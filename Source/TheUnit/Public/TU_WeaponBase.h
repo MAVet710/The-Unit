@@ -14,7 +14,7 @@ enum class ETUFireMode : uint8
 
 /**
  * Base weapon actor.
- * Phase 1C implements a compile-safe ammo, reload, and fire mode skeleton.
+ * Phase 1C implements a simple compile-safe ammo and reload skeleton.
  */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_WeaponBase : public AActor
@@ -26,21 +26,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     void Fire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void StartFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void StopFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void FireSingleShot();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void HandleBurstFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void HandleFullAutoFire();
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     bool CanFire() const;
@@ -59,15 +44,6 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     int32 GetReserveAmmo() const;
-
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireMode")
-    ETUFireMode GetCurrentFireMode() const;
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void SetFireMode(ETUFireMode NewFireMode);
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|FireMode")
-    void CycleFireMode();
 
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
@@ -93,22 +69,4 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     bool bIsReloading;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|FireMode")
-    TArray<ETUFireMode> AvailableFireModes;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|FireMode")
-    ETUFireMode CurrentFireMode;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|FireMode", meta = (ClampMin = "1"))
-    int32 BurstCount;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FireMode", meta = (ClampMin = "0"))
-    int32 ShotsRemainingInBurst;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|FireMode", meta = (ClampMin = "0.01"))
-    float TimeBetweenShots;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FireMode")
-    bool bIsFiring;
 };
