@@ -4,12 +4,12 @@ A tactical co-op PvE extraction shooter prototype built in **Unreal Engine 5**.
 
 ## Project Status
 
-This repository is currently in **Phase 0: Foundation**.
+This repository has completed **Phase 0: Foundation** and is now in **Phase 1A: UE5 C++ Project Skeleton**.
 
-Phase 0 goals:
-- Define project structure and documentation baseline.
-- Establish source control conventions for UE5 assets.
-- Prepare folders for gameplay, content, and systems work.
+Phase 1A goals:
+- Initialize the UE5 C++ project definition.
+- Establish core framework gameplay class stubs.
+- Keep systems minimal and compile-safe for future iteration.
 
 ## Core Vision (Summary)
 
@@ -22,18 +22,39 @@ For full design context, see:
 
 ## Repository Layout
 
-- `Source/TheUnit/` — C++ gameplay module root (placeholder in Phase 0).
+- `TheUnit.uproject` — UE5 project file.
+- `Source/TheUnit/` — C++ gameplay module root.
 - `Content/TheUnit/` — UE5 content root for project assets.
 - `docs/` — planning and technical documentation.
 
-## Phase 0 Outputs
+## How to Open the Project in Unreal Engine 5
 
-- Unreal-friendly `.gitignore`
-- Git LFS tracking rules in `.gitattributes`
-- Initial planning documents:
-  - `docs/GDD_Phase1.md`
-  - `docs/TECHNICAL_ARCHITECTURE.md`
-  - `docs/ROADMAP.md`
+1. Install a compatible Unreal Engine 5 version via Epic Games Launcher.
+2. From the project root, double-click `TheUnit.uproject`.
+3. If prompted, let Unreal build missing project files/modules.
+
+## How to Generate Visual Studio Project Files
+
+### Option A: Windows Explorer context menu
+1. Right-click `TheUnit.uproject`.
+2. Select **Generate Visual Studio project files**.
+
+### Option B: UnrealBuildTool command line
+Run from the repository root (adjust the engine path to your local install):
+
+```powershell
+"C:\Program Files\Epic Games\UE_5.x\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe" -projectfiles -project="<ABSOLUTE_PATH>\TheUnit.uproject" -game -rocket -progress
+```
+
+## Phase 1A Status
+
+✅ Completed:
+- `TheUnit.uproject` added.
+- Base runtime C++ module files added (`TheUnit.Build.cs`, `TheUnit.cpp`, `TheUnit.h`).
+- Initial gameplay class stubs added for framework, player, mission, extraction, interaction, and callouts.
+
+🔜 Next:
+- Begin implementing baseline gameplay loop behavior in Phase 1B.
 
 ## Tooling & Version Control
 
@@ -45,7 +66,3 @@ Suggested setup:
 git lfs install
 git lfs pull
 ```
-
-## Next Milestone
-
-Move into **Phase 1: Playable Vertical Slice** with a focused test map, one operator archetype, one enemy faction, baseline combat loop, and extraction flow.

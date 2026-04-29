@@ -1,0 +1,14 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.0",
+  "Category": "Games",
+  "Description": "The Unit tactical co-op PvE extraction prototype.",
+  "Modules": [
+    {
+      "Name": "TheUnit",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": []
+}
