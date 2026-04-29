@@ -37,14 +37,7 @@
     - weapon identity + baseline tuning surface (`WeaponDisplayName`, fire rate, damage);
     - ammo state skeleton (`MagazineCapacity`, current magazine ammo, reserve ammo);
     - basic fire and reload state gates (`bCanFire`, `bIsReloading`) exposed to Blueprint;
-    - compile-safe core functions (`CanFire`, `StartReload`, `FinishReload`, `AddReserveAmmo`) without projectile/recoil/audio/network behavior yet.
-  - Phase 1C.1 fire mode foundation:
-    - `ETUFireMode` defines `SemiAuto`, `Burst`, and `FullAuto`;
-    - `Fire()` is backward-compatible and routes into `StartFire()` mode dispatch;
-    - `SemiAuto` uses `FireSingleShot()` for one round per trigger request;
-    - `Burst` uses `HandleBurstFire()` to consume up to `BurstCount` rounds immediately as a placeholder;
-    - `FullAuto` uses `HandleFullAutoFire()` to set `bIsFiring` and consume one immediate placeholder round;
-    - future phases will add true timer cadence, recoil systems, animation coupling, and networking/replication behavior.
+    - compile-safe core functions (`Fire`, `CanFire`, `StartReload`, `FinishReload`, `AddReserveAmmo`) without projectile/recoil/audio/network behavior yet.
 - `ATU_InteractableBase` — owns common world interaction contract and authority checks.
 - `ATU_ObjectiveBase` — owns mission objective lifecycle and completion state surface.
 - `ATU_ExtractionZone` — owns extraction area validation and extraction completion trigger points.
