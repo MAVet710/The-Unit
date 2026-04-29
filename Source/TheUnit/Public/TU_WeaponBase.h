@@ -4,6 +4,14 @@
 #include "GameFramework/Actor.h"
 #include "TU_WeaponBase.generated.h"
 
+UENUM(BlueprintType)
+enum class ETUFireMode : uint8
+{
+    SemiAuto UMETA(DisplayName = "Semi Auto"),
+    Burst UMETA(DisplayName = "Burst"),
+    FullAuto UMETA(DisplayName = "Full Auto")
+};
+
 /**
  * Base weapon actor.
  * Phase 1C implements a simple compile-safe ammo and reload skeleton.
