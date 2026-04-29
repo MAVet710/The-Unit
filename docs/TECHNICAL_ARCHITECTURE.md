@@ -27,6 +27,11 @@
 
 ### Gameplay Actor Bases
 - `ATU_OperatorCharacter` — owns operator avatar/pawn-level gameplay integration points.
+  - Phase 1B responsibilities:
+    - first-person camera + owner-only visible arms mesh placeholder components;
+    - baseline movement/look input routing (`MoveForward`, `MoveRight`, `LookUp`, `Turn`);
+    - tactical movement state toggles (`Sprint`, `Crouch`, `ADS`, `LeanLeft`, `LeanRight`) and speed selection;
+    - interaction input entry point (`Interact`) for later gameplay system integration.
 - `ATU_WeaponBase` — owns shared weapon actor contract and replication-safe weapon state shape.
 - `ATU_InteractableBase` — owns common world interaction contract and authority checks.
 - `ATU_ObjectiveBase` — owns mission objective lifecycle and completion state surface.
