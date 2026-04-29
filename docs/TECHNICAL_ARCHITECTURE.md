@@ -33,6 +33,18 @@
     - tactical movement state toggles (`Sprint`, `Crouch`, `ADS`, `LeanLeft`, `LeanRight`) and speed selection;
     - interaction input entry point (`Interact`) for later gameplay system integration.
 - `ATU_WeaponBase` — owns shared weapon actor contract and replication-safe weapon state shape.
+  - Phase 1C responsibilities:
+    - weapon identity + baseline tuning surface (`WeaponDisplayName`, fire rate, damage);
+    - ammo state skeleton (`MagazineCapacity`, current magazine ammo, reserve ammo);
+    - basic fire and reload state gates (`bCanFire`, `bIsReloading`) exposed to Blueprint;
+    - compile-safe core functions (`CanFire`, `StartReload`, `FinishReload`, `AddReserveAmmo`) without projectile/recoil/audio/network behavior yet.
+  - Phase 1C.1 fire mode foundation:
+    - fire mode architecture via `ETUFireMode` with `SemiAuto`, `Burst`, and `FullAuto`;
+    - backward-compatible fire entry (`Fire`) routes through `StartFire` and mode-specific handlers;
+    - `SemiAuto` fires one shot per trigger request;
+    - `Burst` fires up to `BurstCount` shots immediately as a placeholder;
+    - `FullAuto` sets a firing state and fires one immediate placeholder shot;
+    - future phases will add true shot timers, recoil, animation timing, and networked fire behavior.
 - `ATU_InteractableBase` — owns common world interaction contract and authority checks.
 - `ATU_ObjectiveBase` — owns mission objective lifecycle and completion state surface.
 - `ATU_ExtractionZone` — owns extraction area validation and extraction completion trigger points.
