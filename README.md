@@ -66,3 +66,5 @@ Suggested setup:
 git lfs install
 git lfs pull
 ```
+
+- Phase 1A includes UE target files required for project generation/build.
