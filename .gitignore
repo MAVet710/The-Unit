@@ -1,0 +1,31 @@
+# Unreal Engine 5
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Build artifacts
+Build/*
+!Build/*/
+!Build/*/**
+
+# Visual Studio / Rider / IDE
+.vs/
+.vscode/
+.idea/
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.xcodeproj
+*.xcworkspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+*.cache
