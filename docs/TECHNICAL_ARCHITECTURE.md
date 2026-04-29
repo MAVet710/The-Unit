@@ -36,8 +36,11 @@
   - Phase 1C responsibilities:
     - weapon identity + baseline tuning surface (`WeaponDisplayName`, fire rate, damage);
     - ammo state skeleton (`MagazineCapacity`, current magazine ammo, reserve ammo);
-    - basic fire and reload state gates (`bCanFire`, `bIsReloading`) exposed to Blueprint;
-    - compile-safe core functions (`Fire`, `CanFire`, `StartReload`, `FinishReload`, `AddReserveAmmo`) without projectile/recoil/audio/network behavior yet.
+    - basic fire and reload state gates (`bCanFire`, `bIsReloading`) exposed to Blueprint.
+  - Phase 1C.1 responsibilities (complete fire mode foundation):
+    - fire mode enum + state (`ETUFireMode`, `AvailableFireModes`, `CurrentFireMode`) with Blueprint control helpers;
+    - compile-safe routing functions (`StartFire`, `StopFire`, `FireSingleShot`, `HandleBurstFire`, `HandleFullAutoFire`);
+    - placeholder behavior only for immediate semi/burst/full-auto handling while preserving ammo/reload correctness.
 - `ATU_InteractableBase` — owns common world interaction contract and authority checks.
 - `ATU_ObjectiveBase` — owns mission objective lifecycle and completion state surface.
 - `ATU_ExtractionZone` — owns extraction area validation and extraction completion trigger points.
@@ -79,3 +82,7 @@ C++ will provide stable gameplay foundations while Blueprint content continues t
 - Scope creep in systems before loop validation.
 - Replication complexity if architecture boundaries are unclear.
 - Content pipeline bottlenecks if naming/folder conventions are not enforced early.
+
+## Weapon Feature Delivery Notes
+
+Phase 1C.1 is complete for the fire mode foundation. True timers, projectile spawning, recoil, audio, animation, and networking integrations are intentionally deferred to later phases.

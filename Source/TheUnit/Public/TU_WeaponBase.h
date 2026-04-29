@@ -14,7 +14,7 @@ enum class ETUFireMode : uint8
 
 /**
  * Base weapon actor.
- * Phase 1C implements a simple compile-safe ammo and reload skeleton.
+ * Phase 1C.1 extends the compile-safe ammo skeleton with foundational fire mode routing.
  */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_WeaponBase : public AActor
@@ -29,6 +29,30 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     bool CanFire() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void StartFire();
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void StopFire();
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void FireSingleShot();
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void HandleBurstFire();
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void HandleFullAutoFire();
+
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    ETUFireMode GetCurrentFireMode() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void SetFireMode(ETUFireMode NewFireMode);
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void CycleFireMode();
 
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     void StartReload();
@@ -69,4 +93,22 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     bool bIsReloading;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+    TArray<ETUFireMode> AvailableFireModes;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+    ETUFireMode CurrentFireMode;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "1"))
+    int32 BurstCount;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    int32 ShotsRemainingInBurst;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0.001"))
+    float TimeBetweenShots;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    bool bIsFiring;
 };

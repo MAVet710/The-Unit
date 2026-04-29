@@ -1,10 +1,12 @@
 # The Unit — Roadmap
 
-## Phase 0 — Foundation (Current)
+## Mini-Phase Status (Current)
 
-- Repository structure and documentation scaffold.
-- Git + Git LFS conventions in place.
-- Initial design and architecture baseline.
+- Phase 0 complete
+- Phase 1A complete
+- Phase 1B complete
+- Phase 1C ammo skeleton complete
+- Phase 1C.1 fire mode foundation complete
 
 ## Phase 1 — Vertical Slice
 
