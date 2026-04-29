@@ -1,4 +1,4 @@
-# The Unit — Technical Architecture (Initial)
+# The Unit — Technical Architecture
 
 ## Engine + Platform
 
@@ -12,20 +12,38 @@
 - `Content/TheUnit/` for Blueprints, assets, maps, data.
 - Blueprints for rapid iteration; C++ for core gameplay framework and performance-critical systems.
 
-## Proposed System Layers
+## Current C++ Class Skeleton (Phase 1A)
 
-1. **Core Framework**
-   - GameInstance, GameMode, GameState, PlayerState
-   - Session flow and match state transitions
-2. **Gameplay Systems**
-   - Combat, damage, status effects, interaction
-   - Objective and extraction systems
-3. **AI Systems**
-   - Perception, behavior trees, encounter scripting
-4. **Data Layer**
-   - DataAssets/DataTables for tunables and content definitions
-5. **UI Layer**
-   - HUD, team panel, objective tracking, end-match summary
+### Core Module
+- `TheUnit.Build.cs` — Runtime module definition and engine dependency list.
+- `TheUnit.cpp` / `TheUnit.h` — Primary game module bootstrap.
+
+### Gameplay Framework Classes
+- `UTU_GameInstance` — owns global runtime/session lifecycle and future persistent progression hooks.
+- `ATU_GameMode` — owns authoritative mission rules and match flow.
+- `ATU_GameState` — owns replicated mission-wide runtime state for clients.
+- `ATU_PlayerController` — owns player input routing and client-side tactical command hooks.
+- `ATU_PlayerState` — owns replicated per-player mission status and rewards metadata.
+
+### Gameplay Actor Bases
+- `ATU_OperatorCharacter` — owns operator avatar/pawn-level gameplay integration points.
+- `ATU_WeaponBase` — owns shared weapon actor contract and replication-safe weapon state shape.
+- `ATU_InteractableBase` — owns common world interaction contract and authority checks.
+- `ATU_ObjectiveBase` — owns mission objective lifecycle and completion state surface.
+- `ATU_ExtractionZone` — owns extraction area validation and extraction completion trigger points.
+- `ATU_CalloutManager` — owns team callout event routing and future tactical callout coordination.
+
+## Blueprint-Driven in Early Iteration
+
+During early vertical-slice development, the following remain primarily Blueprint-driven:
+
+- Map scripting and encounter composition.
+- Objective presentation and in-level mission sequencing glue.
+- Temporary UI/HUD widgets and mission feedback.
+- Audio/VFX timing, cues, and presentation polish.
+- Animation state machine tuning and montage sequencing.
+
+C++ will provide stable gameplay foundations while Blueprint content continues to iterate rapidly.
 
 ## Networking Considerations
 
