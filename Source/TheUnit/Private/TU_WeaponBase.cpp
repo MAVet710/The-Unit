@@ -12,47 +12,9 @@ ATU_WeaponBase::ATU_WeaponBase()
     Damage = 25.0f;
     bCanFire = true;
     bIsReloading = false;
-
-    AvailableFireModes = {ETUFireMode::SemiAuto, ETUFireMode::Burst, ETUFireMode::FullAuto};
-    CurrentFireMode = ETUFireMode::SemiAuto;
-    BurstCount = 3;
-    ShotsRemainingInBurst = 0;
-    TimeBetweenShots = 0.1f;
-    bIsFiring = false;
 }
 
 void ATU_WeaponBase::Fire()
-{
-    StartFire();
-}
-
-void ATU_WeaponBase::StartFire()
-{
-    switch (CurrentFireMode)
-    {
-    case ETUFireMode::SemiAuto:
-        bIsFiring = false;
-        FireSingleShot();
-        break;
-    case ETUFireMode::Burst:
-        bIsFiring = false;
-        HandleBurstFire();
-        break;
-    case ETUFireMode::FullAuto:
-        HandleFullAutoFire();
-        break;
-    default:
-        break;
-    }
-}
-
-void ATU_WeaponBase::StopFire()
-{
-    bIsFiring = false;
-    ShotsRemainingInBurst = 0;
-}
-
-void ATU_WeaponBase::FireSingleShot()
 {
     if (!CanFire())
     {
@@ -60,36 +22,6 @@ void ATU_WeaponBase::FireSingleShot()
     }
 
     CurrentAmmoInMagazine = FMath::Max(0, CurrentAmmoInMagazine - 1);
-}
-
-void ATU_WeaponBase::HandleBurstFire()
-{
-    if (!CanFire())
-    {
-        return;
-    }
-
-    ShotsRemainingInBurst = FMath::Min(BurstCount, CurrentAmmoInMagazine);
-
-    while (ShotsRemainingInBurst > 0 && CanFire())
-    {
-        FireSingleShot();
-        --ShotsRemainingInBurst;
-    }
-}
-
-void ATU_WeaponBase::HandleFullAutoFire()
-{
-    if (!CanFire())
-    {
-        bIsFiring = false;
-        return;
-    }
-
-    bIsFiring = true;
-
-    // Placeholder: full auto timer-based repeated shots will be added in a later phase.
-    FireSingleShot();
 }
 
 bool ATU_WeaponBase::CanFire() const
@@ -109,7 +41,6 @@ void ATU_WeaponBase::StartReload()
         return;
     }
 
-    bIsFiring = false;
     bIsReloading = true;
     FinishReload();
 }
@@ -147,29 +78,4 @@ int32 ATU_WeaponBase::GetCurrentAmmo() const
 int32 ATU_WeaponBase::GetReserveAmmo() const
 {
     return ReserveAmmo;
-}
-
-ETUFireMode ATU_WeaponBase::GetCurrentFireMode() const
-{
-    return CurrentFireMode;
-}
-
-void ATU_WeaponBase::SetFireMode(ETUFireMode NewFireMode)
-{
-    if (AvailableFireModes.Contains(NewFireMode))
-    {
-        CurrentFireMode = NewFireMode;
-    }
-}
-
-void ATU_WeaponBase::CycleFireMode()
-{
-    if (AvailableFireModes.Num() == 0)
-    {
-        return;
-    }
-
-    const int32 CurrentIndex = AvailableFireModes.Find(CurrentFireMode);
-    const int32 NextIndex = (CurrentIndex == INDEX_NONE) ? 0 : (CurrentIndex + 1) % AvailableFireModes.Num();
-    CurrentFireMode = AvailableFireModes[NextIndex];
 }

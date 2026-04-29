@@ -14,7 +14,7 @@ enum class ETUFireMode : uint8
 
 /**
  * Base weapon actor.
- * Phase 1C implements a compile-safe ammo, reload, and fire mode skeleton.
+ * Phase 1C implements a simple compile-safe ammo and reload skeleton.
  */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_WeaponBase : public AActor
@@ -45,30 +45,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "Weapon")
     int32 GetReserveAmmo() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|Fire Mode")
-    ETUFireMode GetCurrentFireMode() const;
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire Mode")
-    void SetFireMode(ETUFireMode NewFireMode);
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire Mode")
-    void CycleFireMode();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire")
-    void StartFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire")
-    void StopFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire")
-    void FireSingleShot();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire")
-    void HandleBurstFire();
-
-    UFUNCTION(BlueprintCallable, Category = "Weapon|Fire")
-    void HandleFullAutoFire();
-
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
     FText WeaponDisplayName;
@@ -93,22 +69,4 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     bool bIsReloading;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Fire Mode")
-    TArray<ETUFireMode> AvailableFireModes;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Fire Mode")
-    ETUFireMode CurrentFireMode;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Fire Mode", meta = (ClampMin = "1"))
-    int32 BurstCount;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Fire Mode")
-    int32 ShotsRemainingInBurst;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Fire Mode", meta = (ClampMin = "0.01"))
-    float TimeBetweenShots;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Fire")
-    bool bIsFiring;
 };
