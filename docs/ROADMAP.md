@@ -7,12 +7,19 @@
 - Phase 1B complete
 - Phase 1C ammo skeleton complete
 - Phase 1C.1 fire mode foundation complete
+- Phase 1D.1 automated kill house generator
 
 ## Phase 1 — Vertical Slice
 
 - Deliver one end-to-end playable extraction mission.
 - Validate tactical co-op loop with internal playtests.
 - Establish baseline performance and networking behavior.
+
+## Phase 1D.1 — Automated Kill House Generator
+
+- Implement `ATU_KillhouseGenerator` to auto-build a two-story CQB kill house in-editor.
+- Expose layout controls for dimensions, room counts, hallway/stair widths, roof, and debug labels.
+- Generate tactical placeholders for spawn, objective, extraction, enemy spawn, and patrol points.
 
 ## Phase 2 — Core Expansion
 
