@@ -68,3 +68,7 @@ git lfs pull
 ```
 
 - Phase 1A includes UE target files required for project generation/build.
+
+## UE 5.7 Troubleshooting
+
+For Unreal Engine 5.7, target files use `BuildSettingsVersion.V6` and `EngineIncludeOrderVersion.Unreal5_7`.
