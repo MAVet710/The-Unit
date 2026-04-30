@@ -72,3 +72,10 @@ git lfs pull
 ## UE 5.7 Troubleshooting
 
 For Unreal Engine 5.7, target files use `BuildSettingsVersion.V6` and `EngineIncludeOrderVersion.Unreal5_7`.
+
+## How to use TU_KillhouseGenerator
+
+1. Open a level in Unreal Editor.
+2. Drag `TU_KillhouseGenerator` into the scene.
+3. Adjust exposed layout variables in Details (size, room counts, hallway/stair widths, roof/debug flags).
+4. The actor auto-rebuilds the two-story graybox kill house in-editor via `OnConstruction()`.

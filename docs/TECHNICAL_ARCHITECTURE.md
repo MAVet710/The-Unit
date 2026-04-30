@@ -46,6 +46,12 @@
 - `ATU_ExtractionZone` — owns extraction area validation and extraction completion trigger points.
 - `ATU_CalloutManager` — owns team callout event routing and future tactical callout coordination.
 
+- `ATU_KillhouseGenerator` — procedural graybox map generator actor for Phase 1D.1.
+  - On-construction rebuild pipeline for editor-safe auto-generation.
+  - Basic static-mesh cube composition for floors, walls, rooms, stairs, and optional roof.
+  - Tactical placeholder markers (player start, objective, extraction, enemy spawns, patrol points).
+  - Optional debug labels for key callouts (Lobby, Office, Stairwell, Barracks, Comms, Extraction).
+
 ## Blueprint-Driven in Early Iteration
 
 During early vertical-slice development, the following remain primarily Blueprint-driven:
