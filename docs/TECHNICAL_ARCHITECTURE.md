@@ -52,6 +52,13 @@
   - Tactical placeholder markers (player start, objective, extraction, enemy spawns, patrol points).
   - Optional debug labels for key callouts (Lobby, Office, Stairwell, Barracks, Comms, Extraction).
 
+- `ATU_StadiumGenerator` — procedural graybox stadium generator actor for Phase 1D.2.
+  - On-construction rebuild pipeline for asymmetrical field and stadium blockout generation.
+  - Public-dimension-driven outfield profile (left short line, deep center triangle, short right line).
+  - Tactical placeholders for spawn/objective/extraction/enemy patrol authoring.
+  - Optional debug text labels for major landmarks and gameplay points.
+
+
 ## Blueprint-Driven in Early Iteration
 
 During early vertical-slice development, the following remain primarily Blueprint-driven:

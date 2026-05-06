@@ -79,3 +79,12 @@ For Unreal Engine 5.7, target files use `BuildSettingsVersion.V6` and `EngineInc
 2. Drag `TU_KillhouseGenerator` into the scene.
 3. Adjust exposed layout variables in Details (size, room counts, hallway/stair widths, roof/debug flags).
 4. The actor auto-rebuilds the two-story graybox kill house in-editor via `OnConstruction()`.
+
+
+## How to use TU_StadiumGenerator
+
+1. Open a level in Unreal Editor.
+2. Drag `TU_StadiumGenerator` into the scene.
+3. Toggle procedural sections (field/walls/stands/shell/markers) in Details.
+4. Adjust public-reference field dimensions and `FieldScale` as needed.
+5. The actor auto-rebuilds the asymmetrical graybox stadium in-editor via `OnConstruction()`.

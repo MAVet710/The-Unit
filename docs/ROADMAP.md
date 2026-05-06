@@ -8,6 +8,7 @@
 - Phase 1C ammo skeleton complete
 - Phase 1C.1 fire mode foundation complete
 - Phase 1D.1 automated kill house generator
+- Phase 1D.2 stadium generator
 
 ## Phase 1 — Vertical Slice
 
@@ -20,6 +21,12 @@
 - Implement `ATU_KillhouseGenerator` to auto-build a two-story CQB kill house in-editor.
 - Expose layout controls for dimensions, room counts, hallway/stair widths, roof, and debug labels.
 - Generate tactical placeholders for spawn, objective, extraction, enemy spawn, and patrol points.
+
+## Phase 1D.2 — Stadium Generator
+
+- Implement `ATU_StadiumGenerator` for drag-and-drop in-editor asymmetrical stadium generation.
+- Use public field dimensions to shape tactical graybox outfield walls and deep-center triangle.
+- Provide gameplay marker generation and debug callout labels for encounter setup.
 
 ## Phase 2 — Core Expansion
 
