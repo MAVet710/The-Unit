@@ -53,6 +53,10 @@ public:
     UFUNCTION(BlueprintPure, Category = "Weapon|Definitions")
     bool GetAmmoDefinition(FName AmmoId, FAmmoDefinition& OutDefinition) const;
 
+    /** Validates immutable authored data before it is used to configure runtime weapon instances. */
+    UFUNCTION(BlueprintCallable, Category = "Weapon|Definitions")
+    bool ValidateCatalog(TArray<FString>& OutErrors) const;
+
     /** C++ resolution path; the resolved cache intentionally is not persistent/Blueprint-owned. */
     bool ResolveWeaponBuild(
         const FWeaponBuildState& BuildState,
