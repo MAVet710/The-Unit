@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "TU_ArmedOperatorCharacter.h"
 #include "TU_CommandCenterGenerator.h"
 #include "TU_CommandCenterStation.h"
 #include "TU_RangeTarget.h"
@@ -19,6 +20,15 @@ bool FTUCommandCenterStationDataTest::RunTest(const FString& Parameters)
 
     TestEqual(TEXT("Station defaults to Armory routing"), DefaultStation->GetStationType(), ETUCommandCenterStationType::Armory);
     TestFalse(TEXT("Default station label is not empty"), DefaultStation->GetStationLabel().IsEmpty());
+
+    const ATU_ArmedOperatorCharacter* DefaultOperator = GetDefault<ATU_ArmedOperatorCharacter>();
+    if (!TestNotNull(TEXT("Armed operator CDO"), DefaultOperator))
+    {
+        return false;
+    }
+
+    TestFalse(TEXT("MX50 begins stowed on the chest"), DefaultOperator->IsMX50Raised());
+    TestEqual(TEXT("MX50 uses the chest-rig tablet socket"), DefaultOperator->GetMX50ChestSocket(), FName(TEXT("tablet_chest_socket")));
 
     const ATU_RangeTarget* DefaultTarget = GetDefault<ATU_RangeTarget>();
     if (!TestNotNull(TEXT("Range target CDO"), DefaultTarget))
@@ -65,10 +75,10 @@ bool FTUCommandCenterGrayboxRuntimeTest::RunTest(const FString& Parameters)
     {
         Station->ConfigureStation(
             ETUCommandCenterStationType::Briefing,
-            FText::FromString(TEXT("CLASSIFIED OPERATIONS TERMINAL")),
+            FText::FromString(TEXT("BRIEFING // RAISE CHEST-MOUNTED MX50")),
             TEXT("OP_KILLHOUSE"));
         TestEqual(TEXT("Station can route as Briefing"), Station->GetStationType(), ETUCommandCenterStationType::Briefing);
-        TestEqual(TEXT("Configured briefing label is preserved"), Station->GetStationLabel().ToString(), FString(TEXT("CLASSIFIED OPERATIONS TERMINAL")));
+        TestEqual(TEXT("Configured MX50 briefing label is preserved"), Station->GetStationLabel().ToString(), FString(TEXT("BRIEFING // RAISE CHEST-MOUNTED MX50")));
     }
 
     ATU_RangeTarget* Target = World->SpawnActor<ATU_RangeTarget>();
