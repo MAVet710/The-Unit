@@ -260,7 +260,7 @@ void ATU_StadiumGenerator::GenerateGameplayMarkers()
     AddMarker(PolarToField(LeftFieldDistanceFt - 20.0f, -40.0f) + FVector(0.0f, 0.0f, FeetToUU(40.0f)), FRotator::ZeroRotator, FLinearColor::Red, TEXT("EnemySpawn_LeftWallDeck"));
     AddMarker(FVector(FeetToUU(20.0f), -FeetToUU(260.0f), FeetToUU(42.0f)), FRotator::ZeroRotator, FLinearColor::Red, TEXT("EnemySpawn_PressBox"));
 
-    AddMarker(FVector(-FeetToUU(180.0f), FeetToUU(40.0f), FeetToUU(14.0f)), FRotator::ZeroRotator, FLinearColor::Cyan, TEXT("Patrol_LowerBowl"));
-    AddMarker(FVector(0.0f, -FeetToUU(190.0f), FeetToUU(8.0f)), FRotator::ZeroRotator, FLinearColor::Cyan, TEXT("Patrol_Concourse"));
-    AddMarker(FVector(0.0f, FeetToUU(130.0f), 80.0f), FRotator::ZeroRotator, FLinearColor::Cyan, TEXT("Patrol_Field"));
+    AddMarker(FVector(-FeetToUU(180.0f), FeetToUU(40.0f), FeetToUU(14.0f)), FRotator::ZeroRotator, FLinearColor(0.0f, 1.0f, 1.0f, 1.0f), TEXT("Patrol_LowerBowl"));
+    AddMarker(FVector(0.0f, -FeetToUU(190.0f), FeetToUU(8.0f)), FRotator::ZeroRotator, FLinearColor(0.0f, 1.0f, 1.0f, 1.0f), TEXT("Patrol_Concourse"));
+    AddMarker(FVector(0.0f, FeetToUU(130.0f), 80.0f), FRotator::ZeroRotator, FLinearColor(0.0f, 1.0f, 1.0f, 1.0f), TEXT("Patrol_Field"));
 }

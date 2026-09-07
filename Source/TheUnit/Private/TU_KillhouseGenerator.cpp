@@ -79,8 +79,8 @@ void ATU_KillhouseGenerator::BuildKillhouse()
         AddMarker(FVector(X, Y, Z), FRotator::ZeroRotator, FLinearColor::Red, *FString::Printf(TEXT("EnemySpawn_%d"), Index + 1));
     }
 
-    AddMarker(FVector(0.0f, -100.0f, 40.0f), FRotator::ZeroRotator, FLinearColor::Cyan, TEXT("PatrolPoint_A"));
-    AddMarker(FVector(0.0f, 300.0f, FloorHeight + 40.0f), FRotator::ZeroRotator, FLinearColor::Cyan, TEXT("PatrolPoint_B"));
+    AddMarker(FVector(0.0f, -100.0f, 40.0f), FRotator::ZeroRotator, FLinearColor(0.0f, 1.0f, 1.0f, 1.0f), TEXT("PatrolPoint_A"));
+    AddMarker(FVector(0.0f, 300.0f, FloorHeight + 40.0f), FRotator::ZeroRotator, FLinearColor(0.0f, 1.0f, 1.0f, 1.0f), TEXT("PatrolPoint_B"));
 
     if (bGenerateDebugLabels)
     {

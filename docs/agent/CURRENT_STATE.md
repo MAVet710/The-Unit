@@ -1,6 +1,6 @@
 # Current State
 
-Baseline: audited at `8988524a4ed45409df760ab668fdc9103bb4d231`; weapon state updated by TU-001. Unrelated systems have not been re-audited.
+Baseline: audited at `8988524a4ed45409df760ab668fdc9103bb4d231`; weapon state updated by TU-001; editor build and regression validated by TU-002. Unrelated systems have not been re-audited.
 
 ## Implemented foundations
 
@@ -29,12 +29,12 @@ Actual hitscan/projectile combat, enemy AI/perception/patrol, inventory/loot/sta
 - Module dependencies are currently `Core`, `CoreUObject`, `Engine`, and `InputCore`. Add others only for concrete implementations.
 - Existing documentation is useful design context but can be stale: `README.md` describes an earlier phase, and `PHASE1_IMPLEMENTATION_GUIDE.md` incorrectly says project/module files still need generation.
 
-## TU-001 compatibility and validation
+## Weapon compatibility and build validation
 
 - Existing actor action methods and ammo getters remain. Removed actor data properties and component `FireSemiAuto`/`Reload` Blueprint calls require migration to actor methods and `GetMagazineState`/`GetWeaponDefinition`/`GetAmmoDefinition` snapshots. Author defaults on the actor's native `WeaponMechanics` subobject. Fire rate now comes from definition RPM.
 - Magazine rounds exclude the chamber. `GetCurrentAmmo` returns the loaded total: initially 29+1; tactical reload can reach 30+1. Empty reload loads 30 total. Every successful shot consumes exactly one round, including an initially empty chamber.
 - All 11 TU-001 acceptance criteria checked: single magazine/reserve authority; one reload lifecycle and transfer path; one shot-consumption path; actor-owned fire modes/API; reused types; reflected Blueprint read/action API; no Tick; focused changes; affected Unreal compilation passes.
-- UE 5.7.4 UHT and affected translation units compiled in the repository. Full editor linking is blocked by pre-existing `FLinearColor::Cyan` compile errors in `TU_KillhouseGenerator.cpp` (82-83) and `TU_StadiumGenerator.cpp` (263-265); neither file was changed. TU-002 addresses these five references before configuration cleanup.
-- An isolated UE 5.7 editor project containing byte-identical scoped sources, shared types, and tests built and linked successfully. `TheUnit.Combat.WeaponOwnership` passed headlessly: chamber/ammo conservation, reload boundaries, dry fire, fire-mode routing, reserve overflow, snapshots, and internal API ownership. Run the same test in the repository after TU-002; whole-project build validation remains outstanding.
+- TU-002 replaced exactly five unavailable `FLinearColor::Cyan` constants with explicit linear cyan in the Kill House and Stadium generators. Marker transforms, labels, and generator behavior are unchanged. The full `TheUnitEditor Win64 Development` build now compiles and links successfully using UE 5.7.4 explicitly.
+- `TheUnit.Combat.WeaponOwnership` passed headlessly in the real repository project under UE 5.7.4: one test, zero errors or warnings. Coverage includes chamber/ammo conservation, reload boundaries, dry fire, fire-mode routing, reserve overflow, snapshots, and internal API ownership. Engine association remains stale; TU-003 is the next Wave 0 configuration task.
 
 Update this file only when implementation or architecture state changes materially.
