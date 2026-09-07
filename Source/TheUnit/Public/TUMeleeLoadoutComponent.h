@@ -31,7 +31,7 @@ struct FTUMeleeEquipmentEntry
 
     bool IsValidEntry() const
     {
-        return !ItemId.IsNone() && MeleeClass != nullptr;
+        return !ItemId.IsNone() && MeleeClass.Get() != nullptr;
     }
 };
 
@@ -62,7 +62,7 @@ public:
 
     /** Replace the available list, preserving PreferredItemId when possible. */
     UFUNCTION(BlueprintCallable, Category="Melee Loadout")
-    void SetItems(const TArray<FTUMeleeEquipmentEntry>& NewItems, FName PreferredItemId = NAME_None);
+    void SetItems(const TArray<FTUMeleeEquipmentEntry>& NewItems, FName PreferredItemId);
 
     UFUNCTION(BlueprintPure, Category="Melee Loadout")
     bool GetSelectedItem(FTUMeleeEquipmentEntry& OutItem) const;
