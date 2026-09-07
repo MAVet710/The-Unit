@@ -4,14 +4,16 @@
 #include "TimerManager.h"
 #include "TU_OperatorCharacter.h"
 #include "TUOperatorLoadoutComponent.h"
+#include "TUArmoryWidget.h"
 #include "TU_ArmedOperatorCharacter.generated.h"
 
 class ATU_OTFKnife;
 class ATU_WeaponBase;
 class UTUArmoryWidget;
+class UTUBriefingWidget;
 class UTUMeleeLoadoutComponent;
 
-/** Operator layer that owns primary, secondary and selectable melee loadout slots. */
+/** Operator layer that owns primary, secondary, selectable melee and command-center station UI. */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_ArmedOperatorCharacter : public ATU_OperatorCharacter
 {
@@ -23,6 +25,7 @@ public:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void Interact() override;
 
     UFUNCTION(BlueprintPure, Category="Weapon")
     ATU_WeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
@@ -91,6 +94,9 @@ public:
     bool OpenArmory();
 
     UFUNCTION(BlueprintCallable, Category="Armory")
+    bool OpenArmoryView(ETUArmoryViewMode ViewMode);
+
+    UFUNCTION(BlueprintCallable, Category="Armory")
     void CloseArmory();
 
     UFUNCTION(BlueprintCallable, Category="Armory")
@@ -99,8 +105,19 @@ public:
     UFUNCTION(BlueprintPure, Category="Armory")
     bool IsArmoryOpen() const { return IsValid(ArmoryWidget); }
 
+    UFUNCTION(BlueprintCallable, Category="Briefing")
+    bool OpenBriefing(FName MissionId, const FText& MissionTitle);
+
+    UFUNCTION(BlueprintCallable, Category="Briefing")
+    void CloseBriefing();
+
+    UFUNCTION(BlueprintPure, Category="Briefing")
+    bool IsBriefingOpen() const { return IsValid(BriefingWidget); }
+
+    UFUNCTION(BlueprintPure, Category="Command Center")
+    bool IsCommandCenterUIOpen() const { return IsArmoryOpen() || IsBriefingOpen(); }
+
 protected:
-    /** Backward-compatible primary fallback when the operator loadout is empty. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
     TSubclassOf<ATU_WeaponBase> DefaultWeaponClass;
 
@@ -140,17 +157,31 @@ protected:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Melee")
     bool bMeleeHolstering = false;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Armory")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Armory")
     TSubclassOf<UTUArmoryWidget> ArmoryWidgetClass;
 
     UPROPERTY(Transient)
     TObjectPtr<UTUArmoryWidget> ArmoryWidget = nullptr;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Briefing")
+    TSubclassOf<UTUBriefingWidget> BriefingWidgetClass;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTUBriefingWidget> BriefingWidget = nullptr;
+
+    /** Developer escape hatch. Production command-center flow accesses armory physically with F. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Debug")
+    bool bAllowPortableArmoryDebug = false;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Interaction", meta=(ClampMin="100.0", ClampMax="1000.0"))
+    float CommandCenterInteractRangeCm = 400.0f;
 
 private:
     ATU_WeaponBase* SpawnWeaponClass(TSubclassOf<ATU_WeaponBase> WeaponClass, bool bVisible);
     bool EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot Slot);
     bool ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot);
     void DestroyLoadoutWeapons();
+    void RestoreGameInputMode();
 
     void StartWeaponFire();
     void StopWeaponFire();
