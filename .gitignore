@@ -9,6 +9,9 @@ Build/*
 !Build/*/
 !Build/*/**
 
+# Local third-party/source asset staging. Do not publish raw licensed downloads.
+ExternalAssets/
+
 # Visual Studio / Rider / IDE
 .vs/
 .vscode/
