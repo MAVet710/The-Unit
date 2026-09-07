@@ -131,6 +131,7 @@ struct FWeaponPlatformDefinition : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PlatformId = TEXT("Platform_TU556_Training");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("TU-556 Training Platform"));
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName BaseWeaponDefinitionId = TEXT("WPN_TU556_Training_Rifle");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> InterfaceTags;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<ETUWeaponPartSlot> SupportedPartSlots;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> CompatibleAmmoIds;
