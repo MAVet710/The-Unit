@@ -1,5 +1,6 @@
 #include "TU_ArmedOperatorCharacter.h"
 
+#include "TUMeleeLoadoutComponent.h"
 #include "TU_OTFKnife.h"
 #include "TU_TacticalRifle.h"
 #include "TU_WeaponBase.h"
@@ -12,6 +13,7 @@ ATU_ArmedOperatorCharacter::ATU_ArmedOperatorCharacter()
 {
     DefaultWeaponClass = ATU_TacticalRifle::StaticClass();
     DefaultMeleeClass = ATU_OTFKnife::StaticClass();
+    MeleeLoadout = CreateDefaultSubobject<UTUMeleeLoadoutComponent>(TEXT("MeleeLoadout"));
 }
 
 void ATU_ArmedOperatorCharacter::BeginPlay()
@@ -28,11 +30,7 @@ void ATU_ArmedOperatorCharacter::EndPlay(const EEndPlayReason::Type EndPlayReaso
         GetWorld()->GetTimerManager().ClearTimer(MeleeHolsterTimerHandle);
     }
 
-    if (IsValid(CurrentMelee))
-    {
-        CurrentMelee->Destroy();
-        CurrentMelee = nullptr;
-    }
+    DestroyCurrentMelee();
 
     if (IsValid(CurrentWeapon))
     {
@@ -53,6 +51,7 @@ void ATU_ArmedOperatorCharacter::SetupPlayerInputComponent(UInputComponent* Play
     PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::ReloadWeapon);
     PlayerInputComponent->BindAction(TEXT("CycleFireMode"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::CycleWeaponFireMode);
     PlayerInputComponent->BindAction(TEXT("ToggleMelee"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::ToggleMelee);
+    PlayerInputComponent->BindAction(TEXT("CycleMelee"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::CycleMeleeInput);
 
     // Base operator already owns the ADS movement state. These additional callbacks keep the firearm spread state in sync.
     PlayerInputComponent->BindAction(TEXT("ADS"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::StartWeaponADS);
@@ -90,11 +89,39 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
     return true;
 }
 
+FName ATU_ArmedOperatorCharacter::GetSelectedMeleeId() const
+{
+    return MeleeLoadout ? MeleeLoadout->GetSelectedItemId() : NAME_None;
+}
+
 bool ATU_ArmedOperatorCharacter::SpawnDefaultMelee()
 {
-    if (IsValid(CurrentMelee) || !DefaultMeleeClass || !GetWorld())
+    if (IsValid(CurrentMelee))
     {
-        return IsValid(CurrentMelee);
+        return true;
+    }
+
+    if (!GetWorld())
+    {
+        return false;
+    }
+
+    TSubclassOf<ATU_OTFKnife> SpawnClass = DefaultMeleeClass;
+    CurrentMeleeSocket = FirstPersonMeleeSocket;
+
+    FTUMeleeEquipmentEntry SelectedEntry;
+    if (MeleeLoadout && MeleeLoadout->GetSelectedItem(SelectedEntry))
+    {
+        SpawnClass = SelectedEntry.MeleeClass;
+        if (!SelectedEntry.EquipSocket.IsNone())
+        {
+            CurrentMeleeSocket = SelectedEntry.EquipSocket;
+        }
+    }
+
+    if (!SpawnClass)
+    {
+        return false;
     }
 
     FActorSpawnParameters SpawnParams;
@@ -102,7 +129,7 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultMelee()
     SpawnParams.Instigator = this;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    ATU_OTFKnife* Spawned = GetWorld()->SpawnActor<ATU_OTFKnife>(DefaultMeleeClass, FTransform::Identity, SpawnParams);
+    ATU_OTFKnife* Spawned = GetWorld()->SpawnActor<ATU_OTFKnife>(SpawnClass, FTransform::Identity, SpawnParams);
     if (!Spawned)
     {
         return false;
@@ -114,10 +141,42 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultMelee()
         Spawned->AttachToComponent(
             FirstPersonArmsMesh,
             FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-            FirstPersonMeleeSocket);
+            CurrentMeleeSocket);
     }
     Spawned->SetActorHiddenInGame(true);
     return true;
+}
+
+bool ATU_ArmedOperatorCharacter::SelectMeleeById(FName ItemId)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !MeleeLoadout)
+    {
+        return false;
+    }
+
+    if (!MeleeLoadout->SelectItemById(ItemId))
+    {
+        return false;
+    }
+
+    DestroyCurrentMelee();
+    return SpawnDefaultMelee();
+}
+
+bool ATU_ArmedOperatorCharacter::CycleMeleeSelection(int32 Direction)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !MeleeLoadout)
+    {
+        return false;
+    }
+
+    if (!MeleeLoadout->CycleSelection(Direction))
+    {
+        return false;
+    }
+
+    DestroyCurrentMelee();
+    return SpawnDefaultMelee();
 }
 
 bool ATU_ArmedOperatorCharacter::DrawMelee()
@@ -143,7 +202,7 @@ bool ATU_ArmedOperatorCharacter::DrawMelee()
         CurrentWeapon->SetActorHiddenInGame(true);
     }
 
-    if (!CurrentMelee->EquipTo(FirstPersonArmsMesh, FirstPersonMeleeSocket))
+    if (!CurrentMelee->EquipTo(FirstPersonArmsMesh, CurrentMeleeSocket))
     {
         if (CurrentWeapon)
         {
@@ -257,6 +316,11 @@ void ATU_ArmedOperatorCharacter::ToggleMelee()
     }
 }
 
+void ATU_ArmedOperatorCharacter::CycleMeleeInput()
+{
+    CycleMeleeSelection(1);
+}
+
 void ATU_ArmedOperatorCharacter::FinishMeleeHolster()
 {
     if (CurrentMelee)
@@ -271,5 +335,14 @@ void ATU_ArmedOperatorCharacter::FinishMeleeHolster()
     {
         CurrentWeapon->SetActorHiddenInGame(false);
         CurrentWeapon->SetAiming(bIsADS);
+    }
+}
+
+void ATU_ArmedOperatorCharacter::DestroyCurrentMelee()
+{
+    if (IsValid(CurrentMelee))
+    {
+        CurrentMelee->Destroy();
+        CurrentMelee = nullptr;
     }
 }
