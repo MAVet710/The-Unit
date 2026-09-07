@@ -6,6 +6,7 @@
 #include "TU_WeaponBase.generated.h"
 
 class UTUWeaponComponent;
+struct FTUResolvedWeaponBuild;
 
 /**
  * Canonical runtime weapon API. Owns action routing and reload lifecycle;
@@ -58,6 +59,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     void AddReserveAmmo(int32 Amount);
 
+    /** Applies a resolver-produced modular build atomically. C++ only until catalogs/runtime ownership are finalized. */
+    bool ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBuild, FString& OutFailureReason);
+
     /** Total loaded rounds, including the chamber. */
     UFUNCTION(BlueprintPure, Category = "Weapon")
     int32 GetCurrentAmmo() const;
@@ -73,6 +77,30 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     FAmmoDefinition GetAmmoDefinition() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    TArray<ETUFireMode> GetAvailableFireModes() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    bool HasActiveFireControl() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    FName GetActiveTriggerProfileId() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    int32 GetConfiguredBurstCount() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    float GetTriggerResponseMultiplier() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    float GetResetResponseMultiplier() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    float GetSemiAutoResetDelaySeconds() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    bool RequiresReleaseBetweenSemiShots() const;
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -95,6 +123,12 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     bool bIsFiring;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FireControl")
+    bool bHasActiveFireControl = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FireControl")
+    FFireControlModuleDefinition ActiveFireControlDefinition;
 
 private:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
