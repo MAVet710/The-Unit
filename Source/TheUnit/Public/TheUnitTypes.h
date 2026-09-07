@@ -76,6 +76,81 @@ struct FWeaponDefinition : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName CompatibleAmmoId = TEXT("Ammo_556_Training_Ball");
 };
 
+/** High-level gameplay categories for modular weapon parts. */
+UENUM(BlueprintType)
+enum class ETUWeaponPartSlot : uint8
+{
+	Barrel,
+	Muzzle,
+	Action,
+	Handguard,
+	StockBrace,
+	Grip,
+	MagazineFeed,
+	Optic,
+	OpticMount,
+	RailMount,
+	LightLaser,
+	Underbarrel,
+	Internal,
+	FireControl,
+	Cosmetic
+};
+
+/** Data-table definition for a base weapon platform/receiver family. */
+USTRUCT(BlueprintType)
+struct FWeaponPlatformDefinition : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PlatformId = TEXT("Platform_TU556_Training");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("TU-556 Training Platform"));
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> InterfaceTags;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<ETUWeaponPartSlot> SupportedPartSlots;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> CompatibleAmmoIds;
+};
+
+/** Reusable part definition. Compatibility is expressed as abstract interface tags. */
+USTRUCT(BlueprintType)
+struct FWeaponPartDefinition : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PartId = TEXT("Part_Default");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("Weapon Part"));
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) ETUWeaponPartSlot Slot = ETUWeaponPartSlot::Internal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> RequiredInterfaceTags;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> ProvidedInterfaceTags;
+
+	/** Multipliers contribute to a derived gameplay configuration; 1.0 leaves the base value unchanged. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float RecoilPitchMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float RecoilYawMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float HipSpreadMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float ADSSpreadMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float FireRateRPMMultiplier = 1.0f;
+};
+
+/** One installed part reference; an array permits multiple accessories in the same high-level category. */
+USTRUCT(BlueprintType)
+struct FWeaponInstalledPart
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) ETUWeaponPartSlot Slot = ETUWeaponPartSlot::Internal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PartId = NAME_None;
+};
+
+/** Serializable composition identity for a modular weapon build. */
+USTRUCT(BlueprintType)
+struct FWeaponBuildState
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName PlatformId = NAME_None;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FWeaponInstalledPart> InstalledParts;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName SelectedAmmoId = NAME_None;
+};
+
 /** Phase 2 placeholder customization types. */
 UENUM(BlueprintType)
 enum class ETUGearSlot : uint8
