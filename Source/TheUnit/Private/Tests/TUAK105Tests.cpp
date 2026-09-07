@@ -41,6 +41,12 @@ bool FTUAK105RuntimeTest::RunTest(const FString& Parameters)
     UTUWeaponAttachmentComponent* Attachments = Weapon->GetAttachmentComponent();
     TestNotNull(TEXT("AK-105 uses shared modular attachment runtime"), Attachments);
 
+    Weapon->SetAiming(true);
+    TestTrue(TEXT("AK-105 uses shared ADS state"), Weapon->IsAiming());
+    Weapon->SetFireMode(ETUFireMode::SemiAuto);
+    Weapon->FireSingleShot();
+    TestEqual(TEXT("AK-105 shot consumes one round"), Weapon->GetCurrentAmmo(), 29);
+
     World->DestroyWorld(false);
     return true;
 }
