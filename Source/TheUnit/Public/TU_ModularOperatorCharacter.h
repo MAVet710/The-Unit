@@ -4,6 +4,7 @@
 #include "TU_OperatorCharacter.h"
 #include "TU_ModularOperatorCharacter.generated.h"
 
+class UTUArmorProtectionComponent;
 class UTUOperatorAppearanceData;
 class UTUOperatorEquipmentComponent;
 
@@ -28,11 +29,17 @@ public:
     UFUNCTION(BlueprintPure, Category="Operator|Equipment")
     UTUOperatorEquipmentComponent* GetOperatorEquipment() const { return EquipmentComponent; }
 
+    UFUNCTION(BlueprintPure, Category="Operator|Armor")
+    UTUArmorProtectionComponent* GetArmorProtection() const { return ArmorProtectionComponent; }
+
 protected:
     virtual void BeginPlay() override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Equipment")
     TObjectPtr<UTUOperatorEquipmentComponent> EquipmentComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Armor")
+    TObjectPtr<UTUArmorProtectionComponent> ArmorProtectionComponent;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Operator|Appearance")
     TObjectPtr<UTUOperatorAppearanceData> OperatorAppearance = nullptr;

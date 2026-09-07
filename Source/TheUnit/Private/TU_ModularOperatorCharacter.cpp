@@ -1,5 +1,6 @@
 #include "TU_ModularOperatorCharacter.h"
 
+#include "TUArmorProtectionComponent.h"
 #include "TUOperatorAppearanceData.h"
 #include "TUOperatorEquipmentComponent.h"
 #include "TUOperatorLoadoutData.h"
@@ -9,11 +10,18 @@
 ATU_ModularOperatorCharacter::ATU_ModularOperatorCharacter()
 {
     EquipmentComponent = CreateDefaultSubobject<UTUOperatorEquipmentComponent>(TEXT("OperatorEquipment"));
+    ArmorProtectionComponent = CreateDefaultSubobject<UTUArmorProtectionComponent>(TEXT("ArmorProtection"));
 }
 
 void ATU_ModularOperatorCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (ArmorProtectionComponent)
+    {
+        ArmorProtectionComponent->InitializeEquipment(EquipmentComponent);
+    }
+
     ApplyOperatorAppearance();
 }
 
@@ -88,5 +96,11 @@ void ATU_ModularOperatorCharacter::ApplyOperatorAppearance()
         {
             EquipmentComponent->ApplyLoadout(OperatorAppearance->DefaultLoadout);
         }
+    }
+
+    if (ArmorProtectionComponent)
+    {
+        // Appearance/loadout swaps may replace protective items; reinitialize runtime durability lazily.
+        ArmorProtectionComponent->ResetArmorState();
     }
 }
