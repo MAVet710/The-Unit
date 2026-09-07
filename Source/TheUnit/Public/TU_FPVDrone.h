@@ -63,6 +63,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "FPV|Flight")
     void ResetDrone();
 
+    UFUNCTION(BlueprintCallable, Category = "FPV|Possession")
+    void SetReturnPawn(APawn* PawnToReturnTo);
+
+    UFUNCTION(BlueprintCallable, Category = "FPV|Possession")
+    void ExitDrone();
+
     UFUNCTION(BlueprintPure, Category = "FPV|Flight")
     ETUFPVFlightMode GetFlightMode() const { return FlightMode; }
 
@@ -164,6 +170,9 @@ private:
     float ApplyRateCurve(float Input) const;
     float RunPID(const FFPVPIDGains& Gains, float Error, float TargetRate, float DeltaSeconds, float& Integral, float& PreviousError, float& PreviousTargetRate);
     void ClearControllerState();
+
+    UPROPERTY()
+    TObjectPtr<APawn> ReturnPawn = nullptr;
 
     float ThrottleInput = 0.0f;
     float RollInput = 0.0f;
