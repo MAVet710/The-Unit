@@ -82,11 +82,13 @@ bool FTUOperatorMeleeSelectionTest::RunTest(const FString& Parameters)
 
     TestNotNull(TEXT("Operator owns melee loadout"), Operator->GetMeleeLoadout());
     TestEqual(TEXT("Operator starts with OTF selected"), Operator->GetSelectedMeleeId(), FName(TEXT("MELEE_OTF")));
+    TestEqual(TEXT("Operator exposes OTF loadout weight"), Operator->GetSelectedMeleeWeightKg(), 0.14f);
     TestTrue(TEXT("Operator can spawn selected melee"), Operator->SpawnDefaultMelee());
     TestTrue(TEXT("Spawned default melee is exactly OTF"), Operator->GetCurrentMelee() && Operator->GetCurrentMelee()->GetClass() == ATU_OTFKnife::StaticClass());
 
     TestTrue(TEXT("Operator can select karambit while holstered"), Operator->SelectMeleeById(TEXT("MELEE_Karambit")));
     TestEqual(TEXT("Karambit id becomes selected"), Operator->GetSelectedMeleeId(), FName(TEXT("MELEE_Karambit")));
+    TestEqual(TEXT("Operator exposes karambit loadout weight"), Operator->GetSelectedMeleeWeightKg(), 0.18f);
     TestTrue(TEXT("Runtime melee actor is replaced with karambit"), Operator->GetCurrentMelee() && Operator->GetCurrentMelee()->IsA<ATU_Karambit>());
 
     TestTrue(TEXT("Operator can cycle back to OTF"), Operator->CycleMeleeSelection(1));
