@@ -3,13 +3,15 @@
 #include "CoreMinimal.h"
 #include "TimerManager.h"
 #include "TU_OperatorCharacter.h"
+#include "TUOperatorLoadoutComponent.h"
 #include "TU_ArmedOperatorCharacter.generated.h"
 
 class ATU_OTFKnife;
 class ATU_WeaponBase;
+class UTUArmoryWidget;
 class UTUMeleeLoadoutComponent;
 
-/** Operator layer that owns a first-person firearm plus a selectable melee slot. */
+/** Operator layer that owns primary, secondary and selectable melee loadout slots. */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_ArmedOperatorCharacter : public ATU_OperatorCharacter
 {
@@ -25,8 +27,35 @@ public:
     UFUNCTION(BlueprintPure, Category="Weapon")
     ATU_WeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
 
+    UFUNCTION(BlueprintPure, Category="Weapon|Loadout")
+    ATU_WeaponBase* GetPrimaryWeapon() const { return PrimaryWeapon; }
+
+    UFUNCTION(BlueprintPure, Category="Weapon|Loadout")
+    ATU_WeaponBase* GetSecondaryWeapon() const { return SecondaryWeapon; }
+
+    UFUNCTION(BlueprintPure, Category="Weapon|Loadout")
+    ETUOperatorWeaponSlot GetActiveWeaponSlot() const { return ActiveWeaponSlot; }
+
+    UFUNCTION(BlueprintPure, Category="Weapon|Loadout")
+    UTUOperatorLoadoutComponent* GetOperatorLoadout() const { return OperatorLoadout; }
+
     UFUNCTION(BlueprintCallable, Category="Weapon")
     bool SpawnDefaultWeapon();
+
+    UFUNCTION(BlueprintCallable, Category="Weapon|Loadout")
+    bool EquipWeaponSlot(ETUOperatorWeaponSlot Slot);
+
+    UFUNCTION(BlueprintCallable, Category="Weapon|Loadout")
+    bool SelectPrimaryById(FName ItemId);
+
+    UFUNCTION(BlueprintCallable, Category="Weapon|Loadout")
+    bool SelectSecondaryById(FName ItemId);
+
+    UFUNCTION(BlueprintCallable, Category="Equipment|Loadout")
+    bool SelectEquipmentById(FName ItemId);
+
+    UFUNCTION(BlueprintPure, Category="Loadout")
+    float GetSelectedLoadoutWeightKg() const;
 
     UFUNCTION(BlueprintPure, Category="Melee")
     ATU_OTFKnife* GetCurrentMelee() const { return CurrentMelee; }
@@ -43,44 +72,62 @@ public:
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool SpawnDefaultMelee();
 
-    /** Select a melee item by loadout id while the melee slot is holstered. */
     UFUNCTION(BlueprintCallable, Category="Melee|Loadout")
     bool SelectMeleeById(FName ItemId);
 
-    /** Cycle the selected melee item while holstered. */
     UFUNCTION(BlueprintCallable, Category="Melee|Loadout")
     bool CycleMeleeSelection(int32 Direction = 1);
 
-    /** Hide the firearm, attach the selected melee item, and begin its draw/readiness presentation. */
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool DrawMelee();
 
-    /** Finish the melee item's holster presentation, then restore the firearm. */
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool HolsterMelee();
 
     UFUNCTION(BlueprintPure, Category="Melee")
     bool IsMeleeEquipped() const { return bMeleeEquipped; }
 
+    UFUNCTION(BlueprintCallable, Category="Armory")
+    bool OpenArmory();
+
+    UFUNCTION(BlueprintCallable, Category="Armory")
+    void CloseArmory();
+
+    UFUNCTION(BlueprintCallable, Category="Armory")
+    void ToggleArmory();
+
+    UFUNCTION(BlueprintPure, Category="Armory")
+    bool IsArmoryOpen() const { return IsValid(ArmoryWidget); }
+
 protected:
+    /** Backward-compatible primary fallback when the operator loadout is empty. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
     TSubclassOf<ATU_WeaponBase> DefaultWeaponClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
     FName FirstPersonWeaponSocket = TEXT("weapon_socket");
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Loadout")
+    TObjectPtr<UTUOperatorLoadoutComponent> OperatorLoadout;
+
+    UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    TObjectPtr<ATU_WeaponBase> PrimaryWeapon = nullptr;
+
+    UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    TObjectPtr<ATU_WeaponBase> SecondaryWeapon = nullptr;
+
     UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon")
     TObjectPtr<ATU_WeaponBase> CurrentWeapon = nullptr;
 
-    /** Single melee equipment slot. Contains the built-in OTF and karambit choices by default. */
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    ETUOperatorWeaponSlot ActiveWeaponSlot = ETUOperatorWeaponSlot::Primary;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Melee|Loadout")
     TObjectPtr<UTUMeleeLoadoutComponent> MeleeLoadout;
 
-    /** Backward-compatible fallback used only when the loadout has no valid selected item. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Melee")
     TSubclassOf<ATU_OTFKnife> DefaultMeleeClass;
 
-    /** Fallback socket for legacy melee classes or empty loadouts. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Melee")
     FName FirstPersonMeleeSocket = TEXT("weapon_socket");
 
@@ -93,7 +140,18 @@ protected:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Melee")
     bool bMeleeHolstering = false;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Armory")
+    TSubclassOf<UTUArmoryWidget> ArmoryWidgetClass;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTUArmoryWidget> ArmoryWidget = nullptr;
+
 private:
+    ATU_WeaponBase* SpawnWeaponClass(TSubclassOf<ATU_WeaponBase> WeaponClass, bool bVisible);
+    bool EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot Slot);
+    bool ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot);
+    void DestroyLoadoutWeapons();
+
     void StartWeaponFire();
     void StopWeaponFire();
     void ReloadWeapon();
@@ -101,8 +159,11 @@ private:
     void StartWeaponADS();
     void StopWeaponADS();
 
+    void EquipPrimaryInput();
+    void EquipSecondaryInput();
     void ToggleMelee();
     void CycleMeleeInput();
+    void ToggleArmoryInput();
     void FinishMeleeHolster();
     void DestroyCurrentMelee();
 
