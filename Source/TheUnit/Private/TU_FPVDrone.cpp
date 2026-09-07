@@ -4,6 +4,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/Controller.h"
 
 namespace
 {
@@ -83,6 +84,7 @@ void ATU_FPVDrone::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAction(TEXT("FPVToggleMode"), IE_Pressed, this, &ATU_FPVDrone::ToggleFlightMode);
     PlayerInputComponent->BindAction(TEXT("FPVArm"), IE_Pressed, this, &ATU_FPVDrone::ToggleArmed);
     PlayerInputComponent->BindAction(TEXT("FPVReset"), IE_Pressed, this, &ATU_FPVDrone::ResetDrone);
+    PlayerInputComponent->BindAction(TEXT("FPVExit"), IE_Pressed, this, &ATU_FPVDrone::ExitDrone);
 }
 
 void ATU_FPVDrone::InputThrottle(float Value)
@@ -130,6 +132,25 @@ void ATU_FPVDrone::ResetDrone()
     PhysicsBody->SetPhysicsLinearVelocity(FVector::ZeroVector);
     PhysicsBody->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector);
     SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
+}
+
+void ATU_FPVDrone::SetReturnPawn(APawn* PawnToReturnTo)
+{
+    ReturnPawn = PawnToReturnTo;
+}
+
+void ATU_FPVDrone::ExitDrone()
+{
+    if (!Controller || !IsValid(ReturnPawn))
+    {
+        return;
+    }
+
+    bArmed = false;
+    ClearControllerState();
+
+    AController* DroneController = Controller;
+    DroneController->Possess(ReturnPawn);
 }
 
 FVector4 ATU_FPVDrone::GetMotorCommands() const
