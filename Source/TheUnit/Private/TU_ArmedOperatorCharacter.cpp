@@ -1,10 +1,13 @@
 #include "TU_ArmedOperatorCharacter.h"
 
 #include "TUArmoryWidget.h"
+#include "TUBriefingWidget.h"
 #include "TUMeleeLoadoutComponent.h"
+#include "TU_CommandCenterStation.h"
 #include "TU_OTFKnife.h"
 #include "TU_TacticalRifle.h"
 #include "TU_WeaponBase.h"
+#include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
@@ -18,6 +21,7 @@ ATU_ArmedOperatorCharacter::ATU_ArmedOperatorCharacter()
     OperatorLoadout = CreateDefaultSubobject<UTUOperatorLoadoutComponent>(TEXT("OperatorLoadout"));
     MeleeLoadout = CreateDefaultSubobject<UTUMeleeLoadoutComponent>(TEXT("MeleeLoadout"));
     ArmoryWidgetClass = UTUArmoryWidget::StaticClass();
+    BriefingWidgetClass = UTUBriefingWidget::StaticClass();
 }
 
 void ATU_ArmedOperatorCharacter::BeginPlay()
@@ -35,6 +39,7 @@ void ATU_ArmedOperatorCharacter::EndPlay(const EEndPlayReason::Type EndPlayReaso
     }
 
     CloseArmory();
+    CloseBriefing();
     DestroyCurrentMelee();
     DestroyLoadoutWeapons();
     Super::EndPlay(EndPlayReason);
@@ -57,6 +62,29 @@ void ATU_ArmedOperatorCharacter::SetupPlayerInputComponent(UInputComponent* Play
 
     PlayerInputComponent->BindAction(TEXT("ADS"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::StartWeaponADS);
     PlayerInputComponent->BindAction(TEXT("ADS"), IE_Released, this, &ATU_ArmedOperatorCharacter::StopWeaponADS);
+}
+
+void ATU_ArmedOperatorCharacter::Interact()
+{
+    if (IsCommandCenterUIOpen() || !GetWorld() || !FirstPersonCamera)
+    {
+        return;
+    }
+
+    const FVector Start = FirstPersonCamera->GetComponentLocation();
+    const FVector End = Start + FirstPersonCamera->GetForwardVector() * CommandCenterInteractRangeCm;
+
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(CommandCenterInteract), false, this);
+    FHitResult Hit;
+    if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    {
+        return;
+    }
+
+    if (ATU_CommandCenterStation* Station = Cast<ATU_CommandCenterStation>(Hit.GetActor()))
+    {
+        Station->UseStation(this);
+    }
 }
 
 ATU_WeaponBase* ATU_ArmedOperatorCharacter::SpawnWeaponClass(TSubclassOf<ATU_WeaponBase> WeaponClass, bool bVisible)
@@ -155,7 +183,7 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
 
 bool ATU_ArmedOperatorCharacter::EquipWeaponSlot(ETUOperatorWeaponSlot Slot)
 {
-    if (bMeleeEquipped || bMeleeHolstering || IsArmoryOpen())
+    if (bMeleeEquipped || bMeleeHolstering || IsCommandCenterUIOpen())
     {
         return false;
     }
@@ -376,7 +404,7 @@ bool ATU_ArmedOperatorCharacter::SelectMeleeById(FName ItemId)
 
 bool ATU_ArmedOperatorCharacter::CycleMeleeSelection(int32 Direction)
 {
-    if (bMeleeEquipped || bMeleeHolstering || IsArmoryOpen() || !MeleeLoadout)
+    if (bMeleeEquipped || bMeleeHolstering || IsCommandCenterUIOpen() || !MeleeLoadout)
     {
         return false;
     }
@@ -391,7 +419,7 @@ bool ATU_ArmedOperatorCharacter::CycleMeleeSelection(int32 Direction)
 
 bool ATU_ArmedOperatorCharacter::DrawMelee()
 {
-    if (bMeleeHolstering || IsArmoryOpen())
+    if (bMeleeHolstering || IsCommandCenterUIOpen())
     {
         return false;
     }
@@ -453,13 +481,25 @@ bool ATU_ArmedOperatorCharacter::HolsterMelee()
 
 bool ATU_ArmedOperatorCharacter::OpenArmory()
 {
-    if (IsArmoryOpen())
-    {
-        return true;
-    }
+    return OpenArmoryView(ETUArmoryViewMode::Full);
+}
+
+bool ATU_ArmedOperatorCharacter::OpenArmoryView(ETUArmoryViewMode ViewMode)
+{
     if (bMeleeEquipped || bMeleeHolstering || !ArmoryWidgetClass)
     {
         return false;
+    }
+
+    if (IsBriefingOpen())
+    {
+        CloseBriefing();
+    }
+
+    if (IsArmoryOpen())
+    {
+        ArmoryWidget->SetViewMode(ViewMode);
+        return true;
     }
 
     APlayerController* PC = Cast<APlayerController>(GetController());
@@ -468,6 +508,7 @@ bool ATU_ArmedOperatorCharacter::OpenArmory()
         return false;
     }
 
+    StopADS();
     if (CurrentWeapon)
     {
         CurrentWeapon->StopFire();
@@ -480,6 +521,7 @@ bool ATU_ArmedOperatorCharacter::OpenArmory()
         return false;
     }
 
+    ArmoryWidget->SetViewMode(ViewMode);
     ArmoryWidget->SetOperator(this);
     ArmoryWidget->AddToPlayerScreen(250);
 
@@ -498,11 +540,9 @@ void ATU_ArmedOperatorCharacter::CloseArmory()
         ArmoryWidget = nullptr;
     }
 
-    APlayerController* PC = Cast<APlayerController>(GetController());
-    if (PC && PC->IsLocalController())
+    if (!IsBriefingOpen())
     {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor = false;
+        RestoreGameInputMode();
     }
 }
 
@@ -518,9 +558,80 @@ void ATU_ArmedOperatorCharacter::ToggleArmory()
     }
 }
 
+bool ATU_ArmedOperatorCharacter::OpenBriefing(FName MissionId, const FText& MissionTitle)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !BriefingWidgetClass)
+    {
+        return false;
+    }
+
+    if (IsArmoryOpen())
+    {
+        CloseArmory();
+    }
+
+    if (IsBriefingOpen())
+    {
+        BriefingWidget->Configure(this, MissionId, MissionTitle);
+        return true;
+    }
+
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC || !PC->IsLocalController())
+    {
+        return false;
+    }
+
+    StopADS();
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->StopFire();
+        CurrentWeapon->SetAiming(false);
+    }
+
+    BriefingWidget = CreateWidget<UTUBriefingWidget>(PC, BriefingWidgetClass);
+    if (!BriefingWidget)
+    {
+        return false;
+    }
+
+    BriefingWidget->Configure(this, MissionId, MissionTitle);
+    BriefingWidget->AddToPlayerScreen(260);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = true;
+    return true;
+}
+
+void ATU_ArmedOperatorCharacter::CloseBriefing()
+{
+    if (IsValid(BriefingWidget))
+    {
+        BriefingWidget->RemoveFromParent();
+        BriefingWidget = nullptr;
+    }
+
+    if (!IsArmoryOpen())
+    {
+        RestoreGameInputMode();
+    }
+}
+
+void ATU_ArmedOperatorCharacter::RestoreGameInputMode()
+{
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (PC && PC->IsLocalController())
+    {
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor = false;
+    }
+}
+
 void ATU_ArmedOperatorCharacter::StartWeaponFire()
 {
-    if (IsArmoryOpen())
+    if (IsCommandCenterUIOpen())
     {
         return;
     }
@@ -540,7 +651,7 @@ void ATU_ArmedOperatorCharacter::StartWeaponFire()
 
 void ATU_ArmedOperatorCharacter::StopWeaponFire()
 {
-    if (bMeleeEquipped || IsArmoryOpen())
+    if (bMeleeEquipped || IsCommandCenterUIOpen())
     {
         return;
     }
@@ -552,7 +663,7 @@ void ATU_ArmedOperatorCharacter::StopWeaponFire()
 
 void ATU_ArmedOperatorCharacter::ReloadWeapon()
 {
-    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
+    if (!bMeleeEquipped && !IsCommandCenterUIOpen() && CurrentWeapon)
     {
         CurrentWeapon->StartReload();
     }
@@ -560,7 +671,7 @@ void ATU_ArmedOperatorCharacter::ReloadWeapon()
 
 void ATU_ArmedOperatorCharacter::CycleWeaponFireMode()
 {
-    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
+    if (!bMeleeEquipped && !IsCommandCenterUIOpen() && CurrentWeapon)
     {
         CurrentWeapon->CycleFireMode();
     }
@@ -568,7 +679,7 @@ void ATU_ArmedOperatorCharacter::CycleWeaponFireMode()
 
 void ATU_ArmedOperatorCharacter::StartWeaponADS()
 {
-    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
+    if (!bMeleeEquipped && !IsCommandCenterUIOpen() && CurrentWeapon)
     {
         CurrentWeapon->SetAiming(true);
     }
@@ -576,7 +687,7 @@ void ATU_ArmedOperatorCharacter::StartWeaponADS()
 
 void ATU_ArmedOperatorCharacter::StopWeaponADS()
 {
-    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
+    if (!bMeleeEquipped && !IsCommandCenterUIOpen() && CurrentWeapon)
     {
         CurrentWeapon->SetAiming(false);
     }
@@ -594,7 +705,7 @@ void ATU_ArmedOperatorCharacter::EquipSecondaryInput()
 
 void ATU_ArmedOperatorCharacter::ToggleMelee()
 {
-    if (IsArmoryOpen())
+    if (IsCommandCenterUIOpen())
     {
         return;
     }
@@ -615,7 +726,10 @@ void ATU_ArmedOperatorCharacter::CycleMeleeInput()
 
 void ATU_ArmedOperatorCharacter::ToggleArmoryInput()
 {
-    ToggleArmory();
+    if (bAllowPortableArmoryDebug)
+    {
+        ToggleArmory();
+    }
 }
 
 void ATU_ArmedOperatorCharacter::FinishMeleeHolster()
