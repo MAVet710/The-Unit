@@ -37,6 +37,9 @@ public:
     UFUNCTION(BlueprintPure, Category="Melee|Loadout")
     FName GetSelectedMeleeId() const;
 
+    UFUNCTION(BlueprintPure, Category="Melee|Loadout")
+    float GetSelectedMeleeWeightKg() const;
+
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool SpawnDefaultMelee();
 
