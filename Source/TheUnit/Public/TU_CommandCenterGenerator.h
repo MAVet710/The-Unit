@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TU_CommandCenterStation.h"
 #include "TU_CommandCenterGenerator.generated.h"
 
 class UArrowComponent;
@@ -9,7 +10,6 @@ class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
 class UTextRenderComponent;
-class ATU_CommandCenterStation;
 
 /**
  * Editor-visible graybox for The Unit's walkable pre-mission headquarters.
@@ -66,7 +66,7 @@ private:
     {
         FVector Location = FVector::ZeroVector;
         FRotator Rotation = FRotator::ZeroRotator;
-        uint8 TypeValue = 0;
+        ETUCommandCenterStationType Type = ETUCommandCenterStationType::Armory;
         FString Label;
         FName MissionId = NAME_None;
     };
@@ -80,7 +80,7 @@ private:
     UStaticMeshComponent* AddCube(const FVector& Location, const FVector& Extents, const FName& Name, const FRotator& Rotation = FRotator::ZeroRotator);
     UArrowComponent* AddMarker(const FVector& Location, const FRotator& Rotation, const FName& Name);
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
-    void AddStationMarker(uint8 TypeValue, const FString& Label, const FVector& Location, const FRotator& Rotation, FName MissionId = NAME_None);
+    void AddStationMarker(ETUCommandCenterStationType Type, const FString& Label, const FVector& Location, const FRotator& Rotation, FName MissionId = NAME_None);
 
     void BuildSecureCorridor();
     void BuildArmory();
