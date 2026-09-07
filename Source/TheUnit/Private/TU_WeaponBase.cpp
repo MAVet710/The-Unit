@@ -2,6 +2,8 @@
 #include "TUWeaponBuildResolver.h"
 #include "TUWeaponComponent.h"
 #include "TUWeaponDefinitionCatalog.h"
+#include "TUWeaponInstanceRules.h"
+#include "TUWeaponInstanceState.h"
 
 ATU_WeaponBase::ATU_WeaponBase()
 {
@@ -163,6 +165,13 @@ void ATU_WeaponBase::AddReserveAmmo(int32 Amount)
     WeaponMechanics->AddReserveAmmo(Amount);
 }
 
+void ATU_WeaponBase::ClearActiveInstanceIdentity()
+{
+    ActiveInstanceId.Invalidate();
+    ActiveBuildState = FWeaponBuildState();
+    ActiveConditionNormalized = 1.0f;
+}
+
 bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBuild, FString& OutFailureReason)
 {
     OutFailureReason.Reset();
@@ -258,6 +267,7 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
             : AvailableFireModes[0];
     }
 
+    ClearActiveInstanceIdentity();
     return true;
 }
 
@@ -279,6 +289,55 @@ bool ATU_WeaponBase::ConfigureFromCatalog(
     }
 
     return ApplyResolvedBuild(ResolvedBuild, OutFailureReason);
+}
+
+bool ATU_WeaponBase::ConfigureFromInstance(
+    const UTUWeaponDefinitionCatalog* Catalog,
+    const FWeaponInstanceState& Instance,
+    FString& OutFailureReason)
+{
+    if (!FTUWeaponInstanceRules::ValidateInstance(Instance, Catalog, OutFailureReason))
+    {
+        return false;
+    }
+
+    FTUResolvedWeaponBuild ResolvedBuild;
+    if (!Catalog->ResolveWeaponBuild(Instance.Build, ResolvedBuild, OutFailureReason))
+    {
+        return false;
+    }
+
+    if (!ApplyResolvedBuild(ResolvedBuild, OutFailureReason))
+    {
+        return false;
+    }
+
+    WeaponMechanics->MagazineState = Instance.MagazineState;
+    WeaponMechanics->AmmoReserve = Instance.AmmoReserve;
+    ActiveInstanceId = Instance.InstanceId;
+    ActiveBuildState = Instance.Build;
+    ActiveConditionNormalized = Instance.ConditionNormalized;
+    return true;
+}
+
+bool ATU_WeaponBase::ExportActiveInstance(
+    FWeaponInstanceState& OutInstance,
+    FString& OutFailureReason) const
+{
+    OutFailureReason.Reset();
+    if (!ActiveInstanceId.IsValid())
+    {
+        OutFailureReason = TEXT("Runtime weapon is not associated with a persistent weapon instance.");
+        return false;
+    }
+
+    OutInstance = FWeaponInstanceState();
+    OutInstance.InstanceId = ActiveInstanceId;
+    OutInstance.Build = ActiveBuildState;
+    OutInstance.MagazineState = WeaponMechanics->MagazineState;
+    OutInstance.AmmoReserve = WeaponMechanics->AmmoReserve;
+    OutInstance.ConditionNormalized = ActiveConditionNormalized;
+    return true;
 }
 
 int32 ATU_WeaponBase::GetCurrentAmmo() const
@@ -305,6 +364,21 @@ FWeaponDefinition ATU_WeaponBase::GetWeaponDefinition() const
 FAmmoDefinition ATU_WeaponBase::GetAmmoDefinition() const
 {
     return WeaponMechanics->AmmoDefinition;
+}
+
+bool ATU_WeaponBase::HasActiveInstance() const
+{
+    return ActiveInstanceId.IsValid();
+}
+
+FGuid ATU_WeaponBase::GetActiveInstanceId() const
+{
+    return ActiveInstanceId;
+}
+
+float ATU_WeaponBase::GetConditionNormalized() const
+{
+    return ActiveConditionNormalized;
 }
 
 TArray<ETUFireMode> ATU_WeaponBase::GetAvailableFireModes() const

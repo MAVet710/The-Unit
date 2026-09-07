@@ -8,6 +8,7 @@
 class UTUWeaponComponent;
 class UTUWeaponDefinitionCatalog;
 struct FTUResolvedWeaponBuild;
+struct FWeaponInstanceState;
 
 /**
  * Canonical runtime weapon API. Owns action routing and reload lifecycle;
@@ -63,11 +64,20 @@ public:
     /** Applies a resolver-produced modular build atomically. C++ only until catalogs/runtime ownership are finalized. */
     bool ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBuild, FString& OutFailureReason);
 
-    /** Resolves immutable definitions from a catalog and applies them atomically to this runtime weapon. */
+    /** Resolves immutable definitions from a catalog and applies them as an anonymous/non-persistent runtime build. */
     bool ConfigureFromCatalog(
         const UTUWeaponDefinitionCatalog* Catalog,
         const FWeaponBuildState& BuildState,
         FString& OutFailureReason);
+
+    /** Hydrates this actor from one validated persistent weapon instance. */
+    bool ConfigureFromInstance(
+        const UTUWeaponDefinitionCatalog* Catalog,
+        const FWeaponInstanceState& Instance,
+        FString& OutFailureReason);
+
+    /** Exports the current mutable actor snapshot back to its active persistent instance identity. */
+    bool ExportActiveInstance(FWeaponInstanceState& OutInstance, FString& OutFailureReason) const;
 
     /** Total loaded rounds, including the chamber. */
     UFUNCTION(BlueprintPure, Category = "Weapon")
@@ -84,6 +94,15 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     FAmmoDefinition GetAmmoDefinition() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Instance")
+    bool HasActiveInstance() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Instance")
+    FGuid GetActiveInstanceId() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Instance")
+    float GetConditionNormalized() const;
 
     UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
     TArray<ETUFireMode> GetAvailableFireModes() const;
@@ -153,7 +172,18 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Trigger")
     FTriggerDefinition ActiveTriggerDefinition;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Instance")
+    FGuid ActiveInstanceId;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Instance")
+    FWeaponBuildState ActiveBuildState;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Instance", meta = (ClampMin="0.0", ClampMax="1.0"))
+    float ActiveConditionNormalized = 1.0f;
+
 private:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
     UTUWeaponComponent* WeaponMechanics;
+
+    void ClearActiveInstanceIdentity();
 };
