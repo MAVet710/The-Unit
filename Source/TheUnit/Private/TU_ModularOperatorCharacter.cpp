@@ -1,6 +1,6 @@
 #include "TU_ModularOperatorCharacter.h"
 
-#include "TUArmorProtectionComponent.h"
+#include "TUHealthComponent.h"
 #include "TUOperatorAppearanceData.h"
 #include "TUOperatorEquipmentComponent.h"
 #include "TUOperatorLoadoutData.h"
@@ -11,6 +11,7 @@ ATU_ModularOperatorCharacter::ATU_ModularOperatorCharacter()
 {
     EquipmentComponent = CreateDefaultSubobject<UTUOperatorEquipmentComponent>(TEXT("OperatorEquipment"));
     ArmorProtectionComponent = CreateDefaultSubobject<UTUArmorProtectionComponent>(TEXT("ArmorProtection"));
+    HealthComponent = CreateDefaultSubobject<UTUHealthComponent>(TEXT("OperatorHealth"));
 }
 
 void ATU_ModularOperatorCharacter::BeginPlay()
@@ -103,4 +104,33 @@ void ATU_ModularOperatorCharacter::ApplyOperatorAppearance()
         // Appearance/loadout swaps may replace protective items; reinitialize runtime durability lazily.
         ArmorProtectionComponent->ResetArmorState();
     }
+}
+
+FTUArmorHitResult ATU_ModularOperatorCharacter::ApplyBallisticRegionalDamage(
+    ETUBodyRegion Region,
+    float IncomingDamage,
+    float Penetration,
+    float ArmorDamage,
+    float CoverageRoll01)
+{
+    FTUArmorHitResult Result;
+    Result.IncomingDamage = FMath::Max(0.0f, IncomingDamage);
+    Result.FinalDamage = Result.IncomingDamage;
+
+    if (ArmorProtectionComponent)
+    {
+        Result = ArmorProtectionComponent->ResolveBallisticHit(
+            Region,
+            Result.IncomingDamage,
+            Penetration,
+            ArmorDamage,
+            CoverageRoll01);
+    }
+
+    if (HealthComponent && Result.FinalDamage > 0.0f)
+    {
+        HealthComponent->ApplyRegionalDamage(Region, Result.FinalDamage);
+    }
+
+    return Result;
 }

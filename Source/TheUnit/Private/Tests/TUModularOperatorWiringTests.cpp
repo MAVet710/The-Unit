@@ -23,6 +23,16 @@ bool FTUModularOperatorGameModeWiringTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The Unit game mode spawns the modular operator"),
         GameModeDefaults->DefaultPawnClass->IsChildOf(ATU_ModularOperatorCharacter::StaticClass()));
 
+    const ATU_ModularOperatorCharacter* OperatorDefaults = GetDefault<ATU_ModularOperatorCharacter>();
+    if (!TestNotNull(TEXT("Modular operator defaults"), OperatorDefaults))
+    {
+        return false;
+    }
+
+    TestNotNull(TEXT("Modular operator owns equipment component"), OperatorDefaults->GetOperatorEquipment());
+    TestNotNull(TEXT("Modular operator owns armor protection component"), OperatorDefaults->GetArmorProtection());
+    TestNotNull(TEXT("Modular operator owns regional health component"), OperatorDefaults->GetOperatorHealth());
+
     return true;
 }
 

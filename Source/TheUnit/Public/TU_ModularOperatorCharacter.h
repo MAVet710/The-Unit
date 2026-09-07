@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TUArmorProtectionComponent.h"
 #include "TU_OperatorCharacter.h"
 #include "TU_ModularOperatorCharacter.generated.h"
 
-class UTUArmorProtectionComponent;
+class UTUHealthComponent;
 class UTUOperatorAppearanceData;
 class UTUOperatorEquipmentComponent;
 
@@ -32,6 +33,18 @@ public:
     UFUNCTION(BlueprintPure, Category="Operator|Armor")
     UTUArmorProtectionComponent* GetArmorProtection() const { return ArmorProtectionComponent; }
 
+    UFUNCTION(BlueprintPure, Category="Operator|Health")
+    UTUHealthComponent* GetOperatorHealth() const { return HealthComponent; }
+
+    /** Resolves armor first, then applies the remaining damage to regional health. */
+    UFUNCTION(BlueprintCallable, Category="Operator|Damage")
+    FTUArmorHitResult ApplyBallisticRegionalDamage(
+        ETUBodyRegion Region,
+        float IncomingDamage,
+        float Penetration,
+        float ArmorDamage,
+        float CoverageRoll01);
+
 protected:
     virtual void BeginPlay() override;
 
@@ -40,6 +53,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Armor")
     TObjectPtr<UTUArmorProtectionComponent> ArmorProtectionComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Health")
+    TObjectPtr<UTUHealthComponent> HealthComponent;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Operator|Appearance")
     TObjectPtr<UTUOperatorAppearanceData> OperatorAppearance = nullptr;
