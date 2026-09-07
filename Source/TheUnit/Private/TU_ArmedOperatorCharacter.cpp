@@ -94,6 +94,11 @@ FName ATU_ArmedOperatorCharacter::GetSelectedMeleeId() const
     return MeleeLoadout ? MeleeLoadout->GetSelectedItemId() : NAME_None;
 }
 
+float ATU_ArmedOperatorCharacter::GetSelectedMeleeWeightKg() const
+{
+    return MeleeLoadout ? MeleeLoadout->GetSelectedWeightKg() : 0.0f;
+}
+
 bool ATU_ArmedOperatorCharacter::SpawnDefaultMelee()
 {
     if (IsValid(CurrentMelee))
