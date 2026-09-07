@@ -268,10 +268,15 @@ void ATU_CommandCenterGenerator::BuildBriefingRoom()
     }
 
     AddCube(Center + FVector(780.0f, 0.0f, 190.0f), FVector(14.0f, 380.0f, 95.0f), TEXT("BriefingWallDisplay"));
-    AddCube(Center + FVector(-170.0f, 0.0f, 76.0f), FVector(38.0f, 52.0f, 4.0f), TEXT("BriefingLaptopBase"));
-    AddCube(Center + FVector(-205.0f, 0.0f, 113.0f), FVector(4.0f, 52.0f, 38.0f), TEXT("BriefingLaptopScreen"), FRotator(0.0f, 0.0f, -12.0f));
 
-    AddStationMarker(ETUCommandCenterStationType::Briefing, TEXT("CLASSIFIED OPERATIONS TERMINAL"), Center + FVector(-150.0f, -40.0f, 100.0f), FRotator::ZeroRotator, TEXT("OP_KILLHOUSE"));
+    // No laptop or table-mounted mission device: each operator carries the MX50 on the chest rig.
+    // This room marker prompts the operator to raise that chest-mounted tablet into first-person use.
+    AddStationMarker(
+        ETUCommandCenterStationType::Briefing,
+        TEXT("BRIEFING // RAISE CHEST-MOUNTED MX50"),
+        Center + FVector(-150.0f, -40.0f, 100.0f),
+        FRotator::ZeroRotator,
+        TEXT("OP_KILLHOUSE"));
     AddStationMarker(ETUCommandCenterStationType::MissionLaunch, TEXT("COMMIT LOADOUT / DEPLOY"), Center + FVector(650.0f, -650.0f, 70.0f), FRotator(0.0f, 180.0f, 0.0f), TEXT("OP_KILLHOUSE"));
 
     if (bGenerateLabels)
