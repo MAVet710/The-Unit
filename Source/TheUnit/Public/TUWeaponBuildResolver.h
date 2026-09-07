@@ -10,6 +10,8 @@ struct THEUNIT_API FTUResolvedWeaponBuild
     TArray<FWeaponPartDefinition> InstalledPartDefinitions;
     bool bHasFireControl = false;
     FFireControlModuleDefinition FireControlDefinition;
+    bool bHasAmmoDefinition = false;
+    FAmmoDefinition AmmoDefinition;
 };
 
 /** Resolves and validates a saved modular weapon build without owning persistent state. */

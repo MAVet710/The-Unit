@@ -1,6 +1,7 @@
 #include "TU_WeaponBase.h"
 #include "TUWeaponBuildResolver.h"
 #include "TUWeaponComponent.h"
+#include "TUWeaponDefinitionCatalog.h"
 
 ATU_WeaponBase::ATU_WeaponBase()
 {
@@ -179,6 +180,12 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
         return false;
     }
 
+    if (ResolvedBuild.bHasAmmoDefinition && ResolvedBuild.AmmoDefinition.AmmoId.IsNone())
+    {
+        OutFailureReason = TEXT("Resolved ammunition definition has no stable identity.");
+        return false;
+    }
+
     TArray<ETUFireMode> SanitizedModes;
     for (ETUFireMode Mode : FireControl.SupportedFireModes)
     {
@@ -211,6 +218,10 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
 
     StopFire();
     WeaponMechanics->WeaponDefinition = NewWeaponDefinition;
+    if (ResolvedBuild.bHasAmmoDefinition)
+    {
+        WeaponMechanics->AmmoDefinition = ResolvedBuild.AmmoDefinition;
+    }
     bHasActiveFireControl = true;
     ActiveFireControlDefinition = FireControl;
     ActiveFireControlDefinition.SupportedFireModes = SanitizedModes;
@@ -225,6 +236,26 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
     }
 
     return true;
+}
+
+bool ATU_WeaponBase::ConfigureFromCatalog(
+    const UTUWeaponDefinitionCatalog* Catalog,
+    const FWeaponBuildState& BuildState,
+    FString& OutFailureReason)
+{
+    if (!Catalog)
+    {
+        OutFailureReason = TEXT("Cannot configure weapon without a definition catalog.");
+        return false;
+    }
+
+    FTUResolvedWeaponBuild ResolvedBuild;
+    if (!Catalog->ResolveWeaponBuild(BuildState, ResolvedBuild, OutFailureReason))
+    {
+        return false;
+    }
+
+    return ApplyResolvedBuild(ResolvedBuild, OutFailureReason);
 }
 
 int32 ATU_WeaponBase::GetCurrentAmmo() const

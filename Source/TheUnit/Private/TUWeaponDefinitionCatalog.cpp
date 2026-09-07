@@ -100,6 +100,7 @@ bool UTUWeaponDefinitionCatalog::ResolveWeaponBuild(
     FTUResolvedWeaponBuild& OutResolvedBuild,
     FString& OutFailureReason) const
 {
+    OutResolvedBuild = FTUResolvedWeaponBuild();
     OutFailureReason.Reset();
 
     FWeaponPlatformDefinition Platform;
@@ -122,22 +123,33 @@ bool UTUWeaponDefinitionCatalog::ResolveWeaponBuild(
         return false;
     }
 
-    if (!BuildState.SelectedAmmoId.IsNone())
+    FAmmoDefinition SelectedAmmoDefinition;
+    const bool bHasSelectedAmmo = !BuildState.SelectedAmmoId.IsNone();
+    if (bHasSelectedAmmo && !GetAmmoDefinition(BuildState.SelectedAmmoId, SelectedAmmoDefinition))
     {
-        FAmmoDefinition AmmoDefinition;
-        if (!GetAmmoDefinition(BuildState.SelectedAmmoId, AmmoDefinition))
-        {
-            OutFailureReason = TEXT("Weapon build references ammunition missing from the definition catalog.");
-            return false;
-        }
+        OutFailureReason = TEXT("Weapon build references ammunition missing from the definition catalog.");
+        return false;
     }
 
-    return FTUWeaponBuildResolver::ResolveBuild(
+    FTUResolvedWeaponBuild ResolvedBuild;
+    if (!FTUWeaponBuildResolver::ResolveBuild(
         Platform,
         BaseDefinition,
         BuildState,
         Parts,
         FireControlModules,
-        OutResolvedBuild,
-        OutFailureReason);
+        ResolvedBuild,
+        OutFailureReason))
+    {
+        return false;
+    }
+
+    if (bHasSelectedAmmo)
+    {
+        ResolvedBuild.bHasAmmoDefinition = true;
+        ResolvedBuild.AmmoDefinition = SelectedAmmoDefinition;
+    }
+
+    OutResolvedBuild = MoveTemp(ResolvedBuild);
+    return true;
 }

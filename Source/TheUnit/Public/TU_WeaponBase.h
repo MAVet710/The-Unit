@@ -6,6 +6,7 @@
 #include "TU_WeaponBase.generated.h"
 
 class UTUWeaponComponent;
+class UTUWeaponDefinitionCatalog;
 struct FTUResolvedWeaponBuild;
 
 /**
@@ -61,6 +62,12 @@ public:
 
     /** Applies a resolver-produced modular build atomically. C++ only until catalogs/runtime ownership are finalized. */
     bool ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBuild, FString& OutFailureReason);
+
+    /** Resolves immutable definitions from a catalog and applies them atomically to this runtime weapon. */
+    bool ConfigureFromCatalog(
+        const UTUWeaponDefinitionCatalog* Catalog,
+        const FWeaponBuildState& BuildState,
+        FString& OutFailureReason);
 
     /** Total loaded rounds, including the chamber. */
     UFUNCTION(BlueprintPure, Category = "Weapon")
