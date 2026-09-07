@@ -25,6 +25,12 @@ UTUMeleeLoadoutComponent::UTUMeleeLoadoutComponent()
     SelectedItemId = OTF.ItemId;
 }
 
+void UTUMeleeLoadoutComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    EnsureValidSelection();
+}
+
 bool UTUMeleeLoadoutComponent::AddOrReplaceItem(const FTUMeleeEquipmentEntry& Entry)
 {
     if (!Entry.IsValidEntry())
@@ -78,7 +84,7 @@ bool UTUMeleeLoadoutComponent::SelectItemById(FName ItemId)
 
 bool UTUMeleeLoadoutComponent::CycleSelection(int32 Direction)
 {
-    if (AvailableItems.Num() == 0 || Direction == 0)
+    if (AvailableItems.Num() <= 1 || Direction == 0)
     {
         return false;
     }
