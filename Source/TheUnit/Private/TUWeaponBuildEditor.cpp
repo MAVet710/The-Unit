@@ -127,24 +127,24 @@ bool FTUWeaponBuildEditor::TryInstallPart(
         return false;
     }
 
-    if (InOutBuild.InstalledParts.ContainsByPredicate([&CandidatePart](const FWeaponInstalledPart& Ref)
-        { return Ref.PartId == CandidatePart.PartId; }))
+    const FWeaponPartDefinition* CatalogPart = FindPart(PartCatalog, CandidatePart.PartId);
+    if (!CatalogPart)
+    {
+        OutFailureReason = TEXT("Cannot install a part that is not present in the immutable part catalog.");
+        return false;
+    }
+
+    if (InOutBuild.InstalledParts.ContainsByPredicate([CatalogPart](const FWeaponInstalledPart& Ref)
+        { return Ref.PartId == CatalogPart->PartId; }))
     {
         OutFailureReason = TEXT("The same part identity is already installed.");
         return false;
     }
 
     FWeaponBuildState Proposed = InOutBuild;
-    Proposed.InstalledParts.Add({ CandidatePart.Slot, CandidatePart.PartId });
+    Proposed.InstalledParts.Add({ CatalogPart->Slot, CatalogPart->PartId });
 
-    TArray<FWeaponPartDefinition> ProposedCatalog = PartCatalog;
-    if (!ProposedCatalog.ContainsByPredicate([&CandidatePart](const FWeaponPartDefinition& Definition)
-        { return Definition.PartId == CandidatePart.PartId; }))
-    {
-        ProposedCatalog.Add(CandidatePart);
-    }
-
-    if (!ValidateFinalBuild(Platform, Proposed, ProposedCatalog, OutFailureReason))
+    if (!ValidateFinalBuild(Platform, Proposed, PartCatalog, OutFailureReason))
     {
         return false;
     }
@@ -195,6 +195,13 @@ bool FTUWeaponBuildEditor::TryReplacePart(
         return false;
     }
 
+    const FWeaponPartDefinition* CatalogReplacement = FindPart(PartCatalog, ReplacementPart.PartId);
+    if (!CatalogReplacement)
+    {
+        OutFailureReason = TEXT("Cannot install a replacement part that is not present in the immutable part catalog.");
+        return false;
+    }
+
     const int32 ExistingIndex = InOutBuild.InstalledParts.IndexOfByPredicate([ExistingPartId](const FWeaponInstalledPart& Ref)
     {
         return Ref.PartId == ExistingPartId;
@@ -205,24 +212,17 @@ bool FTUWeaponBuildEditor::TryReplacePart(
         return false;
     }
 
-    if (InOutBuild.InstalledParts.ContainsByPredicate([&ReplacementPart, ExistingPartId](const FWeaponInstalledPart& Ref)
-        { return Ref.PartId != ExistingPartId && Ref.PartId == ReplacementPart.PartId; }))
+    if (InOutBuild.InstalledParts.ContainsByPredicate([CatalogReplacement, ExistingPartId](const FWeaponInstalledPart& Ref)
+        { return Ref.PartId != ExistingPartId && Ref.PartId == CatalogReplacement->PartId; }))
     {
         OutFailureReason = TEXT("Replacement part identity is already installed elsewhere in the build.");
         return false;
     }
 
     FWeaponBuildState Proposed = InOutBuild;
-    Proposed.InstalledParts[ExistingIndex] = { ReplacementPart.Slot, ReplacementPart.PartId };
+    Proposed.InstalledParts[ExistingIndex] = { CatalogReplacement->Slot, CatalogReplacement->PartId };
 
-    TArray<FWeaponPartDefinition> ProposedCatalog = PartCatalog;
-    if (!ProposedCatalog.ContainsByPredicate([&ReplacementPart](const FWeaponPartDefinition& Definition)
-        { return Definition.PartId == ReplacementPart.PartId; }))
-    {
-        ProposedCatalog.Add(ReplacementPart);
-    }
-
-    if (!ValidateFinalBuild(Platform, Proposed, ProposedCatalog, OutFailureReason))
+    if (!ValidateFinalBuild(Platform, Proposed, PartCatalog, OutFailureReason))
     {
         return false;
     }
