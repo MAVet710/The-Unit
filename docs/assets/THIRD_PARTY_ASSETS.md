@@ -17,7 +17,7 @@ Record every externally sourced asset before it enters The Unit's content pipeli
 
 | Asset | Author | Source | License | Downloaded | Attribution | Intended Use | UE Destination | Source Redistribution Allowed? | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| SWAT Operator (#4153582) | jeandiz; component creators below | [Listing](https://www.cgtrader.com/free-3d-models/character/man/swat-operator) | Listing: Custom License (no AI); author describes source components as CC-BY, version unspecified | Pending local intake | Required; see credits below | Candidate modular character/gear | Not imported | Unknown pending exact terms | Needs Review |
+| SWAT Operator (#4153582) | jeandiz; component creators below | [Listing](https://www.cgtrader.com/free-3d-models/character/man/swat-operator) | Listing: Custom License (no AI); author describes source components as CC-BY, version unspecified | User-supplied; inspected 2026-09-07 | Required; see credits below | Conversion candidate; character gear is joined | Not imported | Unknown pending exact terms | Needs Review |
 | Bren 2 assault rifle (#3485426) | Studio-Svoboda | [Listing](https://www.cgtrader.com/free-3d-models/military/gun/bren-2) | Royalty Free License (no AI) as displayed 2026-09-07 | User-supplied; exact date unverified | Creator credit retained below | Candidate modular weapon art | Not imported | Not approved for public source redistribution | Needs Review |
 | Private Military Contractor | jeandiz | [Matching listing](https://www.cgtrader.com/free-3d-models/military/military-character/private-military-contractor-8cb4b6a2-1d89-45be-b328-7f29ad58f653) | Editorial License (no AI) as displayed 2026-09-07 | User-supplied; exact date unverified | jeandiz | Assessment only; separate permission needed for commercial-game use | Not imported | Not approved | Needs Review |
 
@@ -47,6 +47,18 @@ The Unit modifications: none so far; inspection only. Record later mesh separati
 ## Character customization acceptance gate
 
 All character gear must be independently removable and replaceable. Verify separate equipment meshes, compatible skeleton/weights or attachment points, complete underlying body/clothing for supported unequipped states, and fit/clipping across supported combinations. A rigged assembled character or a source-credit list alone does not establish modular readiness. No asset has been approved or imported by this registry update.
+
+## SWAT file inspection — 2026-09-07
+
+User-supplied originals inspected read-only: `SWAT+Operator.fbx` (3,700,748 bytes), `SWAT+Operator+CGTrader.blend` (16,105,872 bytes), and `Textures.zip` (216,936,820 bytes). FBX structure, Blender datablocks, and archive filenames were parsed; no embedded scripts were executed and no files were imported into Unreal.
+
+- FBX: 32 mesh objects. The character uses the single `sol_8_low` mesh; the other 31 named mesh objects are weapon parts. The skeleton uses `mixamorig:` bone names.
+- Blender 3.3 file: the same 32 mesh objects plus the `SWAT` armature. It does not preserve separate character equipment objects. A combined mesh may still contain separable geometry islands, but these have not been classified into gear slots.
+- Textures: black/camo character variants and beige/black Vector variants. No license/readme files were found in the archive; no Blender text datablocks were found. Existing attribution and exact-license review remain applicable.
+- Verdict: not ready for fully interchangeable character gear as supplied. Retain as a conversion candidate, not an approved modular base.
+- Required next asset work: visually identify and separate equipment while preserving skin weights and UVs; verify underlying body/clothing coverage; repair or replace missing underlying surfaces if found; establish attachment/rig compatibility and test gear swaps for clipping. Body completeness and deformation quality are not established by this structural inspection.
+
+The source assets remain unmodified and outside Git. This inspection adds no character, weapon, or gameplay implementation.
 
 ## Status values
 
