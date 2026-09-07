@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 import bpy
+from mathutils import Vector
 
 SOURCE_OBJECT_NAME = os.environ.get("TU_SWAT_SOURCE_OBJECT", "sol_8_low")
 CANDIDATE_COLLECTION_NAME = "TU_SWAT_SeparationCandidates"
@@ -89,14 +90,13 @@ def _separate_loose_parts(duplicate: bpy.types.Object) -> list[bpy.types.Object]
     duplicate.select_set(True)
     bpy.context.view_layer.objects.active = duplicate
 
-    before = set(bpy.data.objects)
+    before_names = set(bpy.data.objects.keys())
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.mesh.separate(type="LOOSE")
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    after = set(bpy.data.objects)
-    created = list(after - before)
+    created = [obj for obj in bpy.data.objects if obj.name not in before_names]
 
     # Blender keeps one loose part in the original duplicate object and creates
     # new objects for the others, so include the duplicate itself as a candidate.
@@ -107,10 +107,10 @@ def _separate_loose_parts(duplicate: bpy.types.Object) -> list[bpy.types.Object]
 
 
 def _world_bbox(obj: bpy.types.Object) -> dict[str, list[float]]:
-    points = [obj.matrix_world @ obj.bound_box[i] for i in range(8)]
+    points = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
     return {
-        "min": [min(point[axis] for point in points) for axis in range(3)],
-        "max": [max(point[axis] for point in points) for axis in range(3)],
+        "min": [round(min(point[axis] for point in points), 6) for axis in range(3)],
+        "max": [round(max(point[axis] for point in points), 6) for axis in range(3)],
     }
 
 
@@ -136,10 +136,7 @@ def _bone_influence_summary(obj: bpy.types.Object, limit: int = 12) -> list[dict
 
 
 def _candidate_record(obj: bpy.types.Object) -> dict[str, Any]:
-    materials = []
-    for slot in obj.material_slots:
-        materials.append(slot.material.name if slot.material else None)
-
+    materials = [slot.material.name if slot.material else None for slot in obj.material_slots]
     armature_modifiers = [
         modifier.object.name if modifier.object else None
         for modifier in obj.modifiers
@@ -167,6 +164,7 @@ def main() -> None:
     if source.type != "MESH":
         raise RuntimeError(f"Source object '{SOURCE_OBJECT_NAME}' is type {source.type}, expected MESH.")
 
+    source_blend_path = Path(bpy.data.filepath).resolve() if bpy.data.filepath else None
     collection = _ensure_candidate_collection()
     duplicate = _duplicate_source(source, collection)
     candidates = _separate_loose_parts(duplicate)
@@ -182,8 +180,11 @@ def main() -> None:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     working_path.parent.mkdir(parents=True, exist_ok=True)
 
+    if source_blend_path and working_path == source_blend_path:
+        raise RuntimeError("TU_SWAT_WORKING_BLEND resolves to the opened source file; refusing to overwrite the original.")
+
     report = {
-        "source_blend": str(Path(bpy.data.filepath).resolve()) if bpy.data.filepath else None,
+        "source_blend": str(source_blend_path) if source_blend_path else None,
         "source_object": SOURCE_OBJECT_NAME,
         "source_object_preserved": True,
         "candidate_collection": CANDIDATE_COLLECTION_NAME,
@@ -196,7 +197,8 @@ def main() -> None:
     }
 
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    bpy.ops.wm.save_as_mainfile(filepath=str(working_path), copy=False)
+    # copy=True writes a new working file while leaving the loaded source file identity untouched.
+    bpy.ops.wm.save_as_mainfile(filepath=str(working_path), copy=True)
 
     print(f"[TheUnit] Source preserved: {SOURCE_OBJECT_NAME}")
     print(f"[TheUnit] Candidate pieces: {len(candidates)}")
