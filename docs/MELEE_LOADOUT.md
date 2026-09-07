@@ -69,6 +69,8 @@ The current inheritance is intentionally a prototype compromise: `ATU_Karambit` 
 - the OTF runtime actor is spawned from the selected slot
 - selecting karambit replaces the holstered runtime actor
 - cycling replaces it back with OTF
+- drawing marks melee active
+- direct selection and cycling are both blocked while melee is active
 
 ## Validation gate
 
