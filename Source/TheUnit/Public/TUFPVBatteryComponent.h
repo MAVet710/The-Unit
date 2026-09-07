@@ -60,6 +60,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FPV|Battery", meta=(ClampMin="0.0", ClampMax="1.0"))
     float MinimumThrustScale = 0.68f;
 
+protected:
+    virtual void BeginPlay() override;
+
 private:
     void RecalculateLoadedVoltage();
 
