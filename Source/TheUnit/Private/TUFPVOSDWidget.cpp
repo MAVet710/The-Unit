@@ -1,6 +1,7 @@
 #include "TUFPVOSDWidget.h"
 
 #include "TU_FPVDronePlayer.h"
+#include "TUFPVSignalComponent.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SOverlay.h"
 #include "Widgets/Layout/SVerticalBox.h"
