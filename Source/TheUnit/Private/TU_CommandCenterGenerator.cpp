@@ -33,8 +33,6 @@ void ATU_CommandCenterGenerator::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Rebuild the authored station list at runtime. The generated geometry is intentionally
-    // simple graybox content so the whole headquarters can be tested before art dressing.
     if (StationSpawns.IsEmpty())
     {
         ClearGeneratedComponents();
@@ -71,7 +69,6 @@ void ATU_CommandCenterGenerator::BeginPlay()
         RuntimeStations.Add(Station);
     }
 
-    // Reusable live-fire targets. These use the same generic Unreal damage path as mission actors.
     const TArray<FVector> TargetLocations = {
         FVector(1780.0f, -2450.0f, 110.0f),
         FVector(2150.0f, -2450.0f, 110.0f),
@@ -99,7 +96,6 @@ void ATU_CommandCenterGenerator::BuildHub()
     }
 
     StationSpawns.Reset();
-
     BuildSecureCorridor();
     BuildArmory();
     BuildCage();
@@ -113,22 +109,60 @@ void ATU_CommandCenterGenerator::BuildSecureCorridor()
     const float HalfLength = HubLength * 0.5f;
     const float HalfCorridor = CorridorWidth * 0.5f;
     const float WallThickness = 18.0f;
+    const float DoorHalfWidth = 105.0f;
 
-    // Long institutional hallway like the supplied Operator reference.
     AddCube(FVector(0.0f, 0.0f, -10.0f), FVector(HalfCorridor, HalfLength, 10.0f), TEXT("CorridorFloor"));
     AddCube(FVector(0.0f, 0.0f, CeilingHeight), FVector(HalfCorridor, HalfLength, 8.0f), TEXT("CorridorDropCeiling"));
-    AddCube(FVector(-HalfCorridor, 0.0f, CeilingHeight * 0.5f), FVector(WallThickness * 0.5f, HalfLength, CeilingHeight * 0.5f), TEXT("CorridorWallWest"));
-    AddCube(FVector(HalfCorridor, 0.0f, CeilingHeight * 0.5f), FVector(WallThickness * 0.5f, HalfLength, CeilingHeight * 0.5f), TEXT("CorridorWallEast"));
 
-    // Fluorescent-strip placeholders in the drop ceiling.
+    // Build segmented side walls so every destination is physically reachable from the corridor.
+    auto AddSegmentedWall = [this, HalfLength, WallThickness, DoorHalfWidth](float X, TArray<float> DoorCenters, const FString& Prefix)
+    {
+        DoorCenters.Sort();
+        float SegmentStart = -HalfLength;
+        int32 SegmentIndex = 0;
+
+        for (const float DoorCenter : DoorCenters)
+        {
+            const float SegmentEnd = DoorCenter - DoorHalfWidth;
+            if (SegmentEnd > SegmentStart)
+            {
+                const float Length = SegmentEnd - SegmentStart;
+                AddCube(
+                    FVector(X, (SegmentStart + SegmentEnd) * 0.5f, CeilingHeight * 0.5f),
+                    FVector(WallThickness * 0.5f, Length * 0.5f, CeilingHeight * 0.5f),
+                    *FString::Printf(TEXT("%s_%d"), *Prefix, SegmentIndex++));
+            }
+            SegmentStart = DoorCenter + DoorHalfWidth;
+        }
+
+        if (SegmentStart < HalfLength)
+        {
+            const float Length = HalfLength - SegmentStart;
+            AddCube(
+                FVector(X, (SegmentStart + HalfLength) * 0.5f, CeilingHeight * 0.5f),
+                FVector(WallThickness * 0.5f, Length * 0.5f, CeilingHeight * 0.5f),
+                *FString::Printf(TEXT("%s_%d"), *Prefix, SegmentIndex));
+        }
+    };
+
+    AddSegmentedWall(-HalfCorridor, { -1750.0f, 650.0f }, TEXT("CorridorWallWest"));
+    AddSegmentedWall(HalfCorridor, { -2150.0f, 950.0f }, TEXT("CorridorWallEast"));
+
+    // Drop-ceiling fluorescent-strip placeholders echo the supplied Operator reference.
     for (int32 Index = -6; Index <= 6; ++Index)
     {
-        AddCube(FVector(0.0f, Index * 520.0f, CeilingHeight - 12.0f), FVector(35.0f, 150.0f, 5.0f), *FString::Printf(TEXT("CorridorLight_%d"), Index));
+        AddCube(
+            FVector(0.0f, Index * 520.0f, CeilingHeight - 12.0f),
+            FVector(35.0f, 150.0f, 5.0f),
+            *FString::Printf(TEXT("CorridorLight_%d"), Index));
     }
 
     if (bGenerateLabels)
     {
-        AddLabel(TEXT("THE UNIT // SPECIAL OPERATIONS COMMAND"), FVector(0.0f, -HalfLength + 180.0f, 210.0f), FRotator(0.0f, 0.0f, 0.0f));
+        AddLabel(
+            TEXT("THE UNIT // SPECIAL OPERATIONS COMMAND"),
+            FVector(0.0f, -HalfLength + 180.0f, 210.0f),
+            FRotator::ZeroRotator);
     }
 }
 
@@ -139,12 +173,12 @@ void ATU_CommandCenterGenerator::BuildArmory()
     const float Wall = 18.0f;
 
     AddCube(Center + FVector(0.0f, 0.0f, -10.0f), FVector(RoomHalf.X, RoomHalf.Y, 10.0f), TEXT("ArmoryFloor"));
+    AddCube(FVector(-265.0f, -1750.0f, -10.0f), FVector(85.0f, 105.0f, 10.0f), TEXT("ArmoryThreshold"));
     AddCube(Center + FVector(0.0f, 0.0f, CeilingHeight), FVector(RoomHalf.X, RoomHalf.Y, 8.0f), TEXT("ArmoryCeiling"));
     AddCube(Center + FVector(-RoomHalf.X, 0.0f, CeilingHeight * 0.5f), FVector(Wall * 0.5f, RoomHalf.Y, RoomHalf.Z), TEXT("ArmoryWallWest"));
     AddCube(Center + FVector(0.0f, -RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("ArmoryWallSouth"));
     AddCube(Center + FVector(0.0f, RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("ArmoryWallNorth"));
 
-    // Weapon display wall: pegboard/backer + repeated rifle-shaped graybox bars.
     AddCube(Center + FVector(-RoomHalf.X + 35.0f, 80.0f, 165.0f), FVector(20.0f, 720.0f, 125.0f), TEXT("WeaponWallBacker"));
     for (int32 Row = 0; Row < 4; ++Row)
     {
@@ -152,11 +186,13 @@ void ATU_CommandCenterGenerator::BuildArmory()
         {
             const float Y = -470.0f + Column * 430.0f;
             const float Z = 95.0f + Row * 55.0f;
-            AddCube(Center + FVector(-RoomHalf.X + 65.0f, Y, Z), FVector(18.0f, 150.0f, 9.0f), *FString::Printf(TEXT("WeaponDisplay_%d_%d"), Row, Column));
+            AddCube(
+                Center + FVector(-RoomHalf.X + 65.0f, Y, Z),
+                FVector(18.0f, 150.0f, 9.0f),
+                *FString::Printf(TEXT("WeaponDisplay_%d_%d"), Row, Column));
         }
     }
 
-    // Two workbenches for attachment/customization work.
     AddCube(Center + FVector(260.0f, -360.0f, 42.0f), FVector(260.0f, 95.0f, 42.0f), TEXT("WeaponBenchA"));
     AddCube(Center + FVector(260.0f, 360.0f, 42.0f), FVector(260.0f, 95.0f, 42.0f), TEXT("WeaponBenchB"));
 
@@ -177,12 +213,12 @@ void ATU_CommandCenterGenerator::BuildCage()
     const float Wall = 18.0f;
 
     AddCube(Center + FVector(0.0f, 0.0f, -10.0f), FVector(RoomHalf.X, RoomHalf.Y, 10.0f), TEXT("CageFloor"));
+    AddCube(FVector(-315.0f, 650.0f, -10.0f), FVector(135.0f, 105.0f, 10.0f), TEXT("CageThreshold"));
     AddCube(Center + FVector(0.0f, 0.0f, CeilingHeight), FVector(RoomHalf.X, RoomHalf.Y, 8.0f), TEXT("CageCeiling"));
     AddCube(Center + FVector(-RoomHalf.X, 0.0f, CeilingHeight * 0.5f), FVector(Wall * 0.5f, RoomHalf.Y, RoomHalf.Z), TEXT("CageWallWest"));
     AddCube(Center + FVector(0.0f, RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("CageWallNorth"));
     AddCube(Center + FVector(0.0f, -RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("CageWallSouth"));
 
-    // Locked mesh-cage bays. Thin bars deliberately evoke institutional equipment storage.
     for (int32 Bay = 0; Bay < 3; ++Bay)
     {
         const float YBase = -560.0f + Bay * 560.0f;
@@ -194,11 +230,13 @@ void ATU_CommandCenterGenerator::BuildCage()
         AddCube(Center + FVector(-560.0f, YBase, 278.0f), FVector(8.0f, 240.0f, 6.0f), *FString::Printf(TEXT("CageTop_%d"), Bay));
     }
 
-    // Gear/uniform customization bench and lockers.
     AddCube(Center + FVector(280.0f, 250.0f, 43.0f), FVector(260.0f, 100.0f, 43.0f), TEXT("GearBench"));
     for (int32 Locker = 0; Locker < 5; ++Locker)
     {
-        AddCube(Center + FVector(620.0f, -520.0f + Locker * 220.0f, 125.0f), FVector(90.0f, 90.0f, 125.0f), *FString::Printf(TEXT("GearLocker_%d"), Locker));
+        AddCube(
+            Center + FVector(620.0f, -520.0f + Locker * 220.0f, 125.0f),
+            FVector(90.0f, 90.0f, 125.0f),
+            *FString::Printf(TEXT("GearLocker_%d"), Locker));
     }
 
     AddStationMarker(2, TEXT("CAGE // EQUIPMENT + UNIFORMS"), Center + FVector(180.0f, -150.0f, 65.0f), FRotator(0.0f, 180.0f, 0.0f));
@@ -217,29 +255,31 @@ void ATU_CommandCenterGenerator::BuildBriefingRoom()
     const float Wall = 18.0f;
 
     AddCube(Center + FVector(0.0f, 0.0f, -10.0f), FVector(RoomHalf.X, RoomHalf.Y, 10.0f), TEXT("BriefingFloor"));
+    AddCube(FVector(290.0f, 950.0f, -10.0f), FVector(110.0f, 105.0f, 10.0f), TEXT("BriefingThreshold"));
     AddCube(Center + FVector(0.0f, 0.0f, CeilingHeight), FVector(RoomHalf.X, RoomHalf.Y, 8.0f), TEXT("BriefingCeiling"));
     AddCube(Center + FVector(RoomHalf.X, 0.0f, CeilingHeight * 0.5f), FVector(Wall * 0.5f, RoomHalf.Y, RoomHalf.Z), TEXT("BriefingWallEast"));
     AddCube(Center + FVector(0.0f, RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("BriefingWallNorth"));
     AddCube(Center + FVector(0.0f, -RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("BriefingWallSouth"));
 
-    // Conference table and chairs approximate the physical mission room in the supplied video.
     AddCube(Center + FVector(50.0f, 0.0f, 45.0f), FVector(430.0f, 160.0f, 18.0f), TEXT("BriefingTable"));
     for (int32 Side = -1; Side <= 1; Side += 2)
     {
         for (int32 Seat = -2; Seat <= 2; ++Seat)
         {
-            AddCube(Center + FVector(Seat * 170.0f, Side * 285.0f, 45.0f), FVector(35.0f, 35.0f, 45.0f), *FString::Printf(TEXT("BriefingChair_%d_%d"), Side, Seat));
+            AddCube(
+                Center + FVector(Seat * 170.0f, Side * 285.0f, 45.0f),
+                FVector(35.0f, 35.0f, 45.0f),
+                *FString::Printf(TEXT("BriefingChair_%d_%d"), Side, Seat));
         }
     }
 
-    // Wall display / whiteboard.
     AddCube(Center + FVector(780.0f, 0.0f, 190.0f), FVector(14.0f, 380.0f, 95.0f), TEXT("BriefingWallDisplay"));
 
-    // Physical laptop/terminal on the conference table. Interacting with this opens the classified briefing UI.
+    // Physical secure laptop is the mission UI anchor, matching the user's Operator reference.
     AddCube(Center + FVector(-170.0f, 0.0f, 76.0f), FVector(38.0f, 52.0f, 4.0f), TEXT("BriefingLaptopBase"));
     AddCube(Center + FVector(-205.0f, 0.0f, 113.0f), FVector(4.0f, 52.0f, 38.0f), TEXT("BriefingLaptopScreen"), FRotator(0.0f, 0.0f, -12.0f));
 
-    AddStationMarker(5, TEXT("CLASSIFIED OPERATIONS TERMINAL"), Center + FVector(-150.0f, -40.0f, 100.0f), FRotator(0.0f, 0.0f, 0.0f), TEXT("OP_KILLHOUSE"));
+    AddStationMarker(5, TEXT("CLASSIFIED OPERATIONS TERMINAL"), Center + FVector(-150.0f, -40.0f, 100.0f), FRotator::ZeroRotator, TEXT("OP_KILLHOUSE"));
     AddStationMarker(6, TEXT("COMMIT LOADOUT / DEPLOY"), Center + FVector(650.0f, -650.0f, 70.0f), FRotator(0.0f, 180.0f, 0.0f), TEXT("OP_KILLHOUSE"));
 
     if (bGenerateLabels)
@@ -255,34 +295,49 @@ void ATU_CommandCenterGenerator::BuildTestRange()
     const float Wall = 18.0f;
 
     AddCube(Center + FVector(0.0f, 0.0f, -10.0f), FVector(RoomHalf.X, RoomHalf.Y, 10.0f), TEXT("RangeFloor"));
+    AddCube(FVector(290.0f, -2150.0f, -10.0f), FVector(110.0f, 105.0f, 10.0f), TEXT("RangeThreshold"));
     AddCube(Center + FVector(0.0f, 0.0f, CeilingHeight), FVector(RoomHalf.X, RoomHalf.Y, 8.0f), TEXT("RangeCeiling"));
     AddCube(Center + FVector(0.0f, -RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("RangeWallSouth"));
     AddCube(Center + FVector(0.0f, RoomHalf.Y, CeilingHeight * 0.5f), FVector(RoomHalf.X, Wall * 0.5f, RoomHalf.Z), TEXT("RangeWallNorth"));
     AddCube(Center + FVector(RoomHalf.X, 0.0f, CeilingHeight * 0.5f), FVector(Wall * 0.5f, RoomHalf.Y, RoomHalf.Z), TEXT("RangeBackstop"));
 
-    // Firing line and lane dividers.
     AddCube(Center + FVector(-900.0f, 0.0f, 4.0f), FVector(18.0f, RoomHalf.Y, 4.0f), TEXT("RangeFiringLine"));
     for (int32 Lane = -2; Lane <= 2; ++Lane)
     {
-        AddCube(Center + FVector(-820.0f, Lane * 240.0f, 80.0f), FVector(140.0f, 6.0f, 80.0f), *FString::Printf(TEXT("RangeDivider_%d"), Lane));
+        AddCube(
+            Center + FVector(-820.0f, Lane * 240.0f, 80.0f),
+            FVector(140.0f, 6.0f, 80.0f),
+            *FString::Printf(TEXT("RangeDivider_%d"), Lane));
     }
 
-    AddStationMarker(4, TEXT("LIVE FIRE // TEST SELECTED WEAPON"), Center + FVector(-1050.0f, 0.0f, 65.0f), FRotator(0.0f, 0.0f, 0.0f));
+    AddStationMarker(4, TEXT("LIVE FIRE // TEST SELECTED WEAPON"), Center + FVector(-1050.0f, 0.0f, 65.0f), FRotator::ZeroRotator);
 
     if (bGenerateLabels)
     {
-        AddLabel(TEXT("TEST FIRE RANGE"), Center + FVector(-1180.0f, 0.0f, 285.0f), FRotator(0.0f, 0.0f, 0.0f));
+        AddLabel(TEXT("TEST FIRE RANGE"), Center + FVector(-1180.0f, 0.0f, 285.0f), FRotator::ZeroRotator);
     }
 }
 
 void ATU_CommandCenterGenerator::BuildOperationsDetails()
 {
-    // Door slabs along the secure corridor establish the same restrained government-facility rhythm as the reference.
-    const TArray<float> DoorY = { -2500.0f, -950.0f, 400.0f, 1900.0f };
-    for (int32 Index = 0; Index < DoorY.Num(); ++Index)
+    // Visible door leaves sit beside the openings rather than blocking the corridor.
+    struct FDoorVisual
     {
-        const float Side = (Index % 2 == 0) ? -1.0f : 1.0f;
-        AddCube(FVector(Side * (CorridorWidth * 0.5f + 8.0f), DoorY[Index], 105.0f), FVector(8.0f, 70.0f, 105.0f), *FString::Printf(TEXT("SecureDoor_%d"), Index));
+        FVector Location;
+        float Yaw;
+        FString Name;
+    };
+
+    const TArray<FDoorVisual> Doors = {
+        { FVector(-195.0f, -1855.0f, 105.0f), 0.0f, TEXT("ArmoryDoor") },
+        { FVector(-195.0f, 545.0f, 105.0f), 0.0f, TEXT("CageDoor") },
+        { FVector(195.0f, 845.0f, 105.0f), 0.0f, TEXT("BriefingDoor") },
+        { FVector(195.0f, -2255.0f, 105.0f), 0.0f, TEXT("RangeDoor") }
+    };
+
+    for (const FDoorVisual& Door : Doors)
+    {
+        AddCube(Door.Location, FVector(8.0f, 55.0f, 105.0f), *Door.Name, FRotator(0.0f, Door.Yaw, 0.0f));
     }
 
     if (bGenerateLabels)
