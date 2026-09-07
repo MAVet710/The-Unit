@@ -4,7 +4,7 @@
 
 The front-end for The Unit should feel like a physical secure headquarters, not a conventional game menu. The player enters a walkable special-operations command center, prepares equipment, test-fires weapons, reviews the mission, and deploys from inside that space.
 
-The supplied Operator reference video is the visual/flow anchor for this pass. The Unit should borrow the *interaction language* and institutional mood, not copy logos, proprietary UI, or exact room geometry.
+The supplied Operator reference video is the visual/flow anchor for the facility pass. The Unit should borrow the interaction language and institutional mood, not copy logos, proprietary UI, or exact room geometry.
 
 ## Reference cues to preserve
 
@@ -18,13 +18,12 @@ The supplied clip establishes several strong cues:
 - weapon wall storage visible as part of the physical room
 - locked cage-style equipment storage
 - conference/briefing furniture in the same believable facility language
-- a physical laptop/terminal as the bridge from the 3D world into mission planning
-- classified-workstation presentation before the actual mission screen
-- mission selection progressing from operations list -> briefing/intel -> map/plan -> deploy
+
+The Unit deliberately changes the mission-interface device: there is no briefing laptop or desktop workstation. Each operator carries the mission interface on a chest-mounted MX50-style tactical tablet attached to the chest rig.
 
 ## The Unit layout
 
-The Unit expands that concept into distinct preparation spaces connected by the secure corridor.
+The Unit expands the preparation concept into distinct spaces connected by the secure corridor.
 
 ### Secure corridor
 
@@ -109,29 +108,55 @@ The ballistic helmet already being integrated into the operator/equipment branch
 
 ### Briefing room
 
-Purpose: mission/intel selection and final deployment readiness.
+Purpose: squad gathering, mission/intel review, planning discussion and final deployment readiness.
 
-Physical language from the supplied reference:
+Physical language:
 
 - conference table
 - chairs
 - large wall display / whiteboard area
-- physical secure laptop on the table
+- no laptop or desktop mission terminal on the table
 
-The laptop is the primary mission UI anchor.
+The mission interface belongs to the operator.
 
-Interaction flow:
+## MX50 chest-mounted tactical tablet
 
-1. walk to the briefing laptop
-2. press F
-3. enter a classified-workstation style screen
-4. browse active operations
-5. select an operation
-6. view mission area/intel/parameters
-7. confirm loadout/readiness
-8. deploy
+The MX50-style tactical tablet is mounted on the operator's chest rig, not placed in the room.
 
-The UI should feel like software running on an operations workstation rather than floating game cards.
+Prototype runtime contract:
+
+- third-person tablet presentation attaches at `tablet_chest_socket`
+- the final plate carrier/chest rig should author that socket
+- while stowed, the tablet is represented on the operator's chest
+- entering briefing use raises an owner-only first-person tablet presentation
+- raising the tablet stops ADS/fire and hides the current firearm
+- closing the MX50 lowers it back to the chest presentation and restores the current firearm
+- `BP_OnMX50RaisedChanged` is the animation/art bridge for the future hand pull-up / re-stow montage
+
+The current primitive mesh is only a placeholder for gameplay and attachment validation. Final MX50-style art should be a rugged tactical tablet silhouette suitable for a chest mount; it should not depend on proprietary product CAD.
+
+Target briefing interaction flow:
+
+1. squad walks into the briefing room
+2. player approaches the briefing interaction area
+3. press F
+4. operator raises the MX50 from the chest rig
+5. MX50 displays active operations
+6. select an operation
+7. review mission objective, map, imagery, known threats and entry plan
+8. review team assignments and current loadout
+9. confirm readiness
+10. close/lower the MX50 or commit to deployment
+
+The mission interface should feel like tactical software running on equipment the operator physically carries, not like floating game cards and not like a desktop computer.
+
+Longer-term target:
+
+- allow the MX50 to be raised outside the briefing room for appropriate in-mission functions such as map/intel/task review
+- keep mission-launch authority and pre-mission readiness rules separate from generic tablet access
+- show teammates physically using their own chest-mounted tablets in co-op
+
+No unrestricted in-mission tablet access is claimed in the current pass.
 
 ## Current interaction model
 
@@ -145,7 +170,7 @@ Station routing:
 - Weapon Bench -> weapon customization view
 - Cage -> gear/equipment selection UI
 - Uniform Bench -> gear/equipment selection UI
-- Briefing -> mission briefing workstation
+- Briefing -> raise chest-mounted MX50 and open mission/intel interface
 - Mission Launch -> deployment ready check
 - Test Range -> returns to gameplay input and equips the selected Primary
 
@@ -165,7 +190,7 @@ It currently generates:
 - gear/uniform bench
 - briefing conference furniture
 - briefing wall display
-- physical laptop geometry
+- no laptop/table-mounted mission device
 - test range lanes/backstop
 - interaction station markers
 - runtime station actors
@@ -186,10 +211,9 @@ Prefer:
 - steel cage partitions
 - pegboard/slatwall/rack weapon storage
 - utilitarian tables/chairs
-- old-but-secure workstation hardware
 - subdued signage
 - practical security cameras/readers
-- realistic clutter kept under control
+- believable chest-rig mounting hardware for the MX50
 
 The environment can become more premium than the reference, but should remain believable as a working special-operations facility.
 
@@ -202,9 +226,10 @@ Target rules:
 - each operator has an independent loadout
 - squad members are visible moving around the same hub
 - players can use separate benches simultaneously
-- briefing terminal exposes mission selection/readiness to the squad
+- every operator carries an independent chest-mounted MX50
+- briefing/readiness state can be reviewed on each player's tablet
 - host/leader authority for final mission launch is explicit
-- ready state should be visible physically or on the briefing display
+- ready state should be visible physically or on the briefing wall display
 
 No multiplayer implementation is claimed in the current graybox pass.
 
@@ -221,8 +246,11 @@ Before this hub PR leaves draft:
 7. leaving a station restores normal game input.
 8. selected Primary/Secondary state survives walking between Armory and Range.
 9. range targets take damage and reset correctly.
-10. briefing laptop opens the mission workstation flow.
-11. mission launch remains a deliberate final action, not an accidental proximity trigger.
-12. the visual art pass preserves the secure institutional mood established by the supplied reference.
+10. there is no laptop/tablet mission device generated in the briefing room.
+11. briefing interaction raises the operator's chest-mounted MX50 presentation.
+12. the current firearm hides while the MX50 is raised and returns when it is lowered.
+13. final modular chest rigs provide/validate `tablet_chest_socket` placement.
+14. mission launch remains a deliberate final action, not an accidental proximity trigger.
+15. the visual art pass preserves the secure institutional mood established by the supplied reference.
 
 No UE compile, automation execution or PIE validation is claimed yet.
