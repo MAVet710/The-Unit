@@ -7,14 +7,6 @@
 
 class UTUWeaponComponent;
 
-UENUM(BlueprintType)
-enum class ETUFireMode : uint8
-{
-    SemiAuto UMETA(DisplayName = "Semi Auto"),
-    Burst UMETA(DisplayName = "Burst"),
-    FullAuto UMETA(DisplayName = "Full Auto")
-};
-
 /**
  * Canonical runtime weapon API. Owns action routing and reload lifecycle;
  * its private component owns definitions and all ammunition mutations.

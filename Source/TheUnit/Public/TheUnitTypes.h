@@ -37,6 +37,15 @@ enum class ETUCalloutCategory : uint8
 	Extraction
 };
 
+/** Shared fire-mode vocabulary. Installed fire-control data determines which modes are supported. */
+UENUM(BlueprintType)
+enum class ETUFireMode : uint8
+{
+	SemiAuto UMETA(DisplayName = "Semi Auto"),
+	Burst UMETA(DisplayName = "Burst"),
+	FullAuto UMETA(DisplayName = "Full Auto")
+};
+
 USTRUCT(BlueprintType)
 struct FAmmoDefinition : public FTableRowBase
 {
@@ -97,6 +106,23 @@ enum class ETUWeaponPartSlot : uint8
 	Cosmetic
 };
 
+/** Data-driven gameplay behavior supplied by an installed fire-control/trigger module. */
+USTRUCT(BlueprintType)
+struct FFireControlModuleDefinition : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName FireControlId = TEXT("FireControl_Standard_Semi");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("Standard Fire Control"));
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName TriggerProfileId = TEXT("Trigger.Standard");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<ETUFireMode> SupportedFireModes = { ETUFireMode::SemiAuto };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="1")) int32 BurstCount = 3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float TriggerResponseMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float ResetResponseMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float SemiAutoResetDelaySeconds = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bRequiresReleaseBetweenSemiShots = true;
+};
+
 /** Data-table definition for a base weapon platform/receiver family. */
 USTRUCT(BlueprintType)
 struct FWeaponPlatformDefinition : public FTableRowBase
@@ -121,6 +147,8 @@ struct FWeaponPartDefinition : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) ETUWeaponPartSlot Slot = ETUWeaponPartSlot::Internal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> RequiredInterfaceTags;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> ProvidedInterfaceTags;
+	/** Used only by FireControl parts to reference their behavior definition. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName FireControlDefinitionId = NAME_None;
 
 	/** Multipliers contribute to a derived gameplay configuration; 1.0 leaves the base value unchanged. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float RecoilPitchMultiplier = 1.0f;
