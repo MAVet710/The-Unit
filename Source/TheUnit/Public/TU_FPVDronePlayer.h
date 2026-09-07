@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "TU_FPVDrone.h"
+#include "TUFPVSignalComponent.h"
 #include "TU_FPVDronePlayer.generated.h"
 
 class UTUFPVOSDWidget;
 class UTUFPVRadioInputComponent;
-enum class ETUFPVVideoLinkType : uint8;
 
 /** Player-facing FPV pawn layer: OSD, video-link presentation and USB RC input. */
 UCLASS(Blueprintable)
@@ -52,7 +52,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FPV|Video", meta=(ClampMin="0.0", ClampMax="5.0"))
     float MaximumChromaticAberration = 3.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FPV|Video", meta=(ClampMin="0.0", ClampMax="1.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FPV|Video", meta=(ClampMin="0.0", ClampMax="2.0"))
     float MaximumVideoJitterDegrees = 1.2f;
 
 private:
