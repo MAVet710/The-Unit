@@ -6,6 +6,12 @@ UTUFPVBatteryComponent::UTUFPVBatteryComponent()
     RecalculateLoadedVoltage();
 }
 
+void UTUFPVBatteryComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    RecalculateLoadedVoltage();
+}
+
 void UTUFPVBatteryComponent::ConsumeCurrent(float CurrentAmps, float DeltaSeconds)
 {
     CurrentDrawAmps = FMath::Max(0.0f, CurrentAmps);
