@@ -33,7 +33,7 @@ Selection changes are rejected while melee is drawn or currently holstering. Thi
 
 ## Armory / loadout UI integration
 
-A future armory UI does not need melee-specific subclasses hard-coded. It can:
+The runtime selection boundary is complete. A future armory screen does not need melee-specific subclasses hard-coded. It can:
 
 1. call `GetMeleeLoadout()` on the operator
 2. read `GetAvailableItems()`
@@ -76,7 +76,7 @@ The current inheritance is intentionally a prototype compromise: `ATU_Karambit` 
 
 ## Validation gate
 
-Before PR #20 is ready to merge:
+The selection architecture is implemented, but PR #20 stays draft until runtime validation:
 
 1. UE 5.7 UHT/C++ compile succeeds
 2. all `TheUnit.Combat.Melee.*`, OTF and karambit automation passes
