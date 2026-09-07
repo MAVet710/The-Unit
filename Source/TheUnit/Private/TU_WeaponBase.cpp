@@ -1,22 +1,17 @@
 #include "TU_WeaponBase.h"
+#include "TUWeaponComponent.h"
 
 ATU_WeaponBase::ATU_WeaponBase()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    WeaponDisplayName = FText::FromString(TEXT("Weapon"));
-    MagazineCapacity = 30;
-    CurrentAmmoInMagazine = MagazineCapacity;
-    ReserveAmmo = 90;
-    FireRate = 10.0f;
-    Damage = 25.0f;
+    WeaponMechanics = CreateDefaultSubobject<UTUWeaponComponent>(TEXT("WeaponMechanics"));
     bCanFire = true;
     bIsReloading = false;
     AvailableFireModes = {ETUFireMode::SemiAuto, ETUFireMode::Burst, ETUFireMode::FullAuto};
     CurrentFireMode = ETUFireMode::SemiAuto;
     BurstCount = 3;
     ShotsRemainingInBurst = 0;
-    TimeBetweenShots = 0.1f;
     bIsFiring = false;
 }
 
@@ -27,7 +22,8 @@ void ATU_WeaponBase::Fire()
 
 bool ATU_WeaponBase::CanFire() const
 {
-    return bCanFire && !bIsReloading && CurrentAmmoInMagazine > 0;
+    return bCanFire && !bIsReloading && WeaponMechanics->HasAmmo()
+        && (!WeaponMechanics->WeaponDefinition.bSemiAutoOnly || CurrentFireMode == ETUFireMode::SemiAuto);
 }
 
 void ATU_WeaponBase::StartFire()
@@ -62,7 +58,7 @@ void ATU_WeaponBase::FireSingleShot()
         return;
     }
 
-    CurrentAmmoInMagazine = FMath::Max(0, CurrentAmmoInMagazine - 1);
+    WeaponMechanics->ConsumeRound();
 }
 
 void ATU_WeaponBase::HandleBurstFire()
@@ -89,7 +85,8 @@ ETUFireMode ATU_WeaponBase::GetCurrentFireMode() const
 
 void ATU_WeaponBase::SetFireMode(ETUFireMode NewFireMode)
 {
-    if (AvailableFireModes.Contains(NewFireMode))
+    if (AvailableFireModes.Contains(NewFireMode)
+        && (!WeaponMechanics->WeaponDefinition.bSemiAutoOnly || NewFireMode == ETUFireMode::SemiAuto))
     {
         CurrentFireMode = NewFireMode;
     }
@@ -97,6 +94,12 @@ void ATU_WeaponBase::SetFireMode(ETUFireMode NewFireMode)
 
 void ATU_WeaponBase::CycleFireMode()
 {
+    if (WeaponMechanics->WeaponDefinition.bSemiAutoOnly)
+    {
+        SetFireMode(ETUFireMode::SemiAuto);
+        return;
+    }
+
     if (AvailableFireModes.Num() == 0)
     {
         return;
@@ -117,7 +120,7 @@ void ATU_WeaponBase::StartReload()
         return;
     }
 
-    if (CurrentAmmoInMagazine >= MagazineCapacity || ReserveAmmo <= 0)
+    if (!WeaponMechanics->CanReload())
     {
         return;
     }
@@ -134,30 +137,37 @@ void ATU_WeaponBase::FinishReload()
         return;
     }
 
-    const int32 AmmoNeeded = FMath::Max(0, MagazineCapacity - CurrentAmmoInMagazine);
-    const int32 AmmoToLoad = FMath::Min(AmmoNeeded, ReserveAmmo);
-
-    CurrentAmmoInMagazine += AmmoToLoad;
-    ReserveAmmo -= AmmoToLoad;
+    WeaponMechanics->Reload();
     bIsReloading = false;
 }
 
 void ATU_WeaponBase::AddReserveAmmo(int32 Amount)
 {
-    if (Amount <= 0)
-    {
-        return;
-    }
-
-    ReserveAmmo += Amount;
+    WeaponMechanics->AddReserveAmmo(Amount);
 }
 
 int32 ATU_WeaponBase::GetCurrentAmmo() const
 {
-    return CurrentAmmoInMagazine;
+    const FMagazineState& Magazine = WeaponMechanics->MagazineState;
+    return Magazine.RoundsInMagazine + (Magazine.bRoundChambered ? 1 : 0);
 }
 
 int32 ATU_WeaponBase::GetReserveAmmo() const
 {
-    return ReserveAmmo;
+    return WeaponMechanics->AmmoReserve;
+}
+
+FMagazineState ATU_WeaponBase::GetMagazineState() const
+{
+    return WeaponMechanics->MagazineState;
+}
+
+FWeaponDefinition ATU_WeaponBase::GetWeaponDefinition() const
+{
+    return WeaponMechanics->WeaponDefinition;
+}
+
+FAmmoDefinition ATU_WeaponBase::GetAmmoDefinition() const
+{
+    return WeaponMechanics->AmmoDefinition;
 }

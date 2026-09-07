@@ -2,7 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TheUnitTypes.h"
 #include "TU_WeaponBase.generated.h"
+
+class UTUWeaponComponent;
 
 UENUM(BlueprintType)
 enum class ETUFireMode : uint8
@@ -13,8 +16,8 @@ enum class ETUFireMode : uint8
 };
 
 /**
- * Base weapon actor.
- * Phase 1C.1 extends the compile-safe ammo skeleton with foundational fire mode routing.
+ * Canonical runtime weapon API. Owns action routing and reload lifecycle;
+ * its private component owns definitions and all ammunition mutations.
  */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_WeaponBase : public AActor
@@ -63,31 +66,23 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     void AddReserveAmmo(int32 Amount);
 
+    /** Total loaded rounds, including the chamber. */
     UFUNCTION(BlueprintPure, Category = "Weapon")
     int32 GetCurrentAmmo() const;
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     int32 GetReserveAmmo() const;
 
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    FMagazineState GetMagazineState() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    FWeaponDefinition GetWeaponDefinition() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    FAmmoDefinition GetAmmoDefinition() const;
+
 protected:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-    FText WeaponDisplayName;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "1"))
-    int32 MagazineCapacity;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0"))
-    int32 CurrentAmmoInMagazine;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0"))
-    int32 ReserveAmmo;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0.01"))
-    float FireRate;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0.0"))
-    float Damage;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
     bool bCanFire;
 
@@ -106,9 +101,10 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     int32 ShotsRemainingInBurst;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0.001"))
-    float TimeBetweenShots;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     bool bIsFiring;
+
+private:
+    UPROPERTY(VisibleAnywhere, Category = "Weapon")
+    UTUWeaponComponent* WeaponMechanics;
 };
