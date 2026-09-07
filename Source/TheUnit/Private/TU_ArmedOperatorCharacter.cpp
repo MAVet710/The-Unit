@@ -1,5 +1,6 @@
 #include "TU_ArmedOperatorCharacter.h"
 
+#include "TUArmoryWidget.h"
 #include "TUMeleeLoadoutComponent.h"
 #include "TU_OTFKnife.h"
 #include "TU_TacticalRifle.h"
@@ -7,13 +8,16 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "TimerManager.h"
 
 ATU_ArmedOperatorCharacter::ATU_ArmedOperatorCharacter()
 {
     DefaultWeaponClass = ATU_TacticalRifle::StaticClass();
     DefaultMeleeClass = ATU_OTFKnife::StaticClass();
+    OperatorLoadout = CreateDefaultSubobject<UTUOperatorLoadoutComponent>(TEXT("OperatorLoadout"));
     MeleeLoadout = CreateDefaultSubobject<UTUMeleeLoadoutComponent>(TEXT("MeleeLoadout"));
+    ArmoryWidgetClass = UTUArmoryWidget::StaticClass();
 }
 
 void ATU_ArmedOperatorCharacter::BeginPlay()
@@ -30,14 +34,9 @@ void ATU_ArmedOperatorCharacter::EndPlay(const EEndPlayReason::Type EndPlayReaso
         GetWorld()->GetTimerManager().ClearTimer(MeleeHolsterTimerHandle);
     }
 
+    CloseArmory();
     DestroyCurrentMelee();
-
-    if (IsValid(CurrentWeapon))
-    {
-        CurrentWeapon->Destroy();
-        CurrentWeapon = nullptr;
-    }
-
+    DestroyLoadoutWeapons();
     Super::EndPlay(EndPlayReason);
 }
 
@@ -50,19 +49,21 @@ void ATU_ArmedOperatorCharacter::SetupPlayerInputComponent(UInputComponent* Play
     PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &ATU_ArmedOperatorCharacter::StopWeaponFire);
     PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::ReloadWeapon);
     PlayerInputComponent->BindAction(TEXT("CycleFireMode"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::CycleWeaponFireMode);
+    PlayerInputComponent->BindAction(TEXT("EquipPrimary"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::EquipPrimaryInput);
+    PlayerInputComponent->BindAction(TEXT("EquipSecondary"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::EquipSecondaryInput);
     PlayerInputComponent->BindAction(TEXT("ToggleMelee"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::ToggleMelee);
     PlayerInputComponent->BindAction(TEXT("CycleMelee"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::CycleMeleeInput);
+    PlayerInputComponent->BindAction(TEXT("ToggleArmory"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::ToggleArmoryInput);
 
-    // Base operator already owns the ADS movement state. These additional callbacks keep the firearm spread state in sync.
     PlayerInputComponent->BindAction(TEXT("ADS"), IE_Pressed, this, &ATU_ArmedOperatorCharacter::StartWeaponADS);
     PlayerInputComponent->BindAction(TEXT("ADS"), IE_Released, this, &ATU_ArmedOperatorCharacter::StopWeaponADS);
 }
 
-bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
+ATU_WeaponBase* ATU_ArmedOperatorCharacter::SpawnWeaponClass(TSubclassOf<ATU_WeaponBase> WeaponClass, bool bVisible)
 {
-    if (IsValid(CurrentWeapon) || !DefaultWeaponClass || !GetWorld())
+    if (!WeaponClass || !GetWorld())
     {
-        return IsValid(CurrentWeapon);
+        return nullptr;
     }
 
     FActorSpawnParameters SpawnParams;
@@ -70,13 +71,12 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
     SpawnParams.Instigator = this;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    ATU_WeaponBase* Spawned = GetWorld()->SpawnActor<ATU_WeaponBase>(DefaultWeaponClass, FTransform::Identity, SpawnParams);
+    ATU_WeaponBase* Spawned = GetWorld()->SpawnActor<ATU_WeaponBase>(WeaponClass, FTransform::Identity, SpawnParams);
     if (!Spawned)
     {
-        return false;
+        return nullptr;
     }
 
-    CurrentWeapon = Spawned;
     if (FirstPersonArmsMesh)
     {
         Spawned->AttachToComponent(
@@ -85,8 +85,212 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
             FirstPersonWeaponSocket);
     }
 
-    Spawned->SetAiming(bIsADS);
+    Spawned->SetActorHiddenInGame(!bVisible);
+    Spawned->SetAiming(bVisible && bIsADS);
+    return Spawned;
+}
+
+bool ATU_ArmedOperatorCharacter::EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot Slot)
+{
+    TObjectPtr<ATU_WeaponBase>& SlotWeapon = Slot == ETUOperatorWeaponSlot::Primary ? PrimaryWeapon : SecondaryWeapon;
+    if (IsValid(SlotWeapon))
+    {
+        return true;
+    }
+
+    TSubclassOf<ATU_WeaponBase> SpawnClass = nullptr;
+    if (OperatorLoadout)
+    {
+        SpawnClass = Slot == ETUOperatorWeaponSlot::Primary
+            ? OperatorLoadout->GetSelectedPrimaryClass()
+            : OperatorLoadout->GetSelectedSecondaryClass();
+    }
+
+    if (!SpawnClass && Slot == ETUOperatorWeaponSlot::Primary)
+    {
+        SpawnClass = DefaultWeaponClass;
+    }
+
+    const bool bShouldBeVisible = Slot == ActiveWeaponSlot && !bMeleeEquipped;
+    SlotWeapon = SpawnWeaponClass(SpawnClass, bShouldBeVisible);
+    return IsValid(SlotWeapon);
+}
+
+bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
+{
+    const bool bPrimaryReady = EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot::Primary);
+    const bool bSecondaryReady = EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot::Secondary);
+
+    if (!bPrimaryReady && !bSecondaryReady)
+    {
+        CurrentWeapon = nullptr;
+        return false;
+    }
+
+    if (bPrimaryReady)
+    {
+        ActiveWeaponSlot = ETUOperatorWeaponSlot::Primary;
+        CurrentWeapon = PrimaryWeapon;
+    }
+    else
+    {
+        ActiveWeaponSlot = ETUOperatorWeaponSlot::Secondary;
+        CurrentWeapon = SecondaryWeapon;
+    }
+
+    if (PrimaryWeapon)
+    {
+        PrimaryWeapon->SetActorHiddenInGame(CurrentWeapon != PrimaryWeapon || bMeleeEquipped);
+    }
+    if (SecondaryWeapon)
+    {
+        SecondaryWeapon->SetActorHiddenInGame(CurrentWeapon != SecondaryWeapon || bMeleeEquipped);
+    }
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->SetAiming(bIsADS);
+    }
     return true;
+}
+
+bool ATU_ArmedOperatorCharacter::EquipWeaponSlot(ETUOperatorWeaponSlot Slot)
+{
+    if (bMeleeEquipped || bMeleeHolstering || IsArmoryOpen())
+    {
+        return false;
+    }
+
+    if (!EnsureWeaponSlotSpawned(Slot))
+    {
+        return false;
+    }
+
+    ATU_WeaponBase* Target = Slot == ETUOperatorWeaponSlot::Primary ? PrimaryWeapon : SecondaryWeapon;
+    if (!Target)
+    {
+        return false;
+    }
+
+    if (CurrentWeapon == Target)
+    {
+        ActiveWeaponSlot = Slot;
+        return true;
+    }
+
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->StopFire();
+        CurrentWeapon->SetAiming(false);
+        CurrentWeapon->SetActorHiddenInGame(true);
+    }
+
+    ActiveWeaponSlot = Slot;
+    CurrentWeapon = Target;
+    CurrentWeapon->SetActorHiddenInGame(false);
+    CurrentWeapon->SetAiming(bIsADS);
+    return true;
+}
+
+bool ATU_ArmedOperatorCharacter::ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot)
+{
+    TObjectPtr<ATU_WeaponBase>& SlotWeapon = Slot == ETUOperatorWeaponSlot::Primary ? PrimaryWeapon : SecondaryWeapon;
+    const bool bWasActive = CurrentWeapon == SlotWeapon || ActiveWeaponSlot == Slot;
+
+    if (IsValid(SlotWeapon))
+    {
+        SlotWeapon->StopFire();
+        SlotWeapon->Destroy();
+        SlotWeapon = nullptr;
+    }
+
+    if (bWasActive)
+    {
+        CurrentWeapon = nullptr;
+    }
+
+    if (!EnsureWeaponSlotSpawned(Slot))
+    {
+        return false;
+    }
+
+    if (bWasActive)
+    {
+        ActiveWeaponSlot = Slot;
+        CurrentWeapon = SlotWeapon;
+        CurrentWeapon->SetActorHiddenInGame(bMeleeEquipped);
+        CurrentWeapon->SetAiming(!bMeleeEquipped && bIsADS);
+    }
+    else if (SlotWeapon)
+    {
+        SlotWeapon->SetActorHiddenInGame(true);
+        SlotWeapon->SetAiming(false);
+    }
+
+    return true;
+}
+
+bool ATU_ArmedOperatorCharacter::SelectPrimaryById(FName ItemId)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !OperatorLoadout)
+    {
+        return false;
+    }
+    if (OperatorLoadout->GetSelectedPrimaryId() == ItemId)
+    {
+        return true;
+    }
+    if (!OperatorLoadout->SelectPrimaryById(ItemId))
+    {
+        return false;
+    }
+    return ReplaceWeaponSlot(ETUOperatorWeaponSlot::Primary);
+}
+
+bool ATU_ArmedOperatorCharacter::SelectSecondaryById(FName ItemId)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !OperatorLoadout)
+    {
+        return false;
+    }
+    if (OperatorLoadout->GetSelectedSecondaryId() == ItemId)
+    {
+        return true;
+    }
+    if (!OperatorLoadout->SelectSecondaryById(ItemId))
+    {
+        return false;
+    }
+    return ReplaceWeaponSlot(ETUOperatorWeaponSlot::Secondary);
+}
+
+bool ATU_ArmedOperatorCharacter::SelectEquipmentById(FName ItemId)
+{
+    if (bMeleeEquipped || bMeleeHolstering || !OperatorLoadout)
+    {
+        return false;
+    }
+    return OperatorLoadout->SelectEquipmentById(ItemId);
+}
+
+float ATU_ArmedOperatorCharacter::GetSelectedLoadoutWeightKg() const
+{
+    const float NonMeleeWeight = OperatorLoadout ? OperatorLoadout->GetSelectedNonMeleeWeightKg() : 0.0f;
+    return NonMeleeWeight + GetSelectedMeleeWeightKg();
+}
+
+void ATU_ArmedOperatorCharacter::DestroyLoadoutWeapons()
+{
+    if (IsValid(PrimaryWeapon))
+    {
+        PrimaryWeapon->Destroy();
+        PrimaryWeapon = nullptr;
+    }
+    if (IsValid(SecondaryWeapon))
+    {
+        SecondaryWeapon->Destroy();
+        SecondaryWeapon = nullptr;
+    }
+    CurrentWeapon = nullptr;
 }
 
 FName ATU_ArmedOperatorCharacter::GetSelectedMeleeId() const
@@ -105,7 +309,6 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultMelee()
     {
         return true;
     }
-
     if (!GetWorld())
     {
         return false;
@@ -158,7 +361,10 @@ bool ATU_ArmedOperatorCharacter::SelectMeleeById(FName ItemId)
     {
         return false;
     }
-
+    if (MeleeLoadout->GetSelectedItemId() == ItemId)
+    {
+        return true;
+    }
     if (!MeleeLoadout->SelectItemById(ItemId))
     {
         return false;
@@ -170,11 +376,10 @@ bool ATU_ArmedOperatorCharacter::SelectMeleeById(FName ItemId)
 
 bool ATU_ArmedOperatorCharacter::CycleMeleeSelection(int32 Direction)
 {
-    if (bMeleeEquipped || bMeleeHolstering || !MeleeLoadout)
+    if (bMeleeEquipped || bMeleeHolstering || IsArmoryOpen() || !MeleeLoadout)
     {
         return false;
     }
-
     if (!MeleeLoadout->CycleSelection(Direction))
     {
         return false;
@@ -186,16 +391,14 @@ bool ATU_ArmedOperatorCharacter::CycleMeleeSelection(int32 Direction)
 
 bool ATU_ArmedOperatorCharacter::DrawMelee()
 {
-    if (bMeleeHolstering)
+    if (bMeleeHolstering || IsArmoryOpen())
     {
         return false;
     }
-
     if (!IsValid(CurrentMelee) && !SpawnDefaultMelee())
     {
         return false;
     }
-
     if (bMeleeEquipped)
     {
         return true;
@@ -204,6 +407,7 @@ bool ATU_ArmedOperatorCharacter::DrawMelee()
     if (CurrentWeapon)
     {
         CurrentWeapon->StopFire();
+        CurrentWeapon->SetAiming(false);
         CurrentWeapon->SetActorHiddenInGame(true);
     }
 
@@ -247,8 +451,79 @@ bool ATU_ArmedOperatorCharacter::HolsterMelee()
     return true;
 }
 
+bool ATU_ArmedOperatorCharacter::OpenArmory()
+{
+    if (IsArmoryOpen())
+    {
+        return true;
+    }
+    if (bMeleeEquipped || bMeleeHolstering || !ArmoryWidgetClass)
+    {
+        return false;
+    }
+
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC || !PC->IsLocalController())
+    {
+        return false;
+    }
+
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->StopFire();
+        CurrentWeapon->SetAiming(false);
+    }
+
+    ArmoryWidget = CreateWidget<UTUArmoryWidget>(PC, ArmoryWidgetClass);
+    if (!ArmoryWidget)
+    {
+        return false;
+    }
+
+    ArmoryWidget->SetOperator(this);
+    ArmoryWidget->AddToPlayerScreen(250);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = true;
+    return true;
+}
+
+void ATU_ArmedOperatorCharacter::CloseArmory()
+{
+    if (IsValid(ArmoryWidget))
+    {
+        ArmoryWidget->RemoveFromParent();
+        ArmoryWidget = nullptr;
+    }
+
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (PC && PC->IsLocalController())
+    {
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor = false;
+    }
+}
+
+void ATU_ArmedOperatorCharacter::ToggleArmory()
+{
+    if (IsArmoryOpen())
+    {
+        CloseArmory();
+    }
+    else
+    {
+        OpenArmory();
+    }
+}
+
 void ATU_ArmedOperatorCharacter::StartWeaponFire()
 {
+    if (IsArmoryOpen())
+    {
+        return;
+    }
     if (bMeleeEquipped)
     {
         if (!bMeleeHolstering && CurrentMelee)
@@ -257,7 +532,6 @@ void ATU_ArmedOperatorCharacter::StartWeaponFire()
         }
         return;
     }
-
     if (CurrentWeapon)
     {
         CurrentWeapon->StartFire();
@@ -266,11 +540,10 @@ void ATU_ArmedOperatorCharacter::StartWeaponFire()
 
 void ATU_ArmedOperatorCharacter::StopWeaponFire()
 {
-    if (bMeleeEquipped)
+    if (bMeleeEquipped || IsArmoryOpen())
     {
         return;
     }
-
     if (CurrentWeapon)
     {
         CurrentWeapon->StopFire();
@@ -279,7 +552,7 @@ void ATU_ArmedOperatorCharacter::StopWeaponFire()
 
 void ATU_ArmedOperatorCharacter::ReloadWeapon()
 {
-    if (!bMeleeEquipped && CurrentWeapon)
+    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
     {
         CurrentWeapon->StartReload();
     }
@@ -287,7 +560,7 @@ void ATU_ArmedOperatorCharacter::ReloadWeapon()
 
 void ATU_ArmedOperatorCharacter::CycleWeaponFireMode()
 {
-    if (!bMeleeEquipped && CurrentWeapon)
+    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
     {
         CurrentWeapon->CycleFireMode();
     }
@@ -295,7 +568,7 @@ void ATU_ArmedOperatorCharacter::CycleWeaponFireMode()
 
 void ATU_ArmedOperatorCharacter::StartWeaponADS()
 {
-    if (!bMeleeEquipped && CurrentWeapon)
+    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
     {
         CurrentWeapon->SetAiming(true);
     }
@@ -303,14 +576,28 @@ void ATU_ArmedOperatorCharacter::StartWeaponADS()
 
 void ATU_ArmedOperatorCharacter::StopWeaponADS()
 {
-    if (!bMeleeEquipped && CurrentWeapon)
+    if (!bMeleeEquipped && !IsArmoryOpen() && CurrentWeapon)
     {
         CurrentWeapon->SetAiming(false);
     }
 }
 
+void ATU_ArmedOperatorCharacter::EquipPrimaryInput()
+{
+    EquipWeaponSlot(ETUOperatorWeaponSlot::Primary);
+}
+
+void ATU_ArmedOperatorCharacter::EquipSecondaryInput()
+{
+    EquipWeaponSlot(ETUOperatorWeaponSlot::Secondary);
+}
+
 void ATU_ArmedOperatorCharacter::ToggleMelee()
 {
+    if (IsArmoryOpen())
+    {
+        return;
+    }
     if (bMeleeEquipped)
     {
         HolsterMelee();
@@ -324,6 +611,11 @@ void ATU_ArmedOperatorCharacter::ToggleMelee()
 void ATU_ArmedOperatorCharacter::CycleMeleeInput()
 {
     CycleMeleeSelection(1);
+}
+
+void ATU_ArmedOperatorCharacter::ToggleArmoryInput()
+{
+    ToggleArmory();
 }
 
 void ATU_ArmedOperatorCharacter::FinishMeleeHolster()
