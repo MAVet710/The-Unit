@@ -5,6 +5,7 @@
 #include "TU_CommandCenterStation.h"
 #include "TU_CommandCenterGenerator.generated.h"
 
+class UActorComponent;
 class UArrowComponent;
 class USceneComponent;
 class UStaticMesh;
