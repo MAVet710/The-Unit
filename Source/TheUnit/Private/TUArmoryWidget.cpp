@@ -44,6 +44,12 @@ void UTUArmoryWidget::SetOperator(ATU_ArmedOperatorCharacter* InOperator)
     Refresh();
 }
 
+void UTUArmoryWidget::SetViewMode(ETUArmoryViewMode NewViewMode)
+{
+    ViewMode = NewViewMode;
+    Refresh();
+}
+
 void UTUArmoryWidget::Refresh()
 {
     RebuildContent();
@@ -58,44 +64,57 @@ void UTUArmoryWidget::RebuildContent()
 
     RootBox->ClearChildren();
 
-    RootBox->AddSlot()
-    .AutoHeight()
-    .Padding(4.0f, 8.0f)
+    FString Title = TEXT("THE UNIT // ARMORY");
+    FString Subtitle = TEXT("Configure operator loadout. Changes apply immediately at this command-center station.");
+    if (ViewMode == ETUArmoryViewMode::Weapons)
+    {
+        Title = TEXT("THE UNIT // ARMORY & WEAPON BENCH");
+        Subtitle = TEXT("Select primary and secondary weapons. Attachment bench integration uses the same weapon loadout data.");
+    }
+    else if (ViewMode == ETUArmoryViewMode::Gear)
+    {
+        Title = TEXT("THE UNIT // CAGE");
+        Subtitle = TEXT("Configure melee, mission equipment and operator gear. Uniform/armor visuals plug into this room-specific view.");
+    }
+
+    RootBox->AddSlot().AutoHeight().Padding(4.0f, 8.0f)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString(TEXT("THE UNIT // ARMORY")))
+        SNew(STextBlock).Text(FText::FromString(Title))
     ];
 
-    RootBox->AddSlot()
-    .AutoHeight()
-    .Padding(4.0f, 0.0f, 4.0f, 12.0f)
+    RootBox->AddSlot().AutoHeight().Padding(4.0f, 0.0f, 4.0f, 12.0f)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString(TEXT("Configure operator loadout. Changes apply immediately while the armory is open.")))
+        SNew(STextBlock).Text(FText::FromString(Subtitle))
     ];
 
     if (!Operator.IsValid())
     {
         RootBox->AddSlot().AutoHeight().Padding(4.0f)
         [
-            SNew(STextBlock).Text(FText::FromString(TEXT("No operator is assigned to this armory.")))
+            SNew(STextBlock).Text(FText::FromString(TEXT("No operator is assigned to this station.")))
         ];
         return;
     }
 
-    AddPrimaryChoices();
-    AddSecondaryChoices();
-    AddMeleeChoices();
-    AddEquipmentChoices();
+    if (ViewMode == ETUArmoryViewMode::Full || ViewMode == ETUArmoryViewMode::Weapons)
+    {
+        AddPrimaryChoices();
+        AddSecondaryChoices();
+    }
+
+    if (ViewMode == ETUArmoryViewMode::Full || ViewMode == ETUArmoryViewMode::Gear)
+    {
+        AddMeleeChoices();
+        AddEquipmentChoices();
+    }
+
     AddSummary();
 
     TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
-    RootBox->AddSlot()
-    .AutoHeight()
-    .Padding(4.0f, 16.0f, 4.0f, 4.0f)
+    RootBox->AddSlot().AutoHeight().Padding(4.0f, 16.0f, 4.0f, 4.0f)
     [
         SNew(SButton)
-        .Text(FText::FromString(TEXT("CLOSE ARMORY")))
+        .Text(FText::FromString(TEXT("LEAVE STATION")))
         .OnClicked_Lambda([WeakThis]()
         {
             if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
@@ -114,9 +133,7 @@ void UTUArmoryWidget::AddSectionHeader(const FString& Label)
         return;
     }
 
-    RootBox->AddSlot()
-    .AutoHeight()
-    .Padding(4.0f, 12.0f, 4.0f, 4.0f)
+    RootBox->AddSlot().AutoHeight().Padding(4.0f, 12.0f, 4.0f, 4.0f)
     [
         SNew(STextBlock).Text(FText::FromString(Label))
     ];
@@ -132,21 +149,15 @@ void UTUArmoryWidget::AddPrimaryChoices()
     }
 
     const FName Selected = Loadout->GetSelectedPrimaryId();
-    const TArray<FTUOperatorWeaponEntry> Items = Loadout->GetPrimaryItems();
-    for (const FTUOperatorWeaponEntry& Entry : Items)
+    for (const FTUOperatorWeaponEntry& Entry : Loadout->GetPrimaryItems())
     {
         const bool bSelected = Entry.ItemId == Selected;
-        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"),
-            bSelected ? TEXT("[SELECTED] ") : TEXT(""),
-            *Entry.DisplayName.ToString(), Entry.WeightKg);
+        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"), bSelected ? TEXT("[SELECTED] ") : TEXT(""), *Entry.DisplayName.ToString(), Entry.WeightKg);
         const FName ItemId = Entry.ItemId;
         TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
-
         RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
         [
-            SNew(SButton)
-            .Text(FText::FromString(Label))
-            .OnClicked_Lambda([WeakThis, ItemId]()
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId]()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
@@ -169,21 +180,15 @@ void UTUArmoryWidget::AddSecondaryChoices()
     }
 
     const FName Selected = Loadout->GetSelectedSecondaryId();
-    const TArray<FTUOperatorWeaponEntry> Items = Loadout->GetSecondaryItems();
-    for (const FTUOperatorWeaponEntry& Entry : Items)
+    for (const FTUOperatorWeaponEntry& Entry : Loadout->GetSecondaryItems())
     {
         const bool bSelected = Entry.ItemId == Selected;
-        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"),
-            bSelected ? TEXT("[SELECTED] ") : TEXT(""),
-            *Entry.DisplayName.ToString(), Entry.WeightKg);
+        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"), bSelected ? TEXT("[SELECTED] ") : TEXT(""), *Entry.DisplayName.ToString(), Entry.WeightKg);
         const FName ItemId = Entry.ItemId;
         TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
-
         RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
         [
-            SNew(SButton)
-            .Text(FText::FromString(Label))
-            .OnClicked_Lambda([WeakThis, ItemId]()
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId]()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
@@ -206,21 +211,15 @@ void UTUArmoryWidget::AddMeleeChoices()
     }
 
     const FName Selected = Loadout->GetSelectedItemId();
-    const TArray<FTUMeleeEquipmentEntry> Items = Loadout->GetAvailableItems();
-    for (const FTUMeleeEquipmentEntry& Entry : Items)
+    for (const FTUMeleeEquipmentEntry& Entry : Loadout->GetAvailableItems())
     {
         const bool bSelected = Entry.ItemId == Selected;
-        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"),
-            bSelected ? TEXT("[SELECTED] ") : TEXT(""),
-            *Entry.DisplayName.ToString(), Entry.WeightKg);
+        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"), bSelected ? TEXT("[SELECTED] ") : TEXT(""), *Entry.DisplayName.ToString(), Entry.WeightKg);
         const FName ItemId = Entry.ItemId;
         TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
-
         RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
         [
-            SNew(SButton)
-            .Text(FText::FromString(Label))
-            .OnClicked_Lambda([WeakThis, ItemId]()
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId]()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
@@ -235,7 +234,7 @@ void UTUArmoryWidget::AddMeleeChoices()
 
 void UTUArmoryWidget::AddEquipmentChoices()
 {
-    AddSectionHeader(TEXT("EQUIPMENT"));
+    AddSectionHeader(TEXT("EQUIPMENT / GEAR"));
     UTUOperatorLoadoutComponent* Loadout = Operator->GetOperatorLoadout();
     if (!Loadout)
     {
@@ -243,21 +242,15 @@ void UTUArmoryWidget::AddEquipmentChoices()
     }
 
     const FName Selected = Loadout->GetSelectedEquipmentId();
-    const TArray<FTUOperatorEquipmentEntry> Items = Loadout->GetEquipmentItems();
-    for (const FTUOperatorEquipmentEntry& Entry : Items)
+    for (const FTUOperatorEquipmentEntry& Entry : Loadout->GetEquipmentItems())
     {
         const bool bSelected = Entry.ItemId == Selected;
-        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"),
-            bSelected ? TEXT("[SELECTED] ") : TEXT(""),
-            *Entry.DisplayName.ToString(), Entry.WeightKg);
+        const FString Label = FString::Printf(TEXT("%s%s  |  %.2f kg"), bSelected ? TEXT("[SELECTED] ") : TEXT(""), *Entry.DisplayName.ToString(), Entry.WeightKg);
         const FName ItemId = Entry.ItemId;
         TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
-
         RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
         [
-            SNew(SButton)
-            .Text(FText::FromString(Label))
-            .OnClicked_Lambda([WeakThis, ItemId]()
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId]()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
@@ -273,12 +266,8 @@ void UTUArmoryWidget::AddEquipmentChoices()
 void UTUArmoryWidget::AddSummary()
 {
     AddSectionHeader(TEXT("LOADOUT SUMMARY"));
-
-    const FString ActiveSlot = Operator->GetActiveWeaponSlot() == ETUOperatorWeaponSlot::Primary
-        ? TEXT("PRIMARY") : TEXT("SECONDARY");
-    const FString Summary = FString::Printf(TEXT("Active weapon: %s   |   Selected carried weight: %.2f kg"),
-        *ActiveSlot, Operator->GetSelectedLoadoutWeightKg());
-
+    const FString ActiveSlot = Operator->GetActiveWeaponSlot() == ETUOperatorWeaponSlot::Primary ? TEXT("PRIMARY") : TEXT("SECONDARY");
+    const FString Summary = FString::Printf(TEXT("Active weapon: %s   |   Selected carried weight: %.2f kg"), *ActiveSlot, Operator->GetSelectedLoadoutWeightKg());
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 4.0f)
     [
         SNew(STextBlock).Text(FText::FromString(Summary))
