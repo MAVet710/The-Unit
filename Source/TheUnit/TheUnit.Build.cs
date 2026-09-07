@@ -11,7 +11,11 @@ public class TheUnit : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
-            "InputCore"
+            "InputCore",
+            "UMG",
+            "Slate",
+            "SlateCore",
+            "RawInput"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });

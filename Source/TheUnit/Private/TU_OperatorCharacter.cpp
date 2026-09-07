@@ -1,10 +1,14 @@
 #include "TU_OperatorCharacter.h"
 
+#include "TU_FPVDrone.h"
+#include "TU_FPVDronePlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
 
 ATU_OperatorCharacter::ATU_OperatorCharacter()
 {
@@ -17,6 +21,8 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
     FirstPersonArmsMesh->SetOnlyOwnerSee(true);
     FirstPersonArmsMesh->bCastDynamicShadow = false;
     FirstPersonArmsMesh->CastShadow = false;
+
+    FPVDroneClass = ATU_FPVDronePlayer::StaticClass();
 
     bUseControllerRotationYaw = true;
 
@@ -55,6 +61,7 @@ void ATU_OperatorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
     PlayerInputComponent->BindAction(TEXT("LeanRight"), IE_Released, this, &ATU_OperatorCharacter::StopLeanRight);
 
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATU_OperatorCharacter::Interact);
+    PlayerInputComponent->BindAction(TEXT("FPVDeploy"), IE_Pressed, this, &ATU_OperatorCharacter::DeployOrEnterFPVDrone);
 }
 
 void ATU_OperatorCharacter::MoveForward(float Value)
@@ -144,6 +151,33 @@ void ATU_OperatorCharacter::StopLeanRight()
 void ATU_OperatorCharacter::Interact()
 {
     // Placeholder: interaction logic implemented in later phases.
+}
+
+void ATU_OperatorCharacter::DeployOrEnterFPVDrone()
+{
+    AController* OperatorController = GetController();
+    if (!OperatorController || !GetWorld() || !FPVDroneClass)
+    {
+        return;
+    }
+
+    if (!IsValid(ActiveFPVDrone))
+    {
+        const FVector SpawnLocation = GetActorLocation() + (GetActorForwardVector() * 80.0f) + FVector(0.0f, 0.0f, 35.0f);
+        const FRotator SpawnRotation(0.0f, GetActorRotation().Yaw, 0.0f);
+
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+        ActiveFPVDrone = GetWorld()->SpawnActor<ATU_FPVDrone>(FPVDroneClass, SpawnLocation, SpawnRotation, SpawnParams);
+    }
+
+    if (IsValid(ActiveFPVDrone))
+    {
+        ActiveFPVDrone->SetReturnPawn(this);
+        OperatorController->Possess(ActiveFPVDrone);
+    }
 }
 
 void ATU_OperatorCharacter::UpdateMovementSpeed()
