@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "TheUnitTypes.h"
 #include "TU_WeaponBase.generated.h"
 
