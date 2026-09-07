@@ -1,77 +1,119 @@
 # TASK ID
 
-TU-004
+TU-005
 
 # OWNER
 
-Character (QA validates configuration)
+Combat / Lead Architecture (QA validates)
 
 # TITLE
 
-Commit the legacy input mapping foundation
+Define modular weapon platform and part data model
 
 # OBJECTIVE
 
-Add the smallest committed Unreal input configuration required by the bindings that already exist in `ATU_OperatorCharacter`. Do not migrate input technology or add combat integration in this task.
+Begin Wave 0.5 by adding the smallest compile-safe, data-driven definitions needed to represent a weapon platform and compatible installed parts. This task establishes customization vocabulary only; it does not yet mutate runtime weapon builds or change firing behavior.
 
-# PREFLIGHT — CLOSE TU-003 VALIDATION
+# PREFLIGHT
 
-Before editing, run the UE 5.7 editor build and existing weapon regression against the updated project descriptor:
+Before editing in an environment with UE 5.7 available:
 
-- `Build.bat TheUnitEditor Win64 Development -Project=<absolute TheUnit.uproject> -WaitMutex -NoHotReloadFromIDE`
-- `UnrealEditor-Cmd.exe <absolute TheUnit.uproject> /Engine/Maps/Entry -unattended -NullRHI -nosound -ExecCmds="Automation RunTests TheUnit.Combat.WeaponOwnership" -TestExit="Automation Test Queue Empty"`
+1. Build `TheUnitEditor Win64 Development` against the current `TheUnit.uproject`.
+2. Run `TheUnit.Combat.WeaponOwnership`.
 
-If either fails because of the TU-003 descriptor change, stop and report it. Do not continue into input work until the project still builds and the regression passes.
+If either fails because of TU-003/TU-004, stop and fix only that regression before continuing.
 
 # REQUIRED CONTEXT
 
 Read only:
 
-- `Source/TheUnit/Private/TU_OperatorCharacter.cpp` input-binding section
-- `Source/TheUnit/TheUnit.Build.cs`
-- `.gitignore`
+- `Source/TheUnit/Public/TheUnitTypes.h`
+- `Source/TheUnit/Public/TU_WeaponBase.h`
+- `Source/TheUnit/Public/TUWeaponComponent.h`
+- `docs/agent/ARCHITECTURE.md` modular weapon section
+- `docs/agent/GAMEPLAY_CONTRACTS.md` weapon contracts
 - `docs/agent/CODING_RULES.md`
-- `docs/agent/CURRENT_STATE.md` input/config note
+- `docs/agent/ROADMAP.md` Wave 0.5 only
 
-Do not audit the repository, inspect Content, or read full design documents. Inspect additional files only for a concrete build/config failure.
+Do not audit unrelated source or Content.
 
 # IMPLEMENTATION DIRECTION
 
-Create `Config/DefaultInput.ini` if the project still has no committed input configuration. Map the exact legacy names already consumed by `ATU_OperatorCharacter`:
+Extend the canonical shared type surface in `TheUnitTypes.h` with a data-only modular weapon model. Do not create per-weapon subclasses.
 
-Axes:
-- `MoveForward`: W = +1, S = -1
-- `MoveRight`: D = +1, A = -1
-- `Turn`: MouseX = +1
-- `LookUp`: MouseY = -1
+Add a Blueprint-visible weapon-part slot/category enum covering the gameplay customization surfaces already mandated by architecture, including at minimum:
 
-Actions:
-- `Sprint`: LeftShift
-- `Crouch`: LeftControl
-- `ADS`: RightMouseButton
-- `LeanLeft`: Q
-- `LeanRight`: E
-- `Interact`: F
+- Barrel
+- Muzzle
+- Operating/Action component
+- Handguard
+- Stock/Brace
+- Grip
+- Magazine/Feed
+- Optic
+- OpticMount
+- Rail/Mount
+- LightLaser
+- Underbarrel
+- Internal
+- FireControl
+- Cosmetic
 
-Use standard `/Script/Engine.InputSettings` legacy mappings. Keep the file minimal and deterministic. Do not add unused fire/reload bindings yet because the operator does not consume them.
+Keep the receiver/platform represented by the platform definition rather than an installable part slot in this first task.
+
+Add compact data-table-friendly definitions for:
+
+- `FWeaponPlatformDefinition`
+  - stable platform ID
+  - display name
+  - compatibility/interface tags as `FName` values
+  - supported part slots
+  - compatible ammunition identifiers/tags
+
+- `FWeaponPartDefinition`
+  - stable part ID
+  - display name
+  - slot/category
+  - required compatibility/interface tags
+  - provided compatibility/interface tags
+  - generic gameplay modifier fields only where already justified by the existing weapon model (for example recoil/spread/fire-rate modifiers)
+
+- `FWeaponBuildState`
+  - platform ID
+  - installed part IDs keyed by slot
+  - selected ammunition ID if useful for composition identity
+
+Compatibility metadata must remain abstract/data-driven. Do not model real-world assembly procedures or mechanical installation steps.
+
+Do not move fire modes yet. Fire-control behavior gets its own follow-up task after these definitions exist.
 
 # NON-GOALS
 
-No Enhanced Input migration, gameplay code changes, weapon integration, fire/reload controls, AI, UI, map/content edits, module-dependency changes, project regeneration, or unrelated cleanup.
+- No player integration.
+- No hitscan/projectiles/damage delivery.
+- No runtime install/remove API yet.
+- No inventory persistence yet.
+- No UI.
+- No new assets.
+- No GameplayTags module dependency unless the existing minimal `FName` compatibility representation proves insufficient.
+- No change to current fire/reload behavior.
+- No physical weapon-construction simulation.
 
 # ACCEPTANCE CRITERIA
 
-- `Config/DefaultInput.ini` is committed and maps every legacy action/axis currently bound by `ATU_OperatorCharacter`.
-- Mapping names exactly match the source bindings.
-- No currently unused combat mappings are added.
-- `ATU_OperatorCharacter` source remains unchanged.
-- `TheUnit.Build.cs` remains unchanged.
-- `TheUnitEditor Win64 Development` builds under UE 5.7.
-- `TheUnit.Combat.WeaponOwnership` still passes.
-- No generated files, binaries, or unrelated changes are committed.
+- Shared types compile under UE 5.7.
+- Platform, part, slot, and build-state definitions are Blueprint/data-table friendly where appropriate.
+- Stable IDs and compatibility metadata are explicit.
+- FireControl exists as a first-class part slot.
+- Existing `FWeaponDefinition`, `FAmmoDefinition`, and `FMagazineState` remain source compatible.
+- No duplicate mutable ammunition or firing state is introduced.
+- No new module dependency is required unless justified.
+- Existing `TheUnit.Combat.WeaponOwnership` passes unchanged.
+- Add a focused automation test for default construction/identity/slot semantics if it can be done without testing Unreal reflection internals.
+- No unrelated files or binaries change.
 
 # VALIDATION
 
-After adding the config, rerun the UE 5.7 editor build and `TheUnit.Combat.WeaponOwnership`. Review `git diff`, run `git diff --check`, and confirm only the config plus necessary agent-state/next-task handoff changed.
+Build `TheUnitEditor Win64 Development`, run `TheUnit.Combat.WeaponOwnership`, and run any new modular-definition test. Review `git diff` and `git diff --check`.
 
-After successful validation, the next task must begin the mandatory modular weapon foundation before playable combat integration: weapon platforms, part slots, compatibility metadata, and fire-control/trigger-module ownership. Do not skip directly to player weapon firing.
+After success, select TU-006 to implement compatibility evaluation and runtime weapon-build composition. Fire-control/trigger behavior remains a mandatory dedicated task immediately after the composition foundation.
