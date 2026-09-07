@@ -192,10 +192,10 @@ protected:
     FName MX50ChestSocket = TEXT("tablet_chest_socket");
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
-    FTransform MX50ChestFallbackTransform = FTransform(FRotator(0.0f, 90.0f, 0.0f), FVector(5.0f, 0.0f, 18.0f), FVector(1.0f));
+    FTransform MX50ChestFallbackTransform = FTransform(FRotator(0.0f, 90.0f, 0.0f), FVector(5.0f, 0.0f, 18.0f), FVector(0.03f, 0.28f, 0.18f));
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
-    FTransform MX50RaisedTransform = FTransform(FRotator(0.0f, 0.0f, 0.0f), FVector(45.0f, 0.0f, -12.0f), FVector(1.0f));
+    FTransform MX50RaisedTransform = FTransform(FRotator::ZeroRotator, FVector(45.0f, 0.0f, -12.0f), FVector(0.03f, 0.28f, 0.18f));
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Briefing|MX50")
     bool bMX50Raised = false;
