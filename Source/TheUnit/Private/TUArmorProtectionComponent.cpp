@@ -141,7 +141,8 @@ const UTUEquipmentDefinition* UTUArmorProtectionComponent::FindBestProtectiveIte
             continue;
         }
 
-        if (CoverageRoll01 > FMath::Clamp(Definition->RegionalCoverageFraction, 0.0f, 1.0f))
+        const float CoverageFraction = FMath::Clamp(Definition->RegionalCoverageFraction, 0.0f, 1.0f);
+        if (CoverageFraction <= 0.0f || (CoverageFraction < 1.0f && CoverageRoll01 >= CoverageFraction))
         {
             continue;
         }
