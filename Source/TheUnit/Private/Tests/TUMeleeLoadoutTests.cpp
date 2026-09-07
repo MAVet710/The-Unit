@@ -83,7 +83,7 @@ bool FTUOperatorMeleeSelectionTest::RunTest(const FString& Parameters)
     TestNotNull(TEXT("Operator owns melee loadout"), Operator->GetMeleeLoadout());
     TestEqual(TEXT("Operator starts with OTF selected"), Operator->GetSelectedMeleeId(), FName(TEXT("MELEE_OTF")));
     TestTrue(TEXT("Operator can spawn selected melee"), Operator->SpawnDefaultMelee());
-    TestTrue(TEXT("Spawned default melee is OTF"), Operator->GetCurrentMelee() && Operator->GetCurrentMelee()->IsA<ATU_OTFKnife>());
+    TestTrue(TEXT("Spawned default melee is exactly OTF"), Operator->GetCurrentMelee() && Operator->GetCurrentMelee()->GetClass() == ATU_OTFKnife::StaticClass());
 
     TestTrue(TEXT("Operator can select karambit while holstered"), Operator->SelectMeleeById(TEXT("MELEE_Karambit")));
     TestEqual(TEXT("Karambit id becomes selected"), Operator->GetSelectedMeleeId(), FName(TEXT("MELEE_Karambit")));
@@ -92,6 +92,11 @@ bool FTUOperatorMeleeSelectionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Operator can cycle back to OTF"), Operator->CycleMeleeSelection(1));
     TestEqual(TEXT("Cycle returns selected id to OTF"), Operator->GetSelectedMeleeId(), FName(TEXT("MELEE_OTF")));
     TestTrue(TEXT("Runtime melee actor returns to OTF class"), Operator->GetCurrentMelee() && Operator->GetCurrentMelee()->GetClass() == ATU_OTFKnife::StaticClass());
+
+    TestTrue(TEXT("Selected melee can be drawn"), Operator->DrawMelee());
+    TestTrue(TEXT("Operator reports melee equipped"), Operator->IsMeleeEquipped());
+    TestFalse(TEXT("Selection changes are blocked while melee is drawn"), Operator->SelectMeleeById(TEXT("MELEE_Karambit")));
+    TestFalse(TEXT("Cycling is blocked while melee is drawn"), Operator->CycleMeleeSelection(1));
 
     World->DestroyWorld(false);
     return true;
