@@ -31,6 +31,16 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
     }
 }
 
+void ATU_OperatorCharacter::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    if (HealthComponent)
+    {
+        HealthComponent->OnDeath.AddUniqueDynamic(this, &ATU_OperatorCharacter::HandleOperatorDeath);
+    }
+}
+
 void ATU_OperatorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -72,7 +82,7 @@ bool ATU_OperatorCharacter::IsOperatorDead() const
 
 void ATU_OperatorCharacter::MoveForward(float Value)
 {
-    if (Controller != nullptr && !FMath::IsNearlyZero(Value))
+    if (!IsOperatorDead() && Controller != nullptr && !FMath::IsNearlyZero(Value))
     {
         AddMovementInput(GetActorForwardVector(), Value);
     }
@@ -80,7 +90,7 @@ void ATU_OperatorCharacter::MoveForward(float Value)
 
 void ATU_OperatorCharacter::MoveRight(float Value)
 {
-    if (Controller != nullptr && !FMath::IsNearlyZero(Value))
+    if (!IsOperatorDead() && Controller != nullptr && !FMath::IsNearlyZero(Value))
     {
         AddMovementInput(GetActorRightVector(), Value);
     }
@@ -98,6 +108,10 @@ void ATU_OperatorCharacter::Turn(float Value)
 
 void ATU_OperatorCharacter::StartSprint()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
     bIsSprinting = true;
     UpdateMovementSpeed();
 }
@@ -110,6 +124,10 @@ void ATU_OperatorCharacter::StopSprint()
 
 void ATU_OperatorCharacter::StartCrouch()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
     Crouch();
     UpdateMovementSpeed();
 }
@@ -122,6 +140,10 @@ void ATU_OperatorCharacter::StopCrouch()
 
 void ATU_OperatorCharacter::StartADS()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
     bIsADS = true;
     UpdateMovementSpeed();
 }
@@ -134,6 +156,10 @@ void ATU_OperatorCharacter::StopADS()
 
 void ATU_OperatorCharacter::StartLeanLeft()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
     bIsLeaningLeft = true;
     bIsLeaningRight = false;
 }
@@ -145,6 +171,10 @@ void ATU_OperatorCharacter::StopLeanLeft()
 
 void ATU_OperatorCharacter::StartLeanRight()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
     bIsLeaningRight = true;
     bIsLeaningLeft = false;
 }
@@ -156,7 +186,33 @@ void ATU_OperatorCharacter::StopLeanRight()
 
 void ATU_OperatorCharacter::Interact()
 {
+    if (IsOperatorDead())
+    {
+        return;
+    }
+
     // Placeholder: interaction logic implemented in later phases.
+}
+
+void ATU_OperatorCharacter::HandleOperatorDeath(AActor* DeadActor)
+{
+    if (DeadActor != this || bDeathHandled)
+    {
+        return;
+    }
+
+    bDeathHandled = true;
+    bIsSprinting = false;
+    bIsADS = false;
+    bIsLeaningLeft = false;
+    bIsLeaningRight = false;
+    UnCrouch();
+
+    if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+    {
+        Movement->StopMovementImmediately();
+        Movement->DisableMovement();
+    }
 }
 
 void ATU_OperatorCharacter::UpdateMovementSpeed()

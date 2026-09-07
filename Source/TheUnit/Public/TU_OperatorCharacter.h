@@ -20,6 +20,7 @@ class THEUNIT_API ATU_OperatorCharacter : public ACharacter
 public:
     ATU_OperatorCharacter();
 
+    virtual void PostInitializeComponents() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UFUNCTION(BlueprintPure, Category = "Operator|Health")
@@ -107,6 +108,12 @@ protected:
     UFUNCTION(BlueprintCallable, Category = "Input|Interaction")
     virtual void Interact();
 
+    UFUNCTION()
+    void HandleOperatorDeath(AActor* DeadActor);
+
 private:
+    UPROPERTY(VisibleAnywhere, Category = "Operator|Health")
+    bool bDeathHandled = false;
+
     void UpdateMovementSpeed();
 };
