@@ -186,6 +186,23 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
         return false;
     }
 
+    if (ResolvedBuild.bHasTriggerDefinition)
+    {
+        const FTriggerDefinition& Trigger = ResolvedBuild.TriggerDefinition;
+        if (Trigger.TriggerId.IsNone())
+        {
+            OutFailureReason = TEXT("Resolved trigger definition has no stable identity.");
+            return false;
+        }
+        if (Trigger.TriggerResponseMultiplier < 0.0f
+            || Trigger.ResetResponseMultiplier < 0.0f
+            || Trigger.SemiAutoResetDelaySeconds < 0.0f)
+        {
+            OutFailureReason = TEXT("Trigger response values cannot be negative.");
+            return false;
+        }
+    }
+
     TArray<ETUFireMode> SanitizedModes;
     for (ETUFireMode Mode : FireControl.SupportedFireModes)
     {
@@ -204,11 +221,12 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
         return false;
     }
 
-    if (FireControl.TriggerResponseMultiplier < 0.0f
-        || FireControl.ResetResponseMultiplier < 0.0f
-        || FireControl.SemiAutoResetDelaySeconds < 0.0f)
+    if (!ResolvedBuild.bHasTriggerDefinition
+        && (FireControl.TriggerResponseMultiplier < 0.0f
+            || FireControl.ResetResponseMultiplier < 0.0f
+            || FireControl.SemiAutoResetDelaySeconds < 0.0f))
     {
-        OutFailureReason = TEXT("Fire-control response values cannot be negative.");
+        OutFailureReason = TEXT("Legacy fire-control trigger response values cannot be negative.");
         return false;
     }
 
@@ -227,6 +245,11 @@ bool ATU_WeaponBase::ApplyResolvedBuild(const FTUResolvedWeaponBuild& ResolvedBu
     ActiveFireControlDefinition.SupportedFireModes = SanitizedModes;
     AvailableFireModes = SanitizedModes;
     BurstCount = FMath::Max(1, FireControl.BurstCount);
+
+    bHasActiveTrigger = ResolvedBuild.bHasTriggerDefinition;
+    ActiveTriggerDefinition = bHasActiveTrigger
+        ? ResolvedBuild.TriggerDefinition
+        : FTriggerDefinition();
 
     if (!AvailableFireModes.Contains(CurrentFireMode))
     {
@@ -294,9 +317,26 @@ bool ATU_WeaponBase::HasActiveFireControl() const
     return bHasActiveFireControl;
 }
 
+bool ATU_WeaponBase::HasActiveTrigger() const
+{
+    return bHasActiveTrigger;
+}
+
+FName ATU_WeaponBase::GetActiveTriggerId() const
+{
+    return bHasActiveTrigger ? ActiveTriggerDefinition.TriggerId : NAME_None;
+}
+
+ETUTriggerType ATU_WeaponBase::GetActiveTriggerType() const
+{
+    return bHasActiveTrigger ? ActiveTriggerDefinition.TriggerType : ETUTriggerType::Standard;
+}
+
 FName ATU_WeaponBase::GetActiveTriggerProfileId() const
 {
-    return bHasActiveFireControl ? ActiveFireControlDefinition.TriggerProfileId : NAME_None;
+    return bHasActiveTrigger
+        ? ActiveTriggerDefinition.TriggerId
+        : (bHasActiveFireControl ? ActiveFireControlDefinition.TriggerProfileId : NAME_None);
 }
 
 int32 ATU_WeaponBase::GetConfiguredBurstCount() const
@@ -306,21 +346,37 @@ int32 ATU_WeaponBase::GetConfiguredBurstCount() const
 
 float ATU_WeaponBase::GetTriggerResponseMultiplier() const
 {
+    if (bHasActiveTrigger)
+    {
+        return ActiveTriggerDefinition.TriggerResponseMultiplier;
+    }
     return bHasActiveFireControl ? ActiveFireControlDefinition.TriggerResponseMultiplier : 1.0f;
 }
 
 float ATU_WeaponBase::GetResetResponseMultiplier() const
 {
+    if (bHasActiveTrigger)
+    {
+        return ActiveTriggerDefinition.ResetResponseMultiplier;
+    }
     return bHasActiveFireControl ? ActiveFireControlDefinition.ResetResponseMultiplier : 1.0f;
 }
 
 float ATU_WeaponBase::GetSemiAutoResetDelaySeconds() const
 {
+    if (bHasActiveTrigger)
+    {
+        return ActiveTriggerDefinition.SemiAutoResetDelaySeconds;
+    }
     return bHasActiveFireControl ? ActiveFireControlDefinition.SemiAutoResetDelaySeconds : 0.0f;
 }
 
 bool ATU_WeaponBase::RequiresReleaseBetweenSemiShots() const
 {
+    if (bHasActiveTrigger)
+    {
+        return ActiveTriggerDefinition.bRequiresReleaseBetweenSemiShots;
+    }
     return bHasActiveFireControl
         ? ActiveFireControlDefinition.bRequiresReleaseBetweenSemiShots
         : true;

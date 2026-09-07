@@ -10,6 +10,10 @@ struct THEUNIT_API FTUResolvedWeaponBuild
     TArray<FWeaponPartDefinition> InstalledPartDefinitions;
     bool bHasFireControl = false;
     FFireControlModuleDefinition FireControlDefinition;
+    bool bHasTriggerPart = false;
+    FName TriggerDefinitionId = NAME_None;
+    bool bHasTriggerDefinition = false;
+    FTriggerDefinition TriggerDefinition;
     bool bHasAmmoDefinition = false;
     FAmmoDefinition AmmoDefinition;
 };

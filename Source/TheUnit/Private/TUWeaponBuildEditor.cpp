@@ -72,6 +72,7 @@ bool ValidateFinalBuild(
     }
 
     int32 FireControlCount = 0;
+    int32 TriggerCount = 0;
     for (const FWeaponPartDefinition& Part : Definitions)
     {
         if (!Platform.SupportedPartSlots.Contains(Part.Slot))
@@ -82,6 +83,11 @@ bool ValidateFinalBuild(
         if (Part.Slot == ETUWeaponPartSlot::FireControl && ++FireControlCount > 1)
         {
             OutFailureReason = TEXT("Build may contain only one active fire-control module.");
+            return false;
+        }
+        if (Part.Slot == ETUWeaponPartSlot::Trigger && ++TriggerCount > 1)
+        {
+            OutFailureReason = TEXT("Build may contain only one active trigger.");
             return false;
         }
     }

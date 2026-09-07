@@ -46,6 +46,17 @@ enum class ETUFireMode : uint8
 	FullAuto UMETA(DisplayName = "Full Auto")
 };
 
+/** High-level gameplay trigger categories. */
+UENUM(BlueprintType)
+enum class ETUTriggerType : uint8
+{
+	Standard UMETA(DisplayName = "Standard"),
+	TwoStage UMETA(DisplayName = "Two Stage"),
+	Match UMETA(DisplayName = "Match"),
+	Duty UMETA(DisplayName = "Duty"),
+	Electronic UMETA(DisplayName = "Electronic")
+};
+
 USTRUCT(BlueprintType)
 struct FAmmoDefinition : public FTableRowBase
 {
@@ -103,10 +114,11 @@ enum class ETUWeaponPartSlot : uint8
 	Underbarrel,
 	Internal,
 	FireControl,
+	Trigger,
 	Cosmetic
 };
 
-/** Data-driven gameplay behavior supplied by an installed fire-control/trigger module. */
+/** Data-driven gameplay behavior supplied by an installed fire-control module. */
 USTRUCT(BlueprintType)
 struct FFireControlModuleDefinition : public FTableRowBase
 {
@@ -114,9 +126,26 @@ struct FFireControlModuleDefinition : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName FireControlId = TEXT("FireControl_Standard_Semi");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("Standard Fire Control"));
-	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName TriggerProfileId = TEXT("Trigger.Standard");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<ETUFireMode> SupportedFireModes = { ETUFireMode::SemiAuto };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="1")) int32 BurstCount = 3;
+
+	/** Legacy fallback fields retained until all authored builds install a dedicated Trigger part. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName TriggerProfileId = TEXT("Trigger.Standard");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float TriggerResponseMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float ResetResponseMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float SemiAutoResetDelaySeconds = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bRequiresReleaseBetweenSemiShots = true;
+};
+
+/** Data-driven gameplay behavior supplied by an installed Trigger part. */
+USTRUCT(BlueprintType)
+struct FTriggerDefinition : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName TriggerId = TEXT("Trigger_Standard");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FText DisplayName = FText::FromString(TEXT("Standard Trigger"));
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) ETUTriggerType TriggerType = ETUTriggerType::Standard;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float TriggerResponseMultiplier = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float ResetResponseMultiplier = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float SemiAutoResetDelaySeconds = 0.0f;
@@ -150,6 +179,8 @@ struct FWeaponPartDefinition : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FName> ProvidedInterfaceTags;
 	/** Used only by FireControl parts to reference their behavior definition. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName FireControlDefinitionId = NAME_None;
+	/** Used only by Trigger parts to reference their behavior definition. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FName TriggerDefinitionId = NAME_None;
 
 	/** Multipliers contribute to a derived gameplay configuration; 1.0 leaves the base value unchanged. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0.0")) float RecoilPitchMultiplier = 1.0f;

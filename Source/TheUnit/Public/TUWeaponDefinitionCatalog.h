@@ -30,6 +30,9 @@ public:
     TArray<FFireControlModuleDefinition> FireControlModules;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Definitions")
+    TArray<FTriggerDefinition> Triggers;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Definitions")
     TArray<FAmmoDefinition> Ammunition;
 
     UFUNCTION(BlueprintPure, Category = "Weapon|Definitions")
@@ -43,6 +46,9 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Weapon|Definitions")
     bool GetFireControlDefinition(FName FireControlId, FFireControlModuleDefinition& OutDefinition) const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Definitions")
+    bool GetTriggerDefinition(FName TriggerId, FTriggerDefinition& OutDefinition) const;
 
     UFUNCTION(BlueprintPure, Category = "Weapon|Definitions")
     bool GetAmmoDefinition(FName AmmoId, FAmmoDefinition& OutDefinition) const;

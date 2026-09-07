@@ -78,6 +78,23 @@ bool UTUWeaponDefinitionCatalog::GetFireControlDefinition(
     return true;
 }
 
+bool UTUWeaponDefinitionCatalog::GetTriggerDefinition(
+    FName TriggerId,
+    FTriggerDefinition& OutDefinition) const
+{
+    const FTriggerDefinition* Found = FindDefinition(
+        Triggers, [TriggerId](const FTriggerDefinition& Definition)
+        {
+            return Definition.TriggerId == TriggerId;
+        });
+    if (!Found)
+    {
+        return false;
+    }
+    OutDefinition = *Found;
+    return true;
+}
+
 bool UTUWeaponDefinitionCatalog::GetAmmoDefinition(
     FName AmmoId,
     FAmmoDefinition& OutDefinition) const
@@ -142,6 +159,18 @@ bool UTUWeaponDefinitionCatalog::ResolveWeaponBuild(
         OutFailureReason))
     {
         return false;
+    }
+
+    if (ResolvedBuild.bHasTriggerPart)
+    {
+        FTriggerDefinition TriggerDefinition;
+        if (!GetTriggerDefinition(ResolvedBuild.TriggerDefinitionId, TriggerDefinition))
+        {
+            OutFailureReason = TEXT("Trigger part references a trigger definition missing from the catalog.");
+            return false;
+        }
+        ResolvedBuild.bHasTriggerDefinition = true;
+        ResolvedBuild.TriggerDefinition = TriggerDefinition;
     }
 
     if (bHasSelectedAmmo)

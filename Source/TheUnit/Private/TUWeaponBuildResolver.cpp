@@ -91,6 +91,7 @@ bool FTUWeaponBuildResolver::ResolveBuild(
         Platform, OutResolvedBuild.InstalledPartDefinitions);
 
     int32 FireControlPartCount = 0;
+    int32 TriggerPartCount = 0;
     for (const FWeaponPartDefinition& Part : OutResolvedBuild.InstalledPartDefinitions)
     {
         if (!FTUWeaponBuildRules::AreRequiredTagsSatisfied(AvailableTags, Part.RequiredInterfaceTags))
@@ -124,6 +125,24 @@ bool FTUWeaponBuildResolver::ResolveBuild(
 
             OutResolvedBuild.bHasFireControl = true;
             OutResolvedBuild.FireControlDefinition = *FireControl;
+        }
+        else if (Part.Slot == ETUWeaponPartSlot::Trigger)
+        {
+            ++TriggerPartCount;
+            if (TriggerPartCount > 1)
+            {
+                OutFailureReason = TEXT("A resolved build may contain only one active trigger.");
+                return false;
+            }
+
+            if (Part.TriggerDefinitionId.IsNone())
+            {
+                OutFailureReason = TEXT("Trigger part does not reference a trigger behavior definition.");
+                return false;
+            }
+
+            OutResolvedBuild.bHasTriggerPart = true;
+            OutResolvedBuild.TriggerDefinitionId = Part.TriggerDefinitionId;
         }
     }
 

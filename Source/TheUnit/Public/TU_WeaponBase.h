@@ -91,22 +91,32 @@ public:
     UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
     bool HasActiveFireControl() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
+    bool HasActiveTrigger() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
+    FName GetActiveTriggerId() const;
+
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
+    ETUTriggerType GetActiveTriggerType() const;
+
+    /** Legacy-compatible profile accessor; dedicated Trigger parts take precedence. */
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
     FName GetActiveTriggerProfileId() const;
 
     UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
     int32 GetConfiguredBurstCount() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
     float GetTriggerResponseMultiplier() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
     float GetResetResponseMultiplier() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
     float GetSemiAutoResetDelaySeconds() const;
 
-    UFUNCTION(BlueprintPure, Category = "Weapon|FireControl")
+    UFUNCTION(BlueprintPure, Category = "Weapon|Trigger")
     bool RequiresReleaseBetweenSemiShots() const;
 
 protected:
@@ -136,6 +146,12 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FireControl")
     FFireControlModuleDefinition ActiveFireControlDefinition;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Trigger")
+    bool bHasActiveTrigger = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Trigger")
+    FTriggerDefinition ActiveTriggerDefinition;
 
 private:
     UPROPERTY(VisibleAnywhere, Category = "Weapon")
