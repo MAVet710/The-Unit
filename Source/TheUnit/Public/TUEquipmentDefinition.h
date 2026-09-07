@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "TheUnitTypes.h"
 #include "TUEquipmentTypes.h"
 #include "TUEquipmentDefinition.generated.h"
 
@@ -26,6 +27,30 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipment", meta=(ClampMin="0.0"))
     float WeightKg = 0.0f;
+
+    /** True when this item participates in the future armor/penetration resolver. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection")
+    bool bProvidesBallisticProtection = false;
+
+    /** Coarse body regions protected by the item. A helmet should normally include Head. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection", meta=(EditCondition="bProvidesBallisticProtection"))
+    TArray<ETUBodyRegion> ProtectedRegions;
+
+    /** Compared against FAmmoDefinition::Penetration by the future damage resolver. Keep 0 until the real item/spec is known. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection", meta=(EditCondition="bProvidesBallisticProtection", ClampMin="0.0"))
+    float PenetrationResistance = 0.0f;
+
+    /** Maximum authored armor durability for future per-instance equipment state. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection", meta=(EditCondition="bProvidesBallisticProtection", ClampMin="0.0"))
+    float MaxArmorDurability = 0.0f;
+
+    /** Residual regional damage multiplier when a hit is stopped. 1.0 means no blunt-trauma reduction. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection", meta=(EditCondition="bProvidesBallisticProtection", ClampMin="0.0", ClampMax="1.0"))
+    float StoppedRoundDamageMultiplier = 1.0f;
+
+    /** Optional coarse coverage fraction until precise armor collision/hit zones are implemented. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Protection", meta=(EditCondition="bProvidesBallisticProtection", ClampMin="0.0", ClampMax="1.0"))
+    float RegionalCoverageFraction = 1.0f;
 
     /** Weighted gear using the operator skeleton. Preferred for vests/clothing. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Third Person")
