@@ -1,6 +1,7 @@
 #include "TU_OperatorCharacter.h"
 
 #include "TU_FPVDrone.h"
+#include "TU_FPVDronePlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -21,7 +22,7 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
     FirstPersonArmsMesh->bCastDynamicShadow = false;
     FirstPersonArmsMesh->CastShadow = false;
 
-    FPVDroneClass = ATU_FPVDrone::StaticClass();
+    FPVDroneClass = ATU_FPVDronePlayer::StaticClass();
 
     bUseControllerRotationYaw = true;
 
