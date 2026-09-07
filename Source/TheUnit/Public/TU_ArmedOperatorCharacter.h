@@ -9,6 +9,7 @@
 
 class ATU_OTFKnife;
 class ATU_WeaponBase;
+class UStaticMeshComponent;
 class UTUArmoryWidget;
 class UTUBriefingWidget;
 class UTUMeleeLoadoutComponent;
@@ -105,17 +106,27 @@ public:
     UFUNCTION(BlueprintPure, Category="Armory")
     bool IsArmoryOpen() const { return IsValid(ArmoryWidget); }
 
-    UFUNCTION(BlueprintCallable, Category="Briefing")
+    UFUNCTION(BlueprintCallable, Category="Briefing|MX50")
     bool OpenBriefing(FName MissionId, const FText& MissionTitle);
 
-    UFUNCTION(BlueprintCallable, Category="Briefing")
+    UFUNCTION(BlueprintCallable, Category="Briefing|MX50")
     void CloseBriefing();
 
-    UFUNCTION(BlueprintPure, Category="Briefing")
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
     bool IsBriefingOpen() const { return IsValid(BriefingWidget); }
+
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
+    bool IsMX50Raised() const { return bMX50Raised; }
+
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
+    FName GetMX50ChestSocket() const { return MX50ChestSocket; }
 
     UFUNCTION(BlueprintPure, Category="Command Center")
     bool IsCommandCenterUIOpen() const { return IsArmoryOpen() || IsBriefingOpen(); }
+
+    /** Animation/art bridge for replacing the prototype tablet presentation with final chest-rig/hand animation. */
+    UFUNCTION(BlueprintImplementableEvent, Category="Briefing|MX50")
+    void BP_OnMX50RaisedChanged(bool bRaised);
 
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
@@ -169,6 +180,26 @@ protected:
     UPROPERTY(Transient)
     TObjectPtr<UTUBriefingWidget> BriefingWidget = nullptr;
 
+    /** Third-person chest-rig placeholder. Final modular carrier supplies this socket in the operator/equipment branch. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Briefing|MX50")
+    TObjectPtr<UStaticMeshComponent> MX50ChestVisual;
+
+    /** Owner-only raised tablet placeholder used while the tactical interface is open. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Briefing|MX50")
+    TObjectPtr<UStaticMeshComponent> MX50FirstPersonVisual;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
+    FName MX50ChestSocket = TEXT("tablet_chest_socket");
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
+    FTransform MX50ChestFallbackTransform = FTransform(FRotator(0.0f, 90.0f, 0.0f), FVector(5.0f, 0.0f, 18.0f), FVector(1.0f));
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
+    FTransform MX50RaisedTransform = FTransform(FRotator(0.0f, 0.0f, 0.0f), FVector(45.0f, 0.0f, -12.0f), FVector(1.0f));
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Briefing|MX50")
+    bool bMX50Raised = false;
+
     /** Developer escape hatch. Production command-center flow accesses armory physically with F. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Debug")
     bool bAllowPortableArmoryDebug = false;
@@ -182,6 +213,7 @@ private:
     bool ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot);
     void DestroyLoadoutWeapons();
     void RestoreGameInputMode();
+    void SetMX50Raised(bool bRaised);
 
     void StartWeaponFire();
     void StopWeaponFire();
