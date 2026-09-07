@@ -16,12 +16,12 @@ The component stores available items and the selected item. It does not spawn ac
 
 Built-in prototype choices:
 
-| Item id | Class | Presentation |
-| --- | --- | --- |
-| `MELEE_OTF` | `ATU_OTFKnife` | retracts/deploys blade on holster/draw |
-| `MELEE_Karambit` | `ATU_Karambit` | fixed blade; short readiness transition |
+| Item id | Class | Weight | Presentation |
+| --- | --- | ---: | --- |
+| `MELEE_OTF` | `ATU_OTFKnife` | 0.14 kg | retracts/deploys blade on holster/draw |
+| `MELEE_Karambit` | `ATU_Karambit` | 0.18 kg | fixed blade; short readiness transition |
 
-`DefaultMeleeClass` remains only as a backward-compatible fallback for an empty or invalid loadout.
+The weights are inventory/gameplay values and can be retuned. `DefaultMeleeClass` remains only as a backward-compatible fallback for an empty or invalid loadout.
 
 ## Player controls
 
@@ -33,13 +33,14 @@ Selection changes are rejected while melee is drawn or currently holstering. Thi
 
 ## Armory / loadout UI integration
 
-A future armory UI does not need weapon-specific code. It can:
+A future armory UI does not need melee-specific subclasses hard-coded. It can:
 
 1. call `GetMeleeLoadout()` on the operator
 2. read `GetAvailableItems()`
 3. render display name / weight / future icon metadata
 4. call `SelectMeleeById(ItemId)`
 5. show `GetSelectedMeleeId()` as the active melee slot choice
+6. read `GetSelectedMeleeWeightKg()` for encumbrance/loadout totals
 
 `SetItems()` allows a game mode, progression system, saved loadout, or inventory layer to replace the available melee list and preserve a preferred selection.
 
@@ -68,7 +69,8 @@ The current inheritance is intentionally a prototype compromise: `ATU_Karambit` 
 - the operator owns the melee loadout component
 - the OTF runtime actor is spawned from the selected slot
 - selecting karambit replaces the holstered runtime actor
-- cycling replaces it back with OTF
+- selection changes propagate weight to the operator-facing API
+- cycling replaces the runtime actor back with OTF
 - drawing marks melee active
 - direct selection and cycling are both blocked while melee is active
 
