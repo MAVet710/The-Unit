@@ -10,9 +10,12 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 ATU_ArmedOperatorCharacter::ATU_ArmedOperatorCharacter()
 {
@@ -22,11 +25,55 @@ ATU_ArmedOperatorCharacter::ATU_ArmedOperatorCharacter()
     MeleeLoadout = CreateDefaultSubobject<UTUMeleeLoadoutComponent>(TEXT("MeleeLoadout"));
     ArmoryWidgetClass = UTUArmoryWidget::StaticClass();
     BriefingWidgetClass = UTUBriefingWidget::StaticClass();
+
+    MX50ChestVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MX50ChestVisual"));
+    MX50ChestVisual->SetupAttachment(GetMesh(), MX50ChestSocket);
+    MX50ChestVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MX50ChestVisual->SetOwnerNoSee(true);
+
+    MX50FirstPersonVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MX50FirstPersonVisual"));
+    MX50FirstPersonVisual->SetupAttachment(FirstPersonCamera);
+    MX50FirstPersonVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MX50FirstPersonVisual->SetOnlyOwnerSee(true);
+    MX50FirstPersonVisual->SetHiddenInGame(true);
+    MX50FirstPersonVisual->SetRelativeTransform(MX50RaisedTransform);
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (CubeFinder.Succeeded())
+    {
+        // Temporary rugged-tablet silhouette. Final art replaces these components without changing briefing logic.
+        MX50ChestVisual->SetStaticMesh(CubeFinder.Object);
+        MX50FirstPersonVisual->SetStaticMesh(CubeFinder.Object);
+    }
 }
 
 void ATU_ArmedOperatorCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (MX50ChestVisual && GetMesh())
+    {
+        if (GetMesh()->DoesSocketExist(MX50ChestSocket))
+        {
+            MX50ChestVisual->AttachToComponent(
+                GetMesh(),
+                FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+                MX50ChestSocket);
+            MX50ChestVisual->SetRelativeScale3D(MX50ChestFallbackTransform.GetScale3D());
+        }
+        else
+        {
+            MX50ChestVisual->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+            MX50ChestVisual->SetRelativeTransform(MX50ChestFallbackTransform);
+        }
+    }
+
+    if (MX50FirstPersonVisual)
+    {
+        MX50FirstPersonVisual->SetRelativeTransform(MX50RaisedTransform);
+        MX50FirstPersonVisual->SetHiddenInGame(true);
+    }
+
     SpawnDefaultWeapon();
     SpawnDefaultMelee();
 }
@@ -139,7 +186,7 @@ bool ATU_ArmedOperatorCharacter::EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot S
         SpawnClass = DefaultWeaponClass;
     }
 
-    const bool bShouldBeVisible = Slot == ActiveWeaponSlot && !bMeleeEquipped;
+    const bool bShouldBeVisible = Slot == ActiveWeaponSlot && !bMeleeEquipped && !bMX50Raised;
     SlotWeapon = SpawnWeaponClass(SpawnClass, bShouldBeVisible);
     return IsValid(SlotWeapon);
 }
@@ -168,15 +215,15 @@ bool ATU_ArmedOperatorCharacter::SpawnDefaultWeapon()
 
     if (PrimaryWeapon)
     {
-        PrimaryWeapon->SetActorHiddenInGame(CurrentWeapon != PrimaryWeapon || bMeleeEquipped);
+        PrimaryWeapon->SetActorHiddenInGame(CurrentWeapon != PrimaryWeapon || bMeleeEquipped || bMX50Raised);
     }
     if (SecondaryWeapon)
     {
-        SecondaryWeapon->SetActorHiddenInGame(CurrentWeapon != SecondaryWeapon || bMeleeEquipped);
+        SecondaryWeapon->SetActorHiddenInGame(CurrentWeapon != SecondaryWeapon || bMeleeEquipped || bMX50Raised);
     }
     if (CurrentWeapon)
     {
-        CurrentWeapon->SetAiming(bIsADS);
+        CurrentWeapon->SetAiming(!bMX50Raised && bIsADS);
     }
     return true;
 }
@@ -245,8 +292,8 @@ bool ATU_ArmedOperatorCharacter::ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot)
     {
         ActiveWeaponSlot = Slot;
         CurrentWeapon = SlotWeapon;
-        CurrentWeapon->SetActorHiddenInGame(bMeleeEquipped);
-        CurrentWeapon->SetAiming(!bMeleeEquipped && bIsADS);
+        CurrentWeapon->SetActorHiddenInGame(bMeleeEquipped || bMX50Raised);
+        CurrentWeapon->SetAiming(!bMeleeEquipped && !bMX50Raised && bIsADS);
     }
     else if (SlotWeapon)
     {
@@ -572,6 +619,7 @@ bool ATU_ArmedOperatorCharacter::OpenBriefing(FName MissionId, const FText& Miss
 
     if (IsBriefingOpen())
     {
+        SetMX50Raised(true);
         BriefingWidget->Configure(this, MissionId, MissionTitle);
         return true;
     }
@@ -595,6 +643,7 @@ bool ATU_ArmedOperatorCharacter::OpenBriefing(FName MissionId, const FText& Miss
         return false;
     }
 
+    SetMX50Raised(true);
     BriefingWidget->Configure(this, MissionId, MissionTitle);
     BriefingWidget->AddToPlayerScreen(260);
 
@@ -613,10 +662,42 @@ void ATU_ArmedOperatorCharacter::CloseBriefing()
         BriefingWidget = nullptr;
     }
 
+    SetMX50Raised(false);
+
     if (!IsArmoryOpen())
     {
         RestoreGameInputMode();
     }
+}
+
+void ATU_ArmedOperatorCharacter::SetMX50Raised(bool bRaised)
+{
+    if (bMX50Raised == bRaised)
+    {
+        return;
+    }
+
+    bMX50Raised = bRaised;
+
+    if (MX50FirstPersonVisual)
+    {
+        MX50FirstPersonVisual->SetHiddenInGame(!bRaised);
+    }
+
+    if (MX50ChestVisual)
+    {
+        // Until final third-person hand animation exists, remove it from the chest while the local operator is using it.
+        MX50ChestVisual->SetHiddenInGame(bRaised);
+    }
+
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->StopFire();
+        CurrentWeapon->SetAiming(false);
+        CurrentWeapon->SetActorHiddenInGame(bRaised || bMeleeEquipped);
+    }
+
+    BP_OnMX50RaisedChanged(bRaised);
 }
 
 void ATU_ArmedOperatorCharacter::RestoreGameInputMode()
@@ -744,8 +825,8 @@ void ATU_ArmedOperatorCharacter::FinishMeleeHolster()
 
     if (CurrentWeapon)
     {
-        CurrentWeapon->SetActorHiddenInGame(false);
-        CurrentWeapon->SetAiming(bIsADS);
+        CurrentWeapon->SetActorHiddenInGame(bMX50Raised);
+        CurrentWeapon->SetAiming(!bMX50Raised && bIsADS);
     }
 }
 
