@@ -1,6 +1,6 @@
 # Current State
 
-Baseline: audited at `8988524a4ed45409df760ab668fdc9103bb4d231`; weapon state updated by TU-001; editor build and regression validated by TU-002. Unrelated systems have not been re-audited.
+Baseline: audited at `8988524a4ed45409df760ab668fdc9103bb4d231`; weapon state updated by TU-001; editor build and regression validated by TU-002; TU-003 aligns the project descriptor with UE 5.7. Unrelated systems have not been re-audited.
 
 ## Implemented foundations
 
@@ -24,7 +24,6 @@ Actual hitscan/projectile combat, enemy AI/perception/patrol, inventory/loot/sta
 
 ## Known issues and constraints
 
-- Target files use `BuildSettingsVersion.V6` and `EngineIncludeOrderVersion.Unreal5_7`, while `TheUnit.uproject` declares Engine Association `5.0`.
 - Input uses legacy `InputCore`; no committed `Config/` mapping foundation exists.
 - Module dependencies are currently `Core`, `CoreUObject`, `Engine`, and `InputCore`. Add others only for concrete implementations.
 - Existing documentation is useful design context but can be stale: `README.md` describes an earlier phase, and `PHASE1_IMPLEMENTATION_GUIDE.md` incorrectly says project/module files still need generation.
@@ -35,6 +34,7 @@ Actual hitscan/projectile combat, enemy AI/perception/patrol, inventory/loot/sta
 - Magazine rounds exclude the chamber. `GetCurrentAmmo` returns the loaded total: initially 29+1; tactical reload can reach 30+1. Empty reload loads 30 total. Every successful shot consumes exactly one round, including an initially empty chamber.
 - All 11 TU-001 acceptance criteria checked: single magazine/reserve authority; one reload lifecycle and transfer path; one shot-consumption path; actor-owned fire modes/API; reused types; reflected Blueprint read/action API; no Tick; focused changes; affected Unreal compilation passes.
 - TU-002 replaced exactly five unavailable `FLinearColor::Cyan` constants with explicit linear cyan in the Kill House and Stadium generators. Marker transforms, labels, and generator behavior are unchanged. The full `TheUnitEditor Win64 Development` build now compiles and links successfully using UE 5.7.4 explicitly.
-- `TheUnit.Combat.WeaponOwnership` passed headlessly in the real repository project under UE 5.7.4: one test, zero errors or warnings. Coverage includes chamber/ammo conservation, reload boundaries, dry fire, fire-mode routing, reserve overflow, snapshots, and internal API ownership. Engine association remains stale; TU-003 is the next Wave 0 configuration task.
+- `TheUnit.Combat.WeaponOwnership` passed headlessly in the real repository project under UE 5.7.4: one test, zero errors or warnings. Coverage includes chamber/ammo conservation, reload boundaries, dry fire, fire-mode routing, reserve overflow, snapshots, and internal API ownership.
+- TU-003 changes only `TheUnit.uproject` Engine Association from `5.0` to `5.7`, matching the unchanged target settings. This GitHub execution environment cannot run UnrealBuildTool or UnrealEditor; TU-004 must rerun the UE 5.7 editor build and weapon regression as a preflight before changing input configuration.
 
 Update this file only when implementation or architecture state changes materially.

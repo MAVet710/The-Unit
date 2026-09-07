@@ -4,7 +4,7 @@
 
 The current target is one narrow vertical slice: Ready Room -> Loadout -> Kill House -> Enemy Engagement -> Objective -> Loot -> Extraction -> Raid Result -> Persistent Stash. New work must advance this loop before broadening scope. The Kill House procedural graybox is the primary environment; Stadium work is deferred.
 
-The project is an Unreal Engine 5 C++ project with runtime module `TheUnit`, targeting PC and an eventual authoritative co-op server. Targets use UE 5.7 build/include settings, but `TheUnit.uproject` still declares Engine Association 5.0. Treat this as a known configuration issue, not a reason to redesign gameplay.
+The project is an Unreal Engine 5 C++ project with runtime module `TheUnit`, targeting PC and an eventual authoritative co-op server. Targets and `TheUnit.uproject` are aligned to UE 5.7: `BuildSettingsVersion.V6`, `EngineIncludeOrderVersion.Unreal5_7`, and Engine Association `5.7`.
 
 ## System ownership
 
