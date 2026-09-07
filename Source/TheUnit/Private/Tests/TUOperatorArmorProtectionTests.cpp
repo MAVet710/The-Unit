@@ -72,6 +72,23 @@ bool FTUOperatorArmorProtectionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Coverage miss does not reduce durability"),
         FMath::IsNearlyEqual(Armor->GetArmorDurability(ETUEquipmentSlot::Headwear), DurabilityBeforeMiss));
 
+    const FTUArmorHitResult CoverageBoundaryMiss = Armor->ResolveBallisticHit(
+        ETUBodyRegion::Head,
+        40.0f,
+        10.0f,
+        5.0f,
+        0.50f);
+    TestFalse(TEXT("Coverage cutoff itself is outside partial protection"), CoverageBoundaryMiss.bArmorPresent);
+
+    Helmet->RegionalCoverageFraction = 0.0f;
+    const FTUArmorHitResult ZeroCoverage = Armor->ResolveBallisticHit(
+        ETUBodyRegion::Head,
+        40.0f,
+        10.0f,
+        5.0f,
+        0.0f);
+    TestFalse(TEXT("Zero coverage never protects even at zero roll"), ZeroCoverage.bArmorPresent);
+
     UTUOperatorEquipmentComponent* EquipmentTwo = NewObject<UTUOperatorEquipmentComponent>();
     UTUArmorProtectionComponent* ArmorTwo = NewObject<UTUArmorProtectionComponent>();
     ArmorTwo->InitializeEquipment(EquipmentTwo);
