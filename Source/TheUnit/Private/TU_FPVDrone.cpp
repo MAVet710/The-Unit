@@ -1,5 +1,7 @@
 #include "TU_FPVDrone.h"
 
+#include "TUFPVBatteryComponent.h"
+#include "TUFPVSignalComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/InputComponent.h"
@@ -27,10 +29,15 @@ ATU_FPVDrone::ATU_FPVDrone()
     PhysicsBody->SetEnableGravity(true);
     PhysicsBody->SetLinearDamping(0.02f);
     PhysicsBody->SetAngularDamping(0.01f);
+    PhysicsBody->SetNotifyRigidBodyCollision(true);
+    PhysicsBody->OnComponentHit.AddDynamic(this, &ATU_FPVDrone::HandlePhysicsHit);
 
     FPVCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FPVCamera"));
     FPVCamera->SetupAttachment(PhysicsBody);
     FPVCamera->SetRelativeLocation(FVector(11.0f, 0.0f, 2.0f));
+
+    Battery = CreateDefaultSubobject<UTUFPVBatteryComponent>(TEXT("Battery"));
+    Signal = CreateDefaultSubobject<UTUFPVSignalComponent>(TEXT("Signal"));
 
     AutoPossessPlayer = EAutoReceiveInput::Disabled;
 }
@@ -54,7 +61,9 @@ void ATU_FPVDrone::Tick(float DeltaSeconds)
         return;
     }
 
-    if (bArmed)
+    UpdateSignalFailsafe(DeltaSeconds);
+
+    if (bArmed && !bSignalFailsafeActive)
     {
         UpdateFlightController(DeltaSeconds);
     }
@@ -66,8 +75,10 @@ void ATU_FPVDrone::Tick(float DeltaSeconds)
         }
     }
 
+    CurrentPropwashIntensity = ComputePropwashIntensity();
     ApplyRotorForces(DeltaSeconds);
     ApplyAerodynamicDrag();
+    UpdateBattery(DeltaSeconds);
 }
 
 void ATU_FPVDrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -89,24 +100,37 @@ void ATU_FPVDrone::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ATU_FPVDrone::InputThrottle(float Value)
 {
-    // Standard gamepads are spring-centered, while an RC throttle is not.
-    // Mapping [-1, 1] -> [0, 1] gives keyboard/gamepad testing a usable hover midpoint.
+    if (bExternalRCInputEnabled)
+    {
+        return;
+    }
+
+    // Spring-centered accessibility mapping. Native RC input bypasses this path.
     ThrottleInput = FMath::Clamp(0.5f + (Value * 0.5f), 0.0f, 1.0f);
 }
 
 void ATU_FPVDrone::InputRoll(float Value)
 {
-    RollInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    if (!bExternalRCInputEnabled)
+    {
+        RollInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    }
 }
 
 void ATU_FPVDrone::InputPitch(float Value)
 {
-    PitchInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    if (!bExternalRCInputEnabled)
+    {
+        PitchInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    }
 }
 
 void ATU_FPVDrone::InputYaw(float Value)
 {
-    YawInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    if (!bExternalRCInputEnabled)
+    {
+        YawInput = FMath::Clamp(Value, -1.0f, 1.0f);
+    }
 }
 
 void ATU_FPVDrone::ToggleFlightMode()
@@ -121,12 +145,16 @@ void ATU_FPVDrone::ToggleFlightMode()
 void ATU_FPVDrone::ToggleArmed()
 {
     bArmed = !bArmed;
+    bSignalFailsafeActive = false;
+    SignalFailsafeElapsed = 0.0f;
     ClearControllerState();
 }
 
 void ATU_FPVDrone::ResetDrone()
 {
     bArmed = false;
+    bSignalFailsafeActive = false;
+    SignalFailsafeElapsed = 0.0f;
     ClearControllerState();
 
     PhysicsBody->SetPhysicsLinearVelocity(FVector::ZeroVector);
@@ -134,9 +162,30 @@ void ATU_FPVDrone::ResetDrone()
     SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
 }
 
+void ATU_FPVDrone::ServiceDrone()
+{
+    bArmed = false;
+    ClearControllerState();
+
+    if (Battery)
+    {
+        Battery->ResetBattery();
+    }
+
+    for (float& Health : MotorHealth)
+    {
+        Health = 1.0f;
+    }
+}
+
 void ATU_FPVDrone::SetReturnPawn(APawn* PawnToReturnTo)
 {
     ReturnPawn = PawnToReturnTo;
+
+    if (Signal)
+    {
+        Signal->SetSignalOrigin(PawnToReturnTo);
+    }
 }
 
 void ATU_FPVDrone::ExitDrone()
@@ -153,9 +202,66 @@ void ATU_FPVDrone::ExitDrone()
     DroneController->Possess(ReturnPawn);
 }
 
+void ATU_FPVDrone::SetExternalRCEnabled(bool bEnabled)
+{
+    bExternalRCInputEnabled = bEnabled;
+}
+
+void ATU_FPVDrone::SetExternalRCInput(float Throttle01, float Roll, float Pitch, float Yaw)
+{
+    if (!bExternalRCInputEnabled)
+    {
+        return;
+    }
+
+    ThrottleInput = FMath::Clamp(Throttle01, 0.0f, 1.0f);
+    RollInput = FMath::Clamp(Roll, -1.0f, 1.0f);
+    PitchInput = FMath::Clamp(Pitch, -1.0f, 1.0f);
+    YawInput = FMath::Clamp(Yaw, -1.0f, 1.0f);
+}
+
 FVector4 ATU_FPVDrone::GetMotorCommands() const
 {
     return FVector4(MotorCommands[0], MotorCommands[1], MotorCommands[2], MotorCommands[3]);
+}
+
+FVector4 ATU_FPVDrone::GetMotorHealth() const
+{
+    return FVector4(MotorHealth[0], MotorHealth[1], MotorHealth[2], MotorHealth[3]);
+}
+
+FFPVTelemetry ATU_FPVDrone::GetTelemetry() const
+{
+    FFPVTelemetry Telemetry;
+    Telemetry.FlightMode = FlightMode;
+    Telemetry.bArmed = bArmed;
+    Telemetry.bSignalFailsafe = bSignalFailsafeActive;
+    Telemetry.PropwashIntensity = CurrentPropwashIntensity;
+    Telemetry.MotorHealth = GetMotorHealth();
+
+    if (PhysicsBody)
+    {
+        Telemetry.SpeedMetersPerSecond = PhysicsBody->GetPhysicsLinearVelocity().Size() / CmPerMeter;
+        Telemetry.AltitudeAGLMeters = ComputeAltitudeAGLMeters();
+    }
+
+    if (Battery)
+    {
+        Telemetry.BatteryVoltage = Battery->GetVoltage();
+        Telemetry.BatteryPercent = Battery->GetBatteryPercent();
+        Telemetry.CurrentDrawAmps = Battery->GetCurrentDrawAmps();
+        Telemetry.bLowBattery = Battery->IsLowVoltage();
+    }
+
+    if (Signal)
+    {
+        Telemetry.VideoQuality = Signal->GetVideoQuality();
+        Telemetry.ControlQuality = Signal->GetControlQuality();
+        Telemetry.VideoLatencyMs = Signal->GetVideoLatencyMs();
+        Telemetry.LinkDistanceMeters = Signal->GetDistanceMeters();
+    }
+
+    return Telemetry;
 }
 
 float ATU_FPVDrone::ApplyRateCurve(float Input) const
@@ -241,8 +347,9 @@ float ATU_FPVDrone::RunPID(
 {
     Integral = FMath::Clamp(Integral + (Error * DeltaSeconds), -1.5f, 1.5f);
 
-    const float Derivative = (Error - PreviousError) / FMath::Max(DeltaSeconds, 0.001f);
-    const float FeedForward = (TargetRate - PreviousTargetRate) / FMath::Max(DeltaSeconds, 0.001f);
+    const float SafeDelta = FMath::Max(DeltaSeconds, 0.001f);
+    const float Derivative = (Error - PreviousError) / SafeDelta;
+    const float FeedForward = (TargetRate - PreviousTargetRate) / SafeDelta;
 
     PreviousError = Error;
     PreviousTargetRate = TargetRate;
@@ -263,14 +370,16 @@ void ATU_FPVDrone::ApplyRotorForces(float DeltaSeconds)
         : 1.0f - FMath::Exp(-DeltaSeconds / MotorResponseSeconds);
 
     const float GroundEffectMultiplier = ComputeGroundEffectMultiplier();
+    const float PropwashMultiplier = 1.0f - (FMath::Clamp(CurrentPropwashIntensity, 0.0f, 1.0f) * PropwashMaxThrustLoss);
+    const float BatteryThrustScale = Battery ? Battery->GetThrustScale() : 1.0f;
     const FVector Up = PhysicsBody->GetUpVector();
 
     const FVector LocalMotorPositions[4] =
     {
-        FVector( ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f), // front-left
-        FVector( ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f), // front-right
-        FVector(-ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f), // rear-right
-        FVector(-ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f)  // rear-left
+        FVector( ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f),
+        FVector( ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f),
+        FVector(-ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f),
+        FVector(-ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f)
     };
 
     const float SpinSigns[4] = { 1.0f, -1.0f, 1.0f, -1.0f };
@@ -279,21 +388,29 @@ void ATU_FPVDrone::ApplyRotorForces(float DeltaSeconds)
     {
         MotorCommands[Index] = FMath::Lerp(MotorCommands[Index], DesiredMotorCommands[Index], Alpha);
 
-        // Rotor thrust is approximately proportional to RPM squared. The motor
-        // command is treated as normalized RPM for this first flight model.
         const float CommandSquared = MotorCommands[Index] * MotorCommands[Index];
-        const float ThrustNewton = MaxMotorThrustNewton * CommandSquared * GroundEffectMultiplier;
+        const float RotorHealth = FMath::Clamp(MotorHealth[Index], 0.0f, 1.0f);
+        const float ThrustNewton =
+            MaxMotorThrustNewton *
+            CommandSquared *
+            GroundEffectMultiplier *
+            PropwashMultiplier *
+            BatteryThrustScale *
+            RotorHealth;
+
         const FVector Force = Up * (ThrustNewton * NewtonToUnrealForce);
         const FVector WorldMotorPosition = PhysicsBody->GetComponentTransform().TransformPosition(LocalMotorPositions[Index]);
-
         PhysicsBody->AddForceAtLocation(Force, WorldMotorPosition, NAME_None);
 
-        const float ReactionTorqueNm = MaxReactionTorqueNm * CommandSquared * SpinSigns[Index];
+        const float ReactionTorqueNm = MaxReactionTorqueNm * CommandSquared * SpinSigns[Index] * RotorHealth;
         PhysicsBody->AddTorqueInRadians(
             Up * (ReactionTorqueNm * NewtonMeterToUnrealTorque),
             NAME_None,
             false);
     }
+
+    ApplyPropwashDisturbance(CurrentPropwashIntensity);
+    ApplyDamagedPropVibration();
 }
 
 void ATU_FPVDrone::ApplyAerodynamicDrag()
@@ -309,6 +426,128 @@ void ATU_FPVDrone::ApplyAerodynamicDrag()
 
     const FVector WorldDrag = PhysicsBody->GetComponentTransform().TransformVectorNoScale(LocalDragNewton) * NewtonToUnrealForce;
     PhysicsBody->AddForce(WorldDrag, NAME_None, false);
+}
+
+void ATU_FPVDrone::UpdateBattery(float DeltaSeconds)
+{
+    if (!Battery)
+    {
+        return;
+    }
+
+    float CurrentAmps = ElectronicsIdleCurrentAmps;
+    if (bArmed)
+    {
+        for (float Command : MotorCommands)
+        {
+            CurrentAmps += (Command * Command) * MaxMotorCurrentAmps;
+        }
+    }
+
+    Battery->ConsumeCurrent(CurrentAmps, DeltaSeconds);
+}
+
+void ATU_FPVDrone::UpdateSignalFailsafe(float DeltaSeconds)
+{
+    if (!bEnableSignalFailsafe || !Signal || !IsValid(ReturnPawn) || Signal->HasControlLink())
+    {
+        bSignalFailsafeActive = false;
+        SignalFailsafeElapsed = 0.0f;
+        return;
+    }
+
+    bSignalFailsafeActive = true;
+    SignalFailsafeElapsed += DeltaSeconds;
+
+    if (bArmed && SignalFailsafeElapsed >= SignalFailsafeDisarmSeconds)
+    {
+        bArmed = false;
+        ClearControllerState();
+    }
+}
+
+float ATU_FPVDrone::ComputePropwashIntensity() const
+{
+    if (!PhysicsBody || PropwashFullDescentMps <= PropwashStartDescentMps)
+    {
+        return 0.0f;
+    }
+
+    const FVector VelocityMps = PhysicsBody->GetPhysicsLinearVelocity() / CmPerMeter;
+    const FVector Up = PhysicsBody->GetUpVector();
+    const float VerticalVelocity = FVector::DotProduct(VelocityMps, Up);
+    const float DescentSpeed = FMath::Max(0.0f, -VerticalVelocity);
+
+    if (DescentSpeed <= PropwashStartDescentMps)
+    {
+        return 0.0f;
+    }
+
+    const float DescentFactor = FMath::Clamp(
+        (DescentSpeed - PropwashStartDescentMps) /
+        (PropwashFullDescentMps - PropwashStartDescentMps),
+        0.0f,
+        1.0f);
+
+    const FVector LateralVelocity = VelocityMps - (Up * VerticalVelocity);
+    const float LateralRatio = LateralVelocity.Size() / FMath::Max(PropwashLateralEscapeMps, 0.1f);
+    const float WakeRetention = 1.0f / (1.0f + (LateralRatio * LateralRatio));
+
+    return DescentFactor * WakeRetention;
+}
+
+void ATU_FPVDrone::ApplyPropwashDisturbance(float PropwashIntensity)
+{
+    if (PropwashIntensity <= SMALL_NUMBER || PropwashDisturbanceTorqueNm <= 0.0f || !GetWorld())
+    {
+        return;
+    }
+
+    float AverageCommand = 0.0f;
+    for (float Command : MotorCommands)
+    {
+        AverageCommand += Command;
+    }
+    AverageCommand *= 0.25f;
+
+    const float Time = GetWorld()->GetTimeSeconds();
+    const float TorqueNm = PropwashDisturbanceTorqueNm * PropwashIntensity * AverageCommand;
+    const FVector LocalTorque(
+        FMath::Sin(Time * 61.0f) * TorqueNm,
+        FMath::Sin((Time * 73.0f) + 1.7f) * TorqueNm,
+        0.0f);
+
+    const FVector WorldTorque = PhysicsBody->GetComponentTransform().TransformVectorNoScale(LocalTorque);
+    PhysicsBody->AddTorqueInRadians(WorldTorque * NewtonMeterToUnrealTorque, NAME_None, false);
+}
+
+void ATU_FPVDrone::ApplyDamagedPropVibration()
+{
+    if (!GetWorld() || DamagedPropVibrationTorqueNm <= 0.0f)
+    {
+        return;
+    }
+
+    float DamageLoad = 0.0f;
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        DamageLoad += (1.0f - FMath::Clamp(MotorHealth[Index], 0.0f, 1.0f)) * MotorCommands[Index] * MotorCommands[Index];
+    }
+
+    if (DamageLoad <= SMALL_NUMBER)
+    {
+        return;
+    }
+
+    const float Time = GetWorld()->GetTimeSeconds();
+    const float TorqueNm = DamagedPropVibrationTorqueNm * DamageLoad;
+    const FVector LocalTorque(
+        FMath::Sin(Time * 109.0f) * TorqueNm,
+        FMath::Cos(Time * 97.0f) * TorqueNm,
+        FMath::Sin((Time * 83.0f) + 0.9f) * TorqueNm * 0.35f);
+
+    const FVector WorldTorque = PhysicsBody->GetComponentTransform().TransformVectorNoScale(LocalTorque);
+    PhysicsBody->AddTorqueInRadians(WorldTorque * NewtonMeterToUnrealTorque, NAME_None, false);
 }
 
 float ATU_FPVDrone::ComputeGroundEffectMultiplier() const
@@ -332,6 +571,78 @@ float ATU_FPVDrone::ComputeGroundEffectMultiplier() const
     const float NormalizedDistance = FMath::Clamp(Hit.Distance / GroundEffectRangeCm, 0.0f, 1.0f);
     const float Proximity = 1.0f - NormalizedDistance;
     return 1.0f + (GroundEffectStrength * Proximity * Proximity);
+}
+
+float ATU_FPVDrone::ComputeAltitudeAGLMeters() const
+{
+    if (!GetWorld() || !PhysicsBody)
+    {
+        return -1.0f;
+    }
+
+    const FVector Start = PhysicsBody->GetComponentLocation();
+    const FVector End = Start - FVector(0.0f, 0.0f, 20000.0f);
+
+    FHitResult Hit;
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(FPVAltitudeAGL), false, this);
+    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    {
+        return Hit.Distance / CmPerMeter;
+    }
+
+    return -1.0f;
+}
+
+void ATU_FPVDrone::HandlePhysicsHit(
+    UPrimitiveComponent* HitComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    FVector NormalImpulse,
+    const FHitResult& Hit)
+{
+    if (NormalImpulse.IsNearlyZero() || MassKg <= SMALL_NUMBER || DamageFullDeltaVMps <= DamageStartDeltaVMps)
+    {
+        return;
+    }
+
+    // Chaos impulse is in kg*cm/s. Dividing by mass and 100 approximates delta-v in m/s.
+    const float ImpactDeltaVMps = NormalImpulse.Size() / (MassKg * CmPerMeter);
+    if (ImpactDeltaVMps <= DamageStartDeltaVMps)
+    {
+        return;
+    }
+
+    const float Severity = FMath::Clamp(
+        (ImpactDeltaVMps - DamageStartDeltaVMps) /
+        (DamageFullDeltaVMps - DamageStartDeltaVMps),
+        0.0f,
+        1.0f);
+
+    const FVector LocalImpact = PhysicsBody->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint);
+    const FVector LocalMotorPositions[4] =
+    {
+        FVector( ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f),
+        FVector( ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f),
+        FVector(-ArmHalfSpanCm,  ArmHalfSpanCm, 0.0f),
+        FVector(-ArmHalfSpanCm, -ArmHalfSpanCm, 0.0f)
+    };
+
+    int32 NearestMotor = 0;
+    float NearestDistanceSquared = TNumericLimits<float>::Max();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        const float DistanceSquared = (LocalImpact - LocalMotorPositions[Index]).SizeSquared2D();
+        if (DistanceSquared < NearestDistanceSquared)
+        {
+            NearestDistanceSquared = DistanceSquared;
+            NearestMotor = Index;
+        }
+    }
+
+    MotorHealth[NearestMotor] = FMath::Clamp(
+        MotorHealth[NearestMotor] - (Severity * MaxMotorDamagePerImpact),
+        0.0f,
+        1.0f);
 }
 
 void ATU_FPVDrone::ClearControllerState()
