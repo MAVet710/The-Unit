@@ -80,6 +80,8 @@ public:
     TArray<FTUMeleeEquipmentEntry> GetAvailableItems() const { return AvailableItems; }
 
 protected:
+    virtual void BeginPlay() override;
+
     /** Editable inventory exposed to a future armory/loadout UI. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Melee Loadout")
     TArray<FTUMeleeEquipmentEntry> AvailableItems;
