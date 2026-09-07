@@ -20,6 +20,12 @@ bool FTUOperatorEquipmentStateTest::RunTest(const FString& Parameters)
     HelmetA->ItemId = TEXT("helmet_a");
     HelmetA->Slot = ETUEquipmentSlot::Headwear;
     HelmetA->WeightKg = 1.20f;
+    HelmetA->bProvidesBallisticProtection = true;
+    HelmetA->ProtectedRegions.Add(ETUBodyRegion::Head);
+    HelmetA->PenetrationResistance = 18.0f;
+    HelmetA->MaxArmorDurability = 100.0f;
+    HelmetA->StoppedRoundDamageMultiplier = 0.35f;
+    HelmetA->RegionalCoverageFraction = 0.75f;
 
     UTUEquipmentDefinition* HelmetB = NewObject<UTUEquipmentDefinition>();
     HelmetB->ItemId = TEXT("helmet_b");
@@ -30,6 +36,10 @@ bool FTUOperatorEquipmentStateTest::RunTest(const FString& Parameters)
     Carrier->ItemId = TEXT("carrier_a");
     Carrier->Slot = ETUEquipmentSlot::TorsoArmor;
     Carrier->WeightKg = 6.50f;
+
+    TestTrue(TEXT("Ballistic helmet marks head as protected"), HelmetA->ProtectedRegions.Contains(ETUBodyRegion::Head));
+    TestTrue(TEXT("Ballistic resistance is authored independently of visuals"), FMath::IsNearlyEqual(HelmetA->PenetrationResistance, 18.0f));
+    TestTrue(TEXT("Coverage remains bounded by authored value"), FMath::IsNearlyEqual(HelmetA->RegionalCoverageFraction, 0.75f));
 
     TestTrue(TEXT("Equip first helmet"), Equipment->EquipItem(HelmetA));
     TestEqual(TEXT("Head slot points to first helmet"), Equipment->GetEquippedItem(ETUEquipmentSlot::Headwear), HelmetA);
