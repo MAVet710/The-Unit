@@ -7,8 +7,9 @@
 
 class ATU_OTFKnife;
 class ATU_WeaponBase;
+class UTUMeleeLoadoutComponent;
 
-/** Operator layer that owns a first-person firearm plus a quick-draw melee item. */
+/** Operator layer that owns a first-person firearm plus a selectable melee slot. */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_ArmedOperatorCharacter : public ATU_OperatorCharacter
 {
@@ -30,14 +31,28 @@ public:
     UFUNCTION(BlueprintPure, Category="Melee")
     ATU_OTFKnife* GetCurrentMelee() const { return CurrentMelee; }
 
+    UFUNCTION(BlueprintPure, Category="Melee|Loadout")
+    UTUMeleeLoadoutComponent* GetMeleeLoadout() const { return MeleeLoadout; }
+
+    UFUNCTION(BlueprintPure, Category="Melee|Loadout")
+    FName GetSelectedMeleeId() const;
+
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool SpawnDefaultMelee();
 
-    /** Hide the firearm, attach the knife to the first-person hand, and deploy the blade. */
+    /** Select a melee item by loadout id while the melee slot is holstered. */
+    UFUNCTION(BlueprintCallable, Category="Melee|Loadout")
+    bool SelectMeleeById(FName ItemId);
+
+    /** Cycle the selected melee item while holstered. */
+    UFUNCTION(BlueprintCallable, Category="Melee|Loadout")
+    bool CycleMeleeSelection(int32 Direction = 1);
+
+    /** Hide the firearm, attach the selected melee item, and begin its draw/readiness presentation. */
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool DrawMelee();
 
-    /** Retract the blade, then restore the firearm after the presentation finishes. */
+    /** Finish the melee item's holster presentation, then restore the firearm. */
     UFUNCTION(BlueprintCallable, Category="Melee")
     bool HolsterMelee();
 
@@ -54,10 +69,15 @@ protected:
     UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon")
     TObjectPtr<ATU_WeaponBase> CurrentWeapon = nullptr;
 
+    /** Single melee equipment slot. Contains the built-in OTF and karambit choices by default. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Melee|Loadout")
+    TObjectPtr<UTUMeleeLoadoutComponent> MeleeLoadout;
+
+    /** Backward-compatible fallback used only when the loadout has no valid selected item. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Melee")
     TSubclassOf<ATU_OTFKnife> DefaultMeleeClass;
 
-    /** Uses the weapon socket by default so current prototype arms need no extra socket. */
+    /** Fallback socket for legacy melee classes or empty loadouts. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Melee")
     FName FirstPersonMeleeSocket = TEXT("weapon_socket");
 
@@ -79,7 +99,10 @@ private:
     void StopWeaponADS();
 
     void ToggleMelee();
+    void CycleMeleeInput();
     void FinishMeleeHolster();
+    void DestroyCurrentMelee();
 
+    FName CurrentMeleeSocket = TEXT("weapon_socket");
     FTimerHandle MeleeHolsterTimerHandle;
 };
