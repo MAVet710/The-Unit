@@ -12,4 +12,7 @@ UCLASS()
 class THEUNIT_API ATU_GameMode : public AGameModeBase
 {
     GENERATED_BODY()
+
+public:
+    ATU_GameMode();
 };
