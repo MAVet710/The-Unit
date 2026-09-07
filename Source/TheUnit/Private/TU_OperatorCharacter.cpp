@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TUHealthComponent.h"
 
 ATU_OperatorCharacter::ATU_OperatorCharacter()
 {
@@ -17,6 +18,8 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
     FirstPersonArmsMesh->SetOnlyOwnerSee(true);
     FirstPersonArmsMesh->bCastDynamicShadow = false;
     FirstPersonArmsMesh->CastShadow = false;
+
+    HealthComponent = CreateDefaultSubobject<UTUHealthComponent>(TEXT("HealthComponent"));
 
     bUseControllerRotationYaw = true;
 
@@ -55,6 +58,16 @@ void ATU_OperatorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
     PlayerInputComponent->BindAction(TEXT("LeanRight"), IE_Released, this, &ATU_OperatorCharacter::StopLeanRight);
 
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATU_OperatorCharacter::Interact);
+}
+
+UTUHealthComponent* ATU_OperatorCharacter::GetHealthComponent() const
+{
+    return HealthComponent;
+}
+
+bool ATU_OperatorCharacter::IsOperatorDead() const
+{
+    return HealthComponent && HealthComponent->IsDead();
 }
 
 void ATU_OperatorCharacter::MoveForward(float Value)

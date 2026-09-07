@@ -6,10 +6,11 @@
 
 class UCameraComponent;
 class USkeletalMeshComponent;
+class UTUHealthComponent;
 
 /**
  * Base controllable operator pawn.
- * Owns first-person movement/input skeleton that can be extended in Blueprints.
+ * Owns first-person movement/input skeleton and operator-level reusable capabilities.
  */
 UCLASS()
 class THEUNIT_API ATU_OperatorCharacter : public ACharacter
@@ -21,12 +22,21 @@ public:
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    UFUNCTION(BlueprintPure, Category = "Operator|Health")
+    UTUHealthComponent* GetHealthComponent() const;
+
+    UFUNCTION(BlueprintPure, Category = "Operator|Health")
+    bool IsOperatorDead() const;
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCameraComponent> FirstPersonCamera;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<USkeletalMeshComponent> FirstPersonArmsMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UTUHealthComponent> HealthComponent;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
     float WalkSpeed = 300.0f;
