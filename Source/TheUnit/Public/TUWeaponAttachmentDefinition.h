@@ -17,10 +17,13 @@ enum class ETUWeaponAttachmentSlot : uint8
     Muzzle UMETA(DisplayName="Muzzle Device"),
     Stock UMETA(DisplayName="Stock"),
     Magazine UMETA(DisplayName="Magazine"),
+    Slide UMETA(DisplayName="Slide / Upper Assembly"),
+    Magwell UMETA(DisplayName="Magwell"),
+    BarrelVisual UMETA(DisplayName="Barrel Visual"),
     SideAccessory UMETA(DisplayName="Side Accessory")
 };
 
-/** Data-only definition for a removable visual/gameplay rifle attachment. */
+/** Data-only definition for one removable visual/gameplay weapon attachment. */
 UCLASS(BlueprintType)
 class THEUNIT_API UTUWeaponAttachmentDefinition : public UPrimaryDataAsset
 {
