@@ -1,6 +1,5 @@
 #include "TU_CommandCenterGenerator.h"
 
-#include "TU_CommandCenterStation.h"
 #include "TU_RangeTarget.h"
 #include "Components/ArrowComponent.h"
 #include "Components/SceneComponent.h"
@@ -62,10 +61,7 @@ void ATU_CommandCenterGenerator::BeginPlay()
             continue;
         }
 
-        Station->ConfigureStation(
-            static_cast<ETUCommandCenterStationType>(Spawn.TypeValue),
-            FText::FromString(Spawn.Label),
-            Spawn.MissionId);
+        Station->ConfigureStation(Spawn.Type, FText::FromString(Spawn.Label), Spawn.MissionId);
         RuntimeStations.Add(Station);
     }
 
@@ -114,7 +110,6 @@ void ATU_CommandCenterGenerator::BuildSecureCorridor()
     AddCube(FVector(0.0f, 0.0f, -10.0f), FVector(HalfCorridor, HalfLength, 10.0f), TEXT("CorridorFloor"));
     AddCube(FVector(0.0f, 0.0f, CeilingHeight), FVector(HalfCorridor, HalfLength, 8.0f), TEXT("CorridorDropCeiling"));
 
-    // Build segmented side walls so every destination is physically reachable from the corridor.
     auto AddSegmentedWall = [this, HalfLength, WallThickness, DoorHalfWidth](float X, TArray<float> DoorCenters, const FString& Prefix)
     {
         DoorCenters.Sort();
@@ -148,7 +143,6 @@ void ATU_CommandCenterGenerator::BuildSecureCorridor()
     AddSegmentedWall(-HalfCorridor, { -1750.0f, 650.0f }, TEXT("CorridorWallWest"));
     AddSegmentedWall(HalfCorridor, { -2150.0f, 950.0f }, TEXT("CorridorWallEast"));
 
-    // Drop-ceiling fluorescent-strip placeholders echo the supplied Operator reference.
     for (int32 Index = -6; Index <= 6; ++Index)
     {
         AddCube(
@@ -196,8 +190,8 @@ void ATU_CommandCenterGenerator::BuildArmory()
     AddCube(Center + FVector(260.0f, -360.0f, 42.0f), FVector(260.0f, 95.0f, 42.0f), TEXT("WeaponBenchA"));
     AddCube(Center + FVector(260.0f, 360.0f, 42.0f), FVector(260.0f, 95.0f, 42.0f), TEXT("WeaponBenchB"));
 
-    AddStationMarker(0, TEXT("ARMORY // SELECT WEAPONS"), Center + FVector(360.0f, 0.0f, 65.0f), FRotator(0.0f, 180.0f, 0.0f));
-    AddStationMarker(1, TEXT("WEAPON CUSTOMIZATION"), Center + FVector(250.0f, -360.0f, 95.0f), FRotator(0.0f, 180.0f, 0.0f));
+    AddStationMarker(ETUCommandCenterStationType::Armory, TEXT("ARMORY // SELECT WEAPONS"), Center + FVector(360.0f, 0.0f, 65.0f), FRotator(0.0f, 180.0f, 0.0f));
+    AddStationMarker(ETUCommandCenterStationType::WeaponBench, TEXT("WEAPON CUSTOMIZATION"), Center + FVector(250.0f, -360.0f, 95.0f), FRotator(0.0f, 180.0f, 0.0f));
 
     if (bGenerateLabels)
     {
@@ -239,8 +233,8 @@ void ATU_CommandCenterGenerator::BuildCage()
             *FString::Printf(TEXT("GearLocker_%d"), Locker));
     }
 
-    AddStationMarker(2, TEXT("CAGE // EQUIPMENT + UNIFORMS"), Center + FVector(180.0f, -150.0f, 65.0f), FRotator(0.0f, 180.0f, 0.0f));
-    AddStationMarker(3, TEXT("GEAR / UNIFORM BENCH"), Center + FVector(280.0f, 250.0f, 95.0f), FRotator(0.0f, 180.0f, 0.0f));
+    AddStationMarker(ETUCommandCenterStationType::Cage, TEXT("CAGE // EQUIPMENT + UNIFORMS"), Center + FVector(180.0f, -150.0f, 65.0f), FRotator(0.0f, 180.0f, 0.0f));
+    AddStationMarker(ETUCommandCenterStationType::UniformBench, TEXT("GEAR / UNIFORM BENCH"), Center + FVector(280.0f, 250.0f, 95.0f), FRotator(0.0f, 180.0f, 0.0f));
 
     if (bGenerateLabels)
     {
@@ -274,13 +268,11 @@ void ATU_CommandCenterGenerator::BuildBriefingRoom()
     }
 
     AddCube(Center + FVector(780.0f, 0.0f, 190.0f), FVector(14.0f, 380.0f, 95.0f), TEXT("BriefingWallDisplay"));
-
-    // Physical secure laptop is the mission UI anchor, matching the user's Operator reference.
     AddCube(Center + FVector(-170.0f, 0.0f, 76.0f), FVector(38.0f, 52.0f, 4.0f), TEXT("BriefingLaptopBase"));
     AddCube(Center + FVector(-205.0f, 0.0f, 113.0f), FVector(4.0f, 52.0f, 38.0f), TEXT("BriefingLaptopScreen"), FRotator(0.0f, 0.0f, -12.0f));
 
-    AddStationMarker(5, TEXT("CLASSIFIED OPERATIONS TERMINAL"), Center + FVector(-150.0f, -40.0f, 100.0f), FRotator::ZeroRotator, TEXT("OP_KILLHOUSE"));
-    AddStationMarker(6, TEXT("COMMIT LOADOUT / DEPLOY"), Center + FVector(650.0f, -650.0f, 70.0f), FRotator(0.0f, 180.0f, 0.0f), TEXT("OP_KILLHOUSE"));
+    AddStationMarker(ETUCommandCenterStationType::Briefing, TEXT("CLASSIFIED OPERATIONS TERMINAL"), Center + FVector(-150.0f, -40.0f, 100.0f), FRotator::ZeroRotator, TEXT("OP_KILLHOUSE"));
+    AddStationMarker(ETUCommandCenterStationType::MissionLaunch, TEXT("COMMIT LOADOUT / DEPLOY"), Center + FVector(650.0f, -650.0f, 70.0f), FRotator(0.0f, 180.0f, 0.0f), TEXT("OP_KILLHOUSE"));
 
     if (bGenerateLabels)
     {
@@ -310,7 +302,7 @@ void ATU_CommandCenterGenerator::BuildTestRange()
             *FString::Printf(TEXT("RangeDivider_%d"), Lane));
     }
 
-    AddStationMarker(4, TEXT("LIVE FIRE // TEST SELECTED WEAPON"), Center + FVector(-1050.0f, 0.0f, 65.0f), FRotator::ZeroRotator);
+    AddStationMarker(ETUCommandCenterStationType::TestRange, TEXT("LIVE FIRE // TEST SELECTED WEAPON"), Center + FVector(-1050.0f, 0.0f, 65.0f), FRotator::ZeroRotator);
 
     if (bGenerateLabels)
     {
@@ -320,7 +312,6 @@ void ATU_CommandCenterGenerator::BuildTestRange()
 
 void ATU_CommandCenterGenerator::BuildOperationsDetails()
 {
-    // Visible door leaves sit beside the openings rather than blocking the corridor.
     struct FDoorVisual
     {
         FVector Location;
@@ -390,12 +381,12 @@ void ATU_CommandCenterGenerator::AddLabel(const FString& Text, const FVector& Lo
     GeneratedComponents.Add(Label);
 }
 
-void ATU_CommandCenterGenerator::AddStationMarker(uint8 TypeValue, const FString& Label, const FVector& Location, const FRotator& Rotation, FName MissionId)
+void ATU_CommandCenterGenerator::AddStationMarker(ETUCommandCenterStationType Type, const FString& Label, const FVector& Location, const FRotator& Rotation, FName MissionId)
 {
     FStationSpawn Spawn;
     Spawn.Location = Location;
     Spawn.Rotation = Rotation;
-    Spawn.TypeValue = TypeValue;
+    Spawn.Type = Type;
     Spawn.Label = Label;
     Spawn.MissionId = MissionId;
     StationSpawns.Add(Spawn);
