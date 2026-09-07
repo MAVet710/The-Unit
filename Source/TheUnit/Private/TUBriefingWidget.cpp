@@ -53,9 +53,13 @@ void UTUBriefingWidget::RebuildContent()
     RootBox->ClearChildren();
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 8.0f)
     [
-        SNew(STextBlock).Text(FText::FromString(TEXT("THE UNIT // OPERATIONS BRIEFING")))
+        SNew(STextBlock).Text(FText::FromString(TEXT("MX50 TACTICAL TABLET // THE UNIT")))
     ];
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
+    [
+        SNew(STextBlock).Text(FText::FromString(TEXT("SECURE OPERATIONS // MISSION PACKAGE")))
+    ];
+    RootBox->AddSlot().AutoHeight().Padding(4.0f, 8.0f, 4.0f, 2.0f)
     [
         SNew(STextBlock).Text(MissionTitle)
     ];
@@ -66,11 +70,15 @@ void UTUBriefingWidget::RebuildContent()
 
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 4.0f)
     [
-        SNew(STextBlock).Text(FText::FromString(TEXT("MISSION PACKAGE")))
+        SNew(STextBlock).Text(FText::FromString(TEXT("MISSION INTEL")))
     ];
     RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
     [
-        SNew(STextBlock).Text(FText::FromString(TEXT("• Review mission objective and entry plan")))
+        SNew(STextBlock).Text(FText::FromString(TEXT("• Review mission objective, entry plan and known threats")))
+    ];
+    RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
+    [
+        SNew(STextBlock).Text(FText::FromString(TEXT("• Review map, route, imagery and team assignments")))
     ];
     RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
     [
@@ -78,11 +86,7 @@ void UTUBriefingWidget::RebuildContent()
     ];
     RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
     [
-        SNew(STextBlock).Text(FText::FromString(TEXT("• Test-fire and zero weapons in the Armory range before deployment")))
-    ];
-    RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
-    [
-        SNew(STextBlock).Text(FText::FromString(TEXT("• Team roster, intel media, route planning and mission travel plug into this board next")))
+        SNew(STextBlock).Text(FText::FromString(TEXT("• Test-fire and configure weapons before deployment")))
     ];
 
     if (Operator.IsValid())
@@ -97,7 +101,7 @@ void UTUBriefingWidget::RebuildContent()
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 18.0f, 4.0f, 4.0f)
     [
         SNew(SButton)
-        .Text(FText::FromString(TEXT("LEAVE BRIEFING BOARD")))
+        .Text(FText::FromString(TEXT("CLOSE MX50")))
         .OnClicked_Lambda([WeakThis]()
         {
             if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
