@@ -14,6 +14,7 @@ enum class ETUWeaponAttachmentSlot : uint8
     Laser UMETA(DisplayName="Laser / Illuminator"),
     Light UMETA(DisplayName="Weapon Light"),
     Foregrip UMETA(DisplayName="Foregrip"),
+    Bipod UMETA(DisplayName="Bipod"),
     Muzzle UMETA(DisplayName="Muzzle Device"),
     Stock UMETA(DisplayName="Stock"),
     Magazine UMETA(DisplayName="Magazine"),
