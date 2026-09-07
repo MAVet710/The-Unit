@@ -52,6 +52,7 @@ bool FTUMeleeLoadoutComponentTest::RunTest(const FString& Parameters)
     Loadout->SetItems(OneItemLoadout, Custom.ItemId);
     TestEqual(TEXT("SetItems replaces inventory"), Loadout->GetAvailableItems().Num(), 1);
     TestEqual(TEXT("Preferred item remains selected"), Loadout->GetSelectedItemId(), Custom.ItemId);
+    TestFalse(TEXT("Single-item loadout does not perform a pointless cycle"), Loadout->CycleSelection(1));
 
     TestFalse(TEXT("Unknown item cannot be selected"), Loadout->SelectItemById(TEXT("MELEE_Missing")));
     return true;
