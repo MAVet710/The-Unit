@@ -26,6 +26,12 @@ One agent primarily owns each subsystem. Cross-subsystem changes require explici
 
 Combat must converge on `ATU_WeaponBase` as the single external runtime weapon API. A subordinate component may encapsulate ammunition mechanics, but it must not compete as a second weapon implementation. Shared definitions in `TheUnitTypes.h` remain canonical.
 
+### Modular weapon composition
+
+Every weapon must evolve into a data-driven runtime instance assembled from a platform plus compatible part definitions rather than a fixed per-model subclass. The customization model must support meaningful gameplay parts including receiver/platform, barrel, muzzle, action/operating components, handguard, stock/brace, grip, magazine/feed system, optics and mounts, rails, lights/lasers, underbarrel accessories, internal components, ammunition, cosmetics, and a dedicated fire-control/trigger module.
+
+Part installation must be governed by explicit slots/interfaces and compatibility metadata. The installed fire-control/trigger module determines supported fire modes and trigger-related gameplay characteristics; those capabilities must not be permanently hard-coded into the base weapon platform. Derived weapon handling/performance is calculated from the installed configuration. Keep this a gameplay/data architecture, not a physical-construction simulation.
+
 Inventory owns item identity and ownership. Raid consumes inventory-facing operations and eventually commits explicit raid deltas, rather than overwriting an entire profile. UI presents state and sends intent; it never owns authoritative rules.
 
 World generators create geometry and gameplay placement information. They do not control raid state, spawn policy, objectives, or extraction outcomes. Marker components currently emitted by the Kill House are placeholders until owning gameplay systems consume them.

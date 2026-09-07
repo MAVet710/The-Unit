@@ -3,9 +3,24 @@
 ## Wave 0 — Architecture cleanup
 
 - **TU-001:** canonical weapon ownership.
-- Engine association/config cleanup.
-- Input/config foundation.
+- **TU-002:** UE 5.7 generator color compile prerequisite.
+- **TU-003:** align project engine association with UE 5.7.
+- **TU-004:** committed legacy input/config foundation.
 - Basic automated compile/test path.
+
+## Wave 0.5 — Modular Weapon Foundation
+
+Complete this before player weapon equip/firing integration.
+
+- Data-driven weapon platform definitions.
+- Reusable weapon-part definitions and explicit part slots/interfaces.
+- Compatibility metadata/tags that determine valid installations without per-build subclasses.
+- Persistent/runtime weapon-instance composition from installed parts.
+- Dedicated fire-control/trigger modules that determine supported fire modes and trigger-related gameplay characteristics.
+- Derived weapon configuration/stat aggregation from the installed build.
+- Focused compatibility, invalid-build, and configuration regression tests.
+
+The system must support deep customization while remaining an abstract gameplay/data model rather than a physical-construction simulation.
 
 ## Wave 1 — Playable Combat
 
