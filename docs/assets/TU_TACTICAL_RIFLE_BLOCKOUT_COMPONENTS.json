@@ -1,0 +1,35 @@
+{
+  "asset": "TU_TacticalRifle_Blockout.glb",
+  "status": "chat-generated blockout; external source artifact, not yet committed as Unreal content",
+  "recommended_groups": {
+    "body": [
+      "Upper_Receiver",
+      "Lower_Receiver",
+      "Trigger_Guard_Block",
+      "Pistol_Grip",
+      "Handguard_Main",
+      "Top_Rail",
+      "Solid_Barrel_Shroud",
+      "Receiver_Control_Plate"
+    ],
+    "stock": ["Stock_Body", "Stock_Cheek", "Stock_Toe", "Buffer_Tube"],
+    "magazine": ["Magazine", "Magazine_Base"],
+    "foregrip": ["Vertical_Grip", "Vertical_Grip_Base"],
+    "muzzle": ["Solid_Muzzle_Device", "Muzzle_EndCap"],
+    "optic": ["Optic_Mount", "Optic_Body", "Optic_Lens_Housing", "Optic_Knob"],
+    "magnifier": ["Rear_Magnifier_Mount", "Rear_Magnifier", "Magnifier_Lens"],
+    "laser": ["Laser_Mount", "Laser_Module", "Laser_Front"],
+    "forward_accessory": ["Forward_Accessory"],
+    "handguard_detail_pattern": ["Handguard_Slot_L_0..6", "Handguard_Slot_R_0..6"]
+  },
+  "target_attachment_slots": {
+    "stock": "Stock",
+    "magazine": "Magazine",
+    "foregrip": "Foregrip",
+    "muzzle": "Muzzle",
+    "optic": "Optic",
+    "magnifier": "Magnifier",
+    "laser": "Laser",
+    "forward_accessory": "SideAccessory"
+  }
+}
