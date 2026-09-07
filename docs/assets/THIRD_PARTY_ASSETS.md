@@ -17,7 +17,36 @@ Record every externally sourced asset before it enters The Unit's content pipeli
 
 | Asset | Author | Source | License | Downloaded | Attribution | Intended Use | UE Destination | Source Redistribution Allowed? | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| _Example_ | _Creator_ | _URL_ | _License name_ | YYYY-MM-DD | None/Required | Kill House prop | `/Game/TheUnit/...` | Yes/No/Unknown | Needs Review |
+| SWAT Operator (#4153582) | jeandiz; component creators below | [Listing](https://www.cgtrader.com/free-3d-models/character/man/swat-operator) | Listing: Custom License (no AI); author describes source components as CC-BY, version unspecified | Pending local intake | Required; see credits below | Candidate modular character/gear | Not imported | Unknown pending exact terms | Needs Review |
+| Bren 2 assault rifle (#3485426) | Studio-Svoboda | [Listing](https://www.cgtrader.com/free-3d-models/military/gun/bren-2) | Royalty Free License (no AI) as displayed 2026-09-07 | User-supplied; exact date unverified | Creator credit retained below | Candidate modular weapon art | Not imported | Not approved for public source redistribution | Needs Review |
+| Private Military Contractor | jeandiz | [Matching listing](https://www.cgtrader.com/free-3d-models/military/military-character/private-military-contractor-8cb4b6a2-1d89-45be-b328-7f29ad58f653) | Editorial License (no AI) as displayed 2026-09-07 | User-supplied; exact date unverified | jeandiz | Assessment only; separate permission needed for commercial-game use | Not imported | Not approved | Needs Review |
+
+## Attribution record: SWAT Operator
+
+Source: [SWAT Operator](https://www.cgtrader.com/free-3d-models/character/man/swat-operator), assembled, edited, optimized, and retextured by [jeandiz](https://www.cgtrader.com/designers/jeandiz). Component credits transcribed from the author's listing and supplied by the user:
+
+| Component | Original creator |
+|---|---|
+| Gloves | bobeer |
+| NVGs | VassKacsoHunor |
+| Helmet | Simon Coenen |
+| Soldier Uniform | Bzovius |
+| Boots | Albin |
+| Balaclava | Shedmon |
+| KRSV VECTOR | h1ggs |
+
+The author identifies the component sources as Sketchfab and Blend Swap and describes them as CC-BY. Exact source URLs and license versions have not been supplied or verified. Do not substitute an assumed CC-BY version or treat this record as completed release clearance. Retain these credits, add the original asset/license links and required notices once verified, and include the resulting attribution in shipped credits when the assets are actually used.
+
+The Unit modifications: none so far; inspection only. Record later mesh separation, rigging, material, or texture changes here before release. Attribution does not resolve the assembled listing's Custom License terms automatically.
+
+## Other creator credits
+
+- Bren 2 assault rifle: Studio-Svoboda, linked above. The Unit modifications: none; inspection only.
+- Private Military Contractor: jeandiz, linked above. The Unit modifications: none; inspection only. Keep excluded from shipping until permission is resolved.
+
+## Character customization acceptance gate
+
+All character gear must be independently removable and replaceable. Verify separate equipment meshes, compatible skeleton/weights or attachment points, complete underlying body/clothing for supported unequipped states, and fit/clipping across supported combinations. A rigged assembled character or a source-credit list alone does not establish modular readiness. No asset has been approved or imported by this registry update.
 
 ## Status values
 
