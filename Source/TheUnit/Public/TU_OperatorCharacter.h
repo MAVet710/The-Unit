@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "TU_OperatorCharacter.generated.h"
 
+class ATU_FPVDrone;
 class UCameraComponent;
 class USkeletalMeshComponent;
 
@@ -52,6 +53,12 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement|State")
     bool bIsLeaningRight = false;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FPV")
+    TSubclassOf<ATU_FPVDrone> FPVDroneClass;
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "FPV")
+    TObjectPtr<ATU_FPVDrone> ActiveFPVDrone = nullptr;
+
     UFUNCTION(BlueprintCallable, Category = "Input|Movement")
     void MoveForward(float Value);
 
@@ -96,6 +103,9 @@ protected:
 
     UFUNCTION(BlueprintCallable, Category = "Input|Interaction")
     virtual void Interact();
+
+    UFUNCTION(BlueprintCallable, Category = "FPV")
+    void DeployOrEnterFPVDrone();
 
 private:
     void UpdateMovementSpeed();
