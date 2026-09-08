@@ -6,10 +6,13 @@
 
 /**
  * Authoritative match rules for The Unit.
- * Will coordinate mission start/end, objective completion, and extraction outcomes.
+ * Coordinates the native tactical player-controller boundary while mission rules evolve.
  */
 UCLASS()
 class THEUNIT_API ATU_GameMode : public AGameModeBase
 {
     GENERATED_BODY()
+
+public:
+    ATU_GameMode();
 };
