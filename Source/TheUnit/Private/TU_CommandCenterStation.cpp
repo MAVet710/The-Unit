@@ -1,6 +1,7 @@
 #include "TU_CommandCenterStation.h"
 
 #include "TUArmoryWidget.h"
+#include "TUHideoutLifecycleSubsystem.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_PlayerController.h"
 #include "TUMissionPackageData.h"
@@ -8,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -77,12 +79,11 @@ bool ATU_CommandCenterStation::UseStation(ATU_ArmedOperatorCharacter* Operator)
             return Operator->OpenArmoryView(ETUArmoryViewMode::Gear);
 
         case ETUCommandCenterStationType::Briefing:
-        case ETUCommandCenterStationType::MissionLaunch:
         {
             FName BriefingMission = MissionId.IsNone() ? FName(TEXT("OP_KILLHOUSE")) : MissionId;
-            FText BriefingTitle = StationType == ETUCommandCenterStationType::MissionLaunch
-                ? FText::FromString(TEXT("Deployment Ready Check"))
-                : (StationLabel.IsEmpty() ? FText::FromString(TEXT("Operation Briefing")) : StationLabel);
+            FText BriefingTitle = StationLabel.IsEmpty()
+                ? FText::FromString(TEXT("Operation Briefing"))
+                : StationLabel;
 
             if (MissionPackage)
             {
@@ -99,6 +100,32 @@ bool ATU_CommandCenterStation::UseStation(ATU_ArmedOperatorCharacter* Operator)
             }
 
             return Operator->OpenBriefing(BriefingMission, BriefingTitle);
+        }
+
+        case ETUCommandCenterStationType::MissionLaunch:
+        {
+            if (MissionPackage)
+            {
+                if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+                {
+                    if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
+                    {
+                        Tablet->ApplyMissionPackage(MissionPackage);
+                    }
+                }
+
+                if (UGameInstance* GameInstance = Operator->GetGameInstance())
+                {
+                    if (UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>())
+                    {
+                        return Lifecycle->DeployToMission(Operator, MissionPackage);
+                    }
+                }
+                return false;
+            }
+
+            const FName LaunchMission = MissionId.IsNone() ? FName(TEXT("OP_KILLHOUSE")) : MissionId;
+            return Operator->OpenBriefing(LaunchMission, FText::FromString(TEXT("Deployment Ready Check")));
         }
 
         case ETUCommandCenterStationType::TestRange:
