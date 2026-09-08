@@ -25,7 +25,7 @@ public:
 
     /** Rebuild graybox/environment state after persistence or an upgrade changes module levels. */
     UFUNCTION(BlueprintCallable, Category="Hideout")
-    void RefreshFromProgression();
+    void RefreshFromProgression() { Rebuild(); }
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hideout")
