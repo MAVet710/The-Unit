@@ -1,5 +1,6 @@
 #include "TU_ModularOperatorCharacter.h"
 
+#include "TUEquipmentDefinition.h"
 #include "TUHealthComponent.h"
 #include "TUOperatorAppearanceData.h"
 #include "TUOperatorEquipmentComponent.h"
@@ -36,9 +37,36 @@ void ATU_ModularOperatorCharacter::SetOperatorAppearance(UTUOperatorAppearanceDa
     }
 }
 
+void ATU_ModularOperatorCharacter::AddAppearanceLoadoutToCatalog()
+{
+    if (!OperatorAppearance || !OperatorAppearance->DefaultLoadout)
+    {
+        return;
+    }
+
+    for (UTUEquipmentDefinition* Definition : OperatorAppearance->DefaultLoadout->Items)
+    {
+        if (!Definition)
+        {
+            continue;
+        }
+
+        const bool bAlreadyPresent = AvailableGear.ContainsByPredicate([Definition](const TObjectPtr<UTUEquipmentDefinition>& Existing)
+        {
+            return Existing == Definition || (Existing && !Definition->ItemId.IsNone() && Existing->ItemId == Definition->ItemId);
+        });
+
+        if (!bAlreadyPresent)
+        {
+            AvailableGear.Add(Definition);
+        }
+    }
+}
+
 void ATU_ModularOperatorCharacter::ApplyOperatorAppearance()
 {
     USkeletalMeshComponent* ThirdPersonBody = GetMesh();
+    AddAppearanceLoadoutToCatalog();
 
     if (OperatorAppearance)
     {
@@ -103,6 +131,106 @@ void ATU_ModularOperatorCharacter::ApplyOperatorAppearance()
     {
         ArmorProtectionComponent->ResetArmorState();
     }
+}
+
+TArray<UTUEquipmentDefinition*> ATU_ModularOperatorCharacter::GetAvailableGear() const
+{
+    TArray<UTUEquipmentDefinition*> Result;
+    Result.Reserve(AvailableGear.Num());
+    for (UTUEquipmentDefinition* Definition : AvailableGear)
+    {
+        if (Definition)
+        {
+            Result.Add(Definition);
+        }
+    }
+    return Result;
+}
+
+void ATU_ModularOperatorCharacter::SetAvailableGear(const TArray<UTUEquipmentDefinition*>& NewGear)
+{
+    AvailableGear.Reset();
+    TSet<FName> SeenIds;
+
+    for (UTUEquipmentDefinition* Definition : NewGear)
+    {
+        if (!Definition)
+        {
+            continue;
+        }
+
+        if (!Definition->ItemId.IsNone())
+        {
+            if (SeenIds.Contains(Definition->ItemId))
+            {
+                continue;
+            }
+            SeenIds.Add(Definition->ItemId);
+        }
+        AvailableGear.Add(Definition);
+    }
+
+    AddAppearanceLoadoutToCatalog();
+}
+
+UTUEquipmentDefinition* ATU_ModularOperatorCharacter::FindAvailableGear(FName ItemId) const
+{
+    if (ItemId.IsNone())
+    {
+        return nullptr;
+    }
+
+    for (UTUEquipmentDefinition* Definition : AvailableGear)
+    {
+        if (Definition && Definition->ItemId == ItemId)
+        {
+            return Definition;
+        }
+    }
+    return nullptr;
+}
+
+bool ATU_ModularOperatorCharacter::EquipGearById(FName ItemId)
+{
+    UTUEquipmentDefinition* Definition = FindAvailableGear(ItemId);
+    if (!Definition || !EquipmentComponent || !EquipmentComponent->EquipItem(Definition))
+    {
+        return false;
+    }
+
+    if (ArmorProtectionComponent)
+    {
+        ArmorProtectionComponent->ResetArmorState();
+    }
+    return true;
+}
+
+bool ATU_ModularOperatorCharacter::UnequipGearSlot(ETUEquipmentSlot Slot)
+{
+    if (!EquipmentComponent || !EquipmentComponent->UnequipSlot(Slot))
+    {
+        return false;
+    }
+
+    if (ArmorProtectionComponent)
+    {
+        ArmorProtectionComponent->ResetArmorState();
+    }
+    return true;
+}
+
+FName ATU_ModularOperatorCharacter::GetEquippedGearId(ETUEquipmentSlot Slot) const
+{
+    if (!EquipmentComponent)
+    {
+        return NAME_None;
+    }
+
+    if (UTUEquipmentDefinition* Definition = EquipmentComponent->GetEquippedItem(Slot))
+    {
+        return Definition->ItemId.IsNone() ? Definition->GetFName() : Definition->ItemId;
+    }
+    return NAME_None;
 }
 
 float ATU_ModularOperatorCharacter::GetTotalCombatLoadoutWeightKg() const
