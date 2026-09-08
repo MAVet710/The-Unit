@@ -66,7 +66,7 @@ public:
     void SetMissionSnapshot(const FTMX50MissionSnapshot& InSnapshot);
 
     UFUNCTION(BlueprintPure, Category="MX50")
-    const FTMX50MissionSnapshot& GetMissionSnapshot() const { return MissionSnapshot; }
+    FTMX50MissionSnapshot GetMissionSnapshot() const { return MissionSnapshot; }
 
     UFUNCTION(BlueprintCallable, Category="MX50")
     void SetActivePage(ETUMX50Page Page) { ActivePage = Page; }
