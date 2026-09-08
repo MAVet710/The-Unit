@@ -5,6 +5,7 @@
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_ModularOperatorCharacter.generated.h"
 
+class UTUEquipmentDefinition;
 class UTUHealthComponent;
 class UTUOperatorAppearanceData;
 class UTUOperatorEquipmentComponent;
@@ -30,6 +31,21 @@ public:
     UFUNCTION(BlueprintPure, Category="Operator|Equipment")
     UTUOperatorEquipmentComponent* GetOperatorEquipment() const { return EquipmentComponent; }
 
+    UFUNCTION(BlueprintPure, Category="Operator|Equipment")
+    TArray<UTUEquipmentDefinition*> GetAvailableGear() const;
+
+    UFUNCTION(BlueprintCallable, Category="Operator|Equipment")
+    void SetAvailableGear(const TArray<UTUEquipmentDefinition*>& NewGear);
+
+    UFUNCTION(BlueprintCallable, Category="Operator|Equipment")
+    bool EquipGearById(FName ItemId);
+
+    UFUNCTION(BlueprintCallable, Category="Operator|Equipment")
+    bool UnequipGearSlot(ETUEquipmentSlot Slot);
+
+    UFUNCTION(BlueprintPure, Category="Operator|Equipment")
+    FName GetEquippedGearId(ETUEquipmentSlot Slot) const;
+
     UFUNCTION(BlueprintPure, Category="Operator|Armor")
     UTUArmorProtectionComponent* GetArmorProtection() const { return ArmorProtectionComponent; }
 
@@ -54,6 +70,10 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Equipment")
     TObjectPtr<UTUOperatorEquipmentComponent> EquipmentComponent;
 
+    /** Data-authored inventory shown by the Cage. Appearance default-loadout items are automatically included. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Operator|Equipment")
+    TArray<TObjectPtr<UTUEquipmentDefinition>> AvailableGear;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Operator|Armor")
     TObjectPtr<UTUArmorProtectionComponent> ArmorProtectionComponent;
 
@@ -62,4 +82,8 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Operator|Appearance")
     TObjectPtr<UTUOperatorAppearanceData> OperatorAppearance = nullptr;
+
+private:
+    UTUEquipmentDefinition* FindAvailableGear(FName ItemId) const;
+    void AddAppearanceLoadoutToCatalog();
 };
