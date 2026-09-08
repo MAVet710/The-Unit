@@ -1,14 +1,44 @@
 #include "TUArmoryWidget.h"
 
+#include "TUEquipmentDefinition.h"
+#include "TUHideoutLifecycleSubsystem.h"
 #include "TU_ArmedOperatorCharacter.h"
+#include "TU_ModularOperatorCharacter.h"
 #include "TUMeleeLoadoutComponent.h"
+#include "TUOperatorEquipmentComponent.h"
 #include "TUOperatorLoadoutComponent.h"
+#include "Engine/GameInstance.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
+
+namespace
+{
+    FString GearSlotLabel(ETUEquipmentSlot Slot)
+    {
+        switch (Slot)
+        {
+            case ETUEquipmentSlot::Headwear: return TEXT("HEADWEAR");
+            case ETUEquipmentSlot::Headset: return TEXT("HEADSET");
+            case ETUEquipmentSlot::Eyewear: return TEXT("EYEWEAR");
+            case ETUEquipmentSlot::Facewear: return TEXT("FACEWEAR");
+            case ETUEquipmentSlot::NVG: return TEXT("NVG");
+            case ETUEquipmentSlot::TorsoArmor: return TEXT("TORSO ARMOR");
+            case ETUEquipmentSlot::ChestRig: return TEXT("CHEST RIG");
+            case ETUEquipmentSlot::Backpack: return TEXT("BACKPACK");
+            case ETUEquipmentSlot::Belt: return TEXT("BATTLE BELT");
+            case ETUEquipmentSlot::LeftHip: return TEXT("LEFT HIP");
+            case ETUEquipmentSlot::RightHip: return TEXT("RIGHT HIP");
+            case ETUEquipmentSlot::Gloves: return TEXT("GLOVES");
+            case ETUEquipmentSlot::KneePads: return TEXT("KNEE PADS");
+            case ETUEquipmentSlot::Footwear: return TEXT("FOOTWEAR");
+            default: return TEXT("ACCESSORY");
+        }
+    }
+}
 
 TSharedRef<SWidget> UTUArmoryWidget::RebuildWidget()
 {
@@ -55,6 +85,23 @@ void UTUArmoryWidget::Refresh()
     RebuildContent();
 }
 
+void UTUArmoryWidget::PersistSelections()
+{
+    if (!Operator.IsValid())
+    {
+        return;
+    }
+
+    if (UGameInstance* GameInstance = Operator->GetGameInstance())
+    {
+        if (UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>())
+        {
+            Lifecycle->CaptureOperatorLoadout(Operator.Get());
+            Lifecycle->SaveProfile();
+        }
+    }
+}
+
 void UTUArmoryWidget::RebuildContent()
 {
     if (!RootBox.IsValid())
@@ -65,7 +112,7 @@ void UTUArmoryWidget::RebuildContent()
     RootBox->ClearChildren();
 
     FString Title = TEXT("THE UNIT // ARMORY");
-    FString Subtitle = TEXT("Configure operator loadout. Changes apply immediately at this command-center station.");
+    FString Subtitle = TEXT("Configure operator loadout. Changes apply and save immediately at this command-center station.");
     if (ViewMode == ETUArmoryViewMode::Weapons)
     {
         Title = TEXT("THE UNIT // ARMORY & WEAPON BENCH");
@@ -74,7 +121,7 @@ void UTUArmoryWidget::RebuildContent()
     else if (ViewMode == ETUArmoryViewMode::Gear)
     {
         Title = TEXT("THE UNIT // CAGE");
-        Subtitle = TEXT("Configure melee, mission equipment and operator gear. Uniform/armor visuals plug into this room-specific view.");
+        Subtitle = TEXT("Configure melee, mission equipment and modular operator gear. Tactical slot changes apply and save immediately.");
     }
 
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 8.0f)
@@ -106,6 +153,7 @@ void UTUArmoryWidget::RebuildContent()
     {
         AddMeleeChoices();
         AddEquipmentChoices();
+        AddTacticalGearChoices();
     }
 
     AddSummary();
@@ -119,6 +167,7 @@ void UTUArmoryWidget::RebuildContent()
         {
             if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
             {
+                WeakThis->PersistSelections();
                 WeakThis->Operator->CloseArmory();
             }
             return FReply::Handled();
@@ -161,7 +210,10 @@ void UTUArmoryWidget::AddPrimaryChoices()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
-                    WeakThis->Operator->SelectPrimaryById(ItemId);
+                    if (WeakThis->Operator->SelectPrimaryById(ItemId))
+                    {
+                        WeakThis->PersistSelections();
+                    }
                     WeakThis->Refresh();
                 }
                 return FReply::Handled();
@@ -192,7 +244,10 @@ void UTUArmoryWidget::AddSecondaryChoices()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
-                    WeakThis->Operator->SelectSecondaryById(ItemId);
+                    if (WeakThis->Operator->SelectSecondaryById(ItemId))
+                    {
+                        WeakThis->PersistSelections();
+                    }
                     WeakThis->Refresh();
                 }
                 return FReply::Handled();
@@ -223,7 +278,10 @@ void UTUArmoryWidget::AddMeleeChoices()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
-                    WeakThis->Operator->SelectMeleeById(ItemId);
+                    if (WeakThis->Operator->SelectMeleeById(ItemId))
+                    {
+                        WeakThis->PersistSelections();
+                    }
                     WeakThis->Refresh();
                 }
                 return FReply::Handled();
@@ -234,7 +292,7 @@ void UTUArmoryWidget::AddMeleeChoices()
 
 void UTUArmoryWidget::AddEquipmentChoices()
 {
-    AddSectionHeader(TEXT("EQUIPMENT / GEAR"));
+    AddSectionHeader(TEXT("MISSION EQUIPMENT"));
     UTUOperatorLoadoutComponent* Loadout = Operator->GetOperatorLoadout();
     if (!Loadout)
     {
@@ -254,7 +312,77 @@ void UTUArmoryWidget::AddEquipmentChoices()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
-                    WeakThis->Operator->SelectEquipmentById(ItemId);
+                    if (WeakThis->Operator->SelectEquipmentById(ItemId))
+                    {
+                        WeakThis->PersistSelections();
+                    }
+                    WeakThis->Refresh();
+                }
+                return FReply::Handled();
+            })
+        ];
+    }
+}
+
+void UTUArmoryWidget::AddTacticalGearChoices()
+{
+    AddSectionHeader(TEXT("TACTICAL GEAR / UNIFORM SYSTEM"));
+
+    ATU_ModularOperatorCharacter* Modular = Cast<ATU_ModularOperatorCharacter>(Operator.Get());
+    if (!Modular)
+    {
+        RootBox->AddSlot().AutoHeight().Padding(4.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("Current operator pawn does not expose the modular equipment system.")))
+        ];
+        return;
+    }
+
+    const TArray<UTUEquipmentDefinition*> Gear = Modular->GetAvailableGear();
+    if (Gear.IsEmpty())
+    {
+        RootBox->AddSlot().AutoHeight().Padding(4.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("No authored gear definitions are available yet. Import the SWAT/helmet assets and assign equipment definitions to the operator catalog.")))
+        ];
+        return;
+    }
+
+    for (UTUEquipmentDefinition* Definition : Gear)
+    {
+        if (!Definition)
+        {
+            continue;
+        }
+
+        const FName ItemId = Definition->ItemId;
+        const ETUEquipmentSlot Slot = Definition->Slot;
+        const bool bSelected = Modular->GetEquippedGearId(Slot) == ItemId;
+        const FString Label = FString::Printf(
+            TEXT("%s%s // %s  |  %.2f kg%s"),
+            bSelected ? TEXT("[EQUIPPED] ") : TEXT(""),
+            *GearSlotLabel(Slot),
+            *Definition->DisplayName.ToString(),
+            Definition->WeightKg,
+            Definition->bProvidesBallisticProtection ? TEXT("  |  PROTECTIVE") : TEXT(""));
+
+        TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
+        RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
+        [
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId, Slot, bSelected]()
+            {
+                if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
+                {
+                    if (ATU_ModularOperatorCharacter* CurrentModular = Cast<ATU_ModularOperatorCharacter>(WeakThis->Operator.Get()))
+                    {
+                        const bool bChanged = bSelected
+                            ? CurrentModular->UnequipGearSlot(Slot)
+                            : CurrentModular->EquipGearById(ItemId);
+                        if (bChanged)
+                        {
+                            WeakThis->PersistSelections();
+                        }
+                    }
                     WeakThis->Refresh();
                 }
                 return FReply::Handled();
@@ -267,7 +395,24 @@ void UTUArmoryWidget::AddSummary()
 {
     AddSectionHeader(TEXT("LOADOUT SUMMARY"));
     const FString ActiveSlot = Operator->GetActiveWeaponSlot() == ETUOperatorWeaponSlot::Primary ? TEXT("PRIMARY") : TEXT("SECONDARY");
-    const FString Summary = FString::Printf(TEXT("Active weapon: %s   |   Selected carried weight: %.2f kg"), *ActiveSlot, Operator->GetSelectedLoadoutWeightKg());
+
+    float CarriedWeight = Operator->GetSelectedLoadoutWeightKg();
+    int32 GearCount = 0;
+    if (ATU_ModularOperatorCharacter* Modular = Cast<ATU_ModularOperatorCharacter>(Operator.Get()))
+    {
+        CarriedWeight = Modular->GetTotalCombatLoadoutWeightKg();
+        if (UTUOperatorEquipmentComponent* Equipment = Modular->GetOperatorEquipment())
+        {
+            GearCount = Equipment->GetEquippedItemCount();
+        }
+    }
+
+    const FString Summary = FString::Printf(
+        TEXT("Active weapon: %s   |   Total carried weight: %.2f kg   |   Equipped tactical items: %d"),
+        *ActiveSlot,
+        CarriedWeight,
+        GearCount);
+
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 4.0f)
     [
         SNew(STextBlock).Text(FText::FromString(Summary))
