@@ -2,6 +2,9 @@
 
 #include "TUArmoryWidget.h"
 #include "TU_ArmedOperatorCharacter.h"
+#include "TU_PlayerController.h"
+#include "TUMissionPackageData.h"
+#include "TUMX50TabletComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -74,18 +77,28 @@ bool ATU_CommandCenterStation::UseStation(ATU_ArmedOperatorCharacter* Operator)
             return Operator->OpenArmoryView(ETUArmoryViewMode::Gear);
 
         case ETUCommandCenterStationType::Briefing:
-        {
-            const FName BriefingMission = MissionId.IsNone() ? FName(TEXT("OP_KILLHOUSE")) : MissionId;
-            const FText BriefingTitle = StationLabel.IsEmpty()
-                ? FText::FromString(TEXT("Operation Briefing"))
-                : StationLabel;
-            return Operator->OpenBriefing(BriefingMission, BriefingTitle);
-        }
-
         case ETUCommandCenterStationType::MissionLaunch:
         {
-            const FName LaunchMission = MissionId.IsNone() ? FName(TEXT("OP_KILLHOUSE")) : MissionId;
-            return Operator->OpenBriefing(LaunchMission, FText::FromString(TEXT("Deployment Ready Check")));
+            FName BriefingMission = MissionId.IsNone() ? FName(TEXT("OP_KILLHOUSE")) : MissionId;
+            FText BriefingTitle = StationType == ETUCommandCenterStationType::MissionLaunch
+                ? FText::FromString(TEXT("Deployment Ready Check"))
+                : (StationLabel.IsEmpty() ? FText::FromString(TEXT("Operation Briefing")) : StationLabel);
+
+            if (MissionPackage)
+            {
+                BriefingMission = MissionPackage->Mission.MissionId;
+                BriefingTitle = MissionPackage->Mission.MissionTitle;
+
+                if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+                {
+                    if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
+                    {
+                        Tablet->ApplyMissionPackage(MissionPackage);
+                    }
+                }
+            }
+
+            return Operator->OpenBriefing(BriefingMission, BriefingTitle);
         }
 
         case ETUCommandCenterStationType::TestRange:
