@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "TUEquipmentTypes.h"
 #include "TUHideoutProgressionComponent.h"
 #include "TUHideoutSaveGame.generated.h"
 
@@ -12,33 +13,37 @@ class THEUNIT_API UTUHideoutSaveGame : public USaveGame
     GENERATED_BODY()
 
 public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Profile")
-    int32 SaveVersion = 1;
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Profile")
+    int32 SaveVersion = 2;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Hideout")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Hideout")
     TArray<FTUHideoutModuleState> HideoutModules;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
     FName PrimaryId = NAME_None;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
     FName SecondaryId = NAME_None;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
     FName EquipmentId = NAME_None;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Loadout")
     FName MeleeId = NAME_None;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Mission")
+    /** Stable modular equipment item id saved independently for each tactical slot. */
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Loadout|Gear")
+    TMap<ETUEquipmentSlot, FName> GearBySlot;
+
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Mission")
     FName ActiveMissionId = NAME_None;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Mission")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Mission")
     FName HideoutMapName = TEXT("CommandCenter");
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Mission")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Mission")
     bool bMissionInProgress = false;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Mission")
+    UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Mission")
     int32 CompletedOperations = 0;
 };
