@@ -22,6 +22,9 @@ class THEUNIT_API ATU_ModularOperatorCharacter : public ATU_ArmedOperatorCharact
 public:
     ATU_ModularOperatorCharacter();
 
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        class AController* EventInstigator, AActor* DamageCauser) override;
+
     UFUNCTION(BlueprintCallable, Category="Operator|Appearance")
     void SetOperatorAppearance(UTUOperatorAppearanceData* NewAppearance);
 
@@ -86,4 +89,5 @@ protected:
 private:
     UTUEquipmentDefinition* FindAvailableGear(FName ItemId) const;
     void AddAppearanceLoadoutToCatalog();
+    ETUBodyRegion ResolveBodyRegionFromBone(FName BoneName) const;
 };
