@@ -4,9 +4,32 @@
 #include "TUHideoutProgressionComponent.h"
 #include "TUMeleeLoadoutComponent.h"
 #include "TUMissionPackageData.h"
+#include "TUOperatorEquipmentComponent.h"
 #include "TUOperatorLoadoutComponent.h"
+#include "TU_ModularOperatorCharacter.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace
+{
+    static constexpr ETUEquipmentSlot AllGearSlots[] = {
+        ETUEquipmentSlot::Headwear,
+        ETUEquipmentSlot::Headset,
+        ETUEquipmentSlot::Eyewear,
+        ETUEquipmentSlot::Facewear,
+        ETUEquipmentSlot::NVG,
+        ETUEquipmentSlot::TorsoArmor,
+        ETUEquipmentSlot::ChestRig,
+        ETUEquipmentSlot::Backpack,
+        ETUEquipmentSlot::Belt,
+        ETUEquipmentSlot::LeftHip,
+        ETUEquipmentSlot::RightHip,
+        ETUEquipmentSlot::Gloves,
+        ETUEquipmentSlot::KneePads,
+        ETUEquipmentSlot::Footwear,
+        ETUEquipmentSlot::Accessory
+    };
+}
 
 void UTUHideoutLifecycleSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -82,6 +105,28 @@ void UTUHideoutLifecycleSubsystem::ApplyOperatorLoadout(ATU_ArmedOperatorCharact
     {
         Operator->SelectMeleeById(Profile->MeleeId);
     }
+
+    ATU_ModularOperatorCharacter* Modular = Cast<ATU_ModularOperatorCharacter>(Operator);
+    if (!Modular || Profile->GearBySlot.IsEmpty())
+    {
+        return;
+    }
+
+    if (UTUOperatorEquipmentComponent* Equipment = Modular->GetOperatorEquipment())
+    {
+        Equipment->ClearLoadout();
+    }
+
+    for (const ETUEquipmentSlot Slot : AllGearSlots)
+    {
+        if (const FName* SavedItemId = Profile->GearBySlot.Find(Slot))
+        {
+            if (!SavedItemId->IsNone())
+            {
+                Modular->EquipGearById(*SavedItemId);
+            }
+        }
+    }
 }
 
 void UTUHideoutLifecycleSubsystem::CaptureOperatorLoadout(const ATU_ArmedOperatorCharacter* Operator)
@@ -98,6 +143,15 @@ void UTUHideoutLifecycleSubsystem::CaptureOperatorLoadout(const ATU_ArmedOperato
         Profile->EquipmentId = Loadout->GetSelectedEquipmentId();
     }
     Profile->MeleeId = Operator->GetSelectedMeleeId();
+
+    if (const ATU_ModularOperatorCharacter* Modular = Cast<ATU_ModularOperatorCharacter>(Operator))
+    {
+        Profile->GearBySlot.Reset();
+        for (const ETUEquipmentSlot Slot : AllGearSlots)
+        {
+            Profile->GearBySlot.Add(Slot, Modular->GetEquippedGearId(Slot));
+        }
+    }
 }
 
 bool UTUHideoutLifecycleSubsystem::DeployToMission(ATU_ArmedOperatorCharacter* Operator, const UTUMissionPackageData* MissionPackage)
