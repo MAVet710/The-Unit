@@ -49,13 +49,14 @@ ETUMX50Page UTUMX50TabletComponent::CyclePage(int32 Direction)
     return ActivePage;
 }
 
-void UTUMX50TabletComponent::SetMapMarkers(const TArray<FTMX50MapMarker>& InMarkers)
+void UTUMX50TabletComponent::RefreshMapSelection()
 {
-    MapMarkers = InMarkers;
-    for (FTMX50MapMarker& Marker : MapMarkers)
+    for (const FTMX50MapMarker& Marker : MapMarkers)
     {
-        Marker.NormalizedPosition.X = FMath::Clamp(Marker.NormalizedPosition.X, 0.0, 1.0);
-        Marker.NormalizedPosition.Y = FMath::Clamp(Marker.NormalizedPosition.Y, 0.0, 1.0);
+        if (Marker.MarkerId == SelectedMapMarkerId && Marker.bVisible)
+        {
+            return;
+        }
     }
 
     SelectedMapMarkerId = NAME_None;
@@ -64,9 +65,21 @@ void UTUMX50TabletComponent::SetMapMarkers(const TArray<FTMX50MapMarker>& InMark
         if (Marker.bVisible && !Marker.MarkerId.IsNone())
         {
             SelectedMapMarkerId = Marker.MarkerId;
-            break;
+            return;
         }
     }
+}
+
+void UTUMX50TabletComponent::SetMapMarkers(const TArray<FTMX50MapMarker>& InMarkers)
+{
+    MapMarkers = InMarkers;
+    for (FTMX50MapMarker& Marker : MapMarkers)
+    {
+        Marker.NormalizedPosition.X = FMath::Clamp(Marker.NormalizedPosition.X, 0.0, 1.0);
+        Marker.NormalizedPosition.Y = FMath::Clamp(Marker.NormalizedPosition.Y, 0.0, 1.0);
+    }
+    SelectedMapMarkerId = NAME_None;
+    RefreshMapSelection();
 }
 
 bool UTUMX50TabletComponent::UpsertMapMarker(const FTMX50MapMarker& Marker)
@@ -80,20 +93,23 @@ bool UTUMX50TabletComponent::UpsertMapMarker(const FTMX50MapMarker& Marker)
     Sanitized.NormalizedPosition.X = FMath::Clamp(Sanitized.NormalizedPosition.X, 0.0, 1.0);
     Sanitized.NormalizedPosition.Y = FMath::Clamp(Sanitized.NormalizedPosition.Y, 0.0, 1.0);
 
+    bool bUpdated = false;
     for (FTMX50MapMarker& Existing : MapMarkers)
     {
         if (Existing.MarkerId == Sanitized.MarkerId)
         {
             Existing = Sanitized;
-            return true;
+            bUpdated = true;
+            break;
         }
     }
 
-    MapMarkers.Add(Sanitized);
-    if (SelectedMapMarkerId.IsNone() && Sanitized.bVisible)
+    if (!bUpdated)
     {
-        SelectedMapMarkerId = Sanitized.MarkerId;
+        MapMarkers.Add(Sanitized);
     }
+
+    RefreshMapSelection();
     return true;
 }
 
@@ -114,18 +130,7 @@ bool UTUMX50TabletComponent::RemoveMapMarker(FName MarkerId)
         return false;
     }
 
-    if (SelectedMapMarkerId == MarkerId)
-    {
-        SelectedMapMarkerId = NAME_None;
-        for (const FTMX50MapMarker& Marker : MapMarkers)
-        {
-            if (Marker.bVisible && !Marker.MarkerId.IsNone())
-            {
-                SelectedMapMarkerId = Marker.MarkerId;
-                break;
-            }
-        }
-    }
+    RefreshMapSelection();
     return true;
 }
 
@@ -146,7 +151,7 @@ bool UTUMX50TabletComponent::GetSelectedMapMarker(FTMX50MapMarker& OutMarker) co
 {
     for (const FTMX50MapMarker& Marker : MapMarkers)
     {
-        if (Marker.MarkerId == SelectedMapMarkerId)
+        if (Marker.MarkerId == SelectedMapMarkerId && Marker.bVisible)
         {
             OutMarker = Marker;
             return true;
@@ -166,23 +171,44 @@ void UTUMX50TabletComponent::SetPlannedRoute(const TArray<FVector2D>& InRoutePoi
     }
 }
 
-void UTUMX50TabletComponent::SetVideoFeeds(const TArray<FTMX50VideoFeed>& InFeeds)
+void UTUMX50TabletComponent::RefreshVideoDerivedState()
 {
-    VideoFeeds = InFeeds;
-    SelectedVideoFeedId = NAME_None;
     MissionSnapshot.bDroneFeedAvailable = false;
 
+    bool bSelectedStillAvailable = false;
     for (const FTMX50VideoFeed& Feed : VideoFeeds)
     {
-        if (Feed.bAvailable && SelectedVideoFeedId.IsNone() && !Feed.FeedId.IsNone())
+        if (Feed.bAvailable && Feed.FeedId == SelectedVideoFeedId)
         {
-            SelectedVideoFeedId = Feed.FeedId;
+            bSelectedStillAvailable = true;
         }
         if (Feed.bAvailable && Feed.Type == ETUMX50VideoFeedType::FPVDrone)
         {
             MissionSnapshot.bDroneFeedAvailable = true;
         }
     }
+
+    if (bSelectedStillAvailable)
+    {
+        return;
+    }
+
+    SelectedVideoFeedId = NAME_None;
+    for (const FTMX50VideoFeed& Feed : VideoFeeds)
+    {
+        if (Feed.bAvailable && !Feed.FeedId.IsNone())
+        {
+            SelectedVideoFeedId = Feed.FeedId;
+            return;
+        }
+    }
+}
+
+void UTUMX50TabletComponent::SetVideoFeeds(const TArray<FTMX50VideoFeed>& InFeeds)
+{
+    VideoFeeds = InFeeds;
+    SelectedVideoFeedId = NAME_None;
+    RefreshVideoDerivedState();
 }
 
 bool UTUMX50TabletComponent::UpsertVideoFeed(const FTMX50VideoFeed& Feed)
@@ -192,32 +218,44 @@ bool UTUMX50TabletComponent::UpsertVideoFeed(const FTMX50VideoFeed& Feed)
         return false;
     }
 
+    bool bUpdated = false;
     for (FTMX50VideoFeed& Existing : VideoFeeds)
     {
         if (Existing.FeedId == Feed.FeedId)
         {
             Existing = Feed;
-            if (Feed.bAvailable && SelectedVideoFeedId.IsNone())
-            {
-                SelectedVideoFeedId = Feed.FeedId;
-            }
-            if (Feed.Type == ETUMX50VideoFeedType::FPVDrone)
-            {
-                MissionSnapshot.bDroneFeedAvailable = Feed.bAvailable;
-            }
-            return true;
+            bUpdated = true;
+            break;
         }
     }
 
-    VideoFeeds.Add(Feed);
-    if (Feed.bAvailable && SelectedVideoFeedId.IsNone())
+    if (!bUpdated)
     {
-        SelectedVideoFeedId = Feed.FeedId;
+        VideoFeeds.Add(Feed);
     }
-    if (Feed.Type == ETUMX50VideoFeedType::FPVDrone && Feed.bAvailable)
+
+    RefreshVideoDerivedState();
+    return true;
+}
+
+bool UTUMX50TabletComponent::RemoveVideoFeed(FName FeedId)
+{
+    if (FeedId.IsNone())
     {
-        MissionSnapshot.bDroneFeedAvailable = true;
+        return false;
     }
+
+    const int32 Removed = VideoFeeds.RemoveAll([FeedId](const FTMX50VideoFeed& Feed)
+    {
+        return Feed.FeedId == FeedId;
+    });
+
+    if (Removed <= 0)
+    {
+        return false;
+    }
+
+    RefreshVideoDerivedState();
     return true;
 }
 
@@ -238,7 +276,7 @@ bool UTUMX50TabletComponent::GetSelectedVideoFeed(FTMX50VideoFeed& OutFeed) cons
 {
     for (const FTMX50VideoFeed& Feed : VideoFeeds)
     {
-        if (Feed.FeedId == SelectedVideoFeedId)
+        if (Feed.FeedId == SelectedVideoFeedId && Feed.bAvailable)
         {
             OutFeed = Feed;
             return true;
