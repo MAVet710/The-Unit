@@ -2,8 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "TU_ExtractionZone.generated.h"
 
+class APawn;
 class UBoxComponent;
 class UPrimitiveComponent;
 
