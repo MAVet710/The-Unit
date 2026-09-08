@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "TU_DonetskDistrictGenerator.generated.h"
 
+class UActorComponent;
 class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
