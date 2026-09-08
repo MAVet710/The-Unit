@@ -22,13 +22,19 @@ public:
     void Configure(ATU_ArmedOperatorCharacter* InOperator, FName InMissionId, const FText& InMissionTitle);
 
     UFUNCTION(BlueprintCallable, Category="MX50")
+    void SetMissionSnapshot(const FTMX50MissionSnapshot& InSnapshot);
+
+    UFUNCTION(BlueprintCallable, Category="MX50")
     void Refresh();
 
     UFUNCTION(BlueprintCallable, Category="MX50")
     void SetPage(ETUMX50Page Page);
 
     UFUNCTION(BlueprintPure, Category="MX50")
-    ETUMX50Page GetPage() const;
+    ETUMX50Page GetPage() const { return ActivePage; }
+
+    UFUNCTION(BlueprintPure, Category="MX50")
+    const FTMX50MissionSnapshot& GetMissionSnapshot() const { return MissionSnapshot; }
 
 private:
     void RebuildContent();
@@ -38,4 +44,6 @@ private:
 
     TWeakObjectPtr<ATU_ArmedOperatorCharacter> Operator;
     TSharedPtr<SVerticalBox> RootBox;
+    FTMX50MissionSnapshot MissionSnapshot;
+    ETUMX50Page ActivePage = ETUMX50Page::Mission;
 };
