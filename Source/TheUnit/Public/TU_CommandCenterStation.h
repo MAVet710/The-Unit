@@ -7,6 +7,7 @@
 class UBoxComponent;
 class UStaticMeshComponent;
 class ATU_ArmedOperatorCharacter;
+class UTUMissionPackageData;
 
 UENUM(BlueprintType)
 enum class ETUCommandCenterStationType : uint8
@@ -35,11 +36,17 @@ public:
     UFUNCTION(BlueprintCallable, Category="Command Center")
     void ConfigureStation(ETUCommandCenterStationType NewType, const FText& NewLabel, FName NewMissionId = NAME_None);
 
+    UFUNCTION(BlueprintCallable, Category="Command Center|Mission")
+    void SetMissionPackage(UTUMissionPackageData* InMissionPackage) { MissionPackage = InMissionPackage; }
+
     UFUNCTION(BlueprintPure, Category="Command Center")
     ETUCommandCenterStationType GetStationType() const { return StationType; }
 
     UFUNCTION(BlueprintPure, Category="Command Center")
     FText GetStationLabel() const { return StationLabel; }
+
+    UFUNCTION(BlueprintPure, Category="Command Center|Mission")
+    UTUMissionPackageData* GetMissionPackage() const { return MissionPackage; }
 
     UFUNCTION(BlueprintPure, Category="Command Center")
     bool IsOperatorInRange(const APawn* Pawn) const;
@@ -57,7 +64,10 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center")
     FText StationLabel;
 
-    /** Mission/map token reserved for the briefing/mission travel layer. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Mission")
     FName MissionId = NAME_None;
+
+    /** Optional full data-driven package. Falls back to MissionId/StationLabel when unset. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Mission")
+    TObjectPtr<UTUMissionPackageData> MissionPackage = nullptr;
 };

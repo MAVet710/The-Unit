@@ -5,6 +5,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SGridPanel.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -31,23 +32,31 @@ void UTUBriefingWidget::ReleaseSlateResources(bool bReleaseChildren)
     RootBox.Reset();
 }
 
+UTUMX50TabletComponent* UTUBriefingWidget::GetTabletState() const
+{
+    if (!Operator.IsValid())
+    {
+        return nullptr;
+    }
+
+    if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+    {
+        return PC->GetMX50Tablet();
+    }
+    return nullptr;
+}
+
 void UTUBriefingWidget::Configure(ATU_ArmedOperatorCharacter* InOperator, FName InMissionId, const FText& InMissionTitle)
 {
     Operator = InOperator;
 
-    if (Operator.IsValid())
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
     {
-        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
-        {
-            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
-            {
-                Tablet->SetMissionContext(InMissionId, InMissionTitle);
-                MissionSnapshot = Tablet->GetMissionSnapshot();
-                ActivePage = Tablet->GetActivePage();
-                Refresh();
-                return;
-            }
-        }
+        Tablet->SetMissionContext(InMissionId, InMissionTitle);
+        MissionSnapshot = Tablet->GetMissionSnapshot();
+        ActivePage = Tablet->GetActivePage();
+        Refresh();
+        return;
     }
 
     if (!InMissionId.IsNone())
@@ -64,18 +73,10 @@ void UTUBriefingWidget::Configure(ATU_ArmedOperatorCharacter* InOperator, FName 
 void UTUBriefingWidget::SetMissionSnapshot(const FTMX50MissionSnapshot& InSnapshot)
 {
     MissionSnapshot = InSnapshot;
-
-    if (Operator.IsValid())
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
     {
-        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
-        {
-            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
-            {
-                Tablet->SetMissionSnapshot(InSnapshot);
-            }
-        }
+        Tablet->SetMissionSnapshot(InSnapshot);
     }
-
     Refresh();
 }
 
@@ -92,18 +93,29 @@ void UTUBriefingWidget::SetPage(ETUMX50Page Page)
     }
 
     ActivePage = Page;
-
-    if (Operator.IsValid())
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
     {
-        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
-        {
-            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
-            {
-                Tablet->SetActivePage(Page);
-            }
-        }
+        Tablet->SetActivePage(Page);
     }
+    Refresh();
+}
 
+void UTUBriefingWidget::SelectMapMarker(FName MarkerId)
+{
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
+    {
+        Tablet->SelectMapMarker(MarkerId);
+    }
+    Refresh();
+}
+
+void UTUBriefingWidget::SelectVideoFeed(FName FeedId)
+{
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
+    {
+        Tablet->SelectVideoFeed(FeedId);
+        MissionSnapshot = Tablet->GetMissionSnapshot();
+    }
     Refresh();
 }
 
@@ -118,6 +130,33 @@ FText UTUBriefingWidget::GetPageLabel(ETUMX50Page Page) const
         case ETUMX50Page::Drone: return FText::FromString(TEXT("DRONE / VIDEO"));
         case ETUMX50Page::Loadout: return FText::FromString(TEXT("LOADOUT"));
         default: return FText::FromString(TEXT("MX50"));
+    }
+}
+
+FText UTUBriefingWidget::GetMarkerTypeLabel(ETUMX50MapMarkerType Type) const
+{
+    switch (Type)
+    {
+        case ETUMX50MapMarkerType::Entry: return FText::FromString(TEXT("ENTRY"));
+        case ETUMX50MapMarkerType::Objective: return FText::FromString(TEXT("OBJECTIVE"));
+        case ETUMX50MapMarkerType::Threat: return FText::FromString(TEXT("THREAT"));
+        case ETUMX50MapMarkerType::Rally: return FText::FromString(TEXT("RALLY"));
+        case ETUMX50MapMarkerType::Friendly: return FText::FromString(TEXT("FRIENDLY"));
+        case ETUMX50MapMarkerType::Extraction: return FText::FromString(TEXT("EXTRACTION"));
+        case ETUMX50MapMarkerType::Observation: return FText::FromString(TEXT("OBSERVATION"));
+        default: return FText::FromString(TEXT("MARKER"));
+    }
+}
+
+FText UTUBriefingWidget::GetVideoFeedTypeLabel(ETUMX50VideoFeedType Type) const
+{
+    switch (Type)
+    {
+        case ETUMX50VideoFeedType::FPVDrone: return FText::FromString(TEXT("FPV DRONE"));
+        case ETUMX50VideoFeedType::BodyCamera: return FText::FromString(TEXT("BODY CAMERA"));
+        case ETUMX50VideoFeedType::FixedCamera: return FText::FromString(TEXT("FIXED CAMERA"));
+        case ETUMX50VideoFeedType::Observation: return FText::FromString(TEXT("OBSERVATION"));
+        default: return FText::FromString(TEXT("VIDEO"));
     }
 }
 
@@ -162,6 +201,177 @@ void UTUBriefingWidget::AddNavigation()
     }
 }
 
+void UTUBriefingWidget::AddMapPage()
+{
+    UTUMX50TabletComponent* Tablet = GetTabletState();
+    if (!Tablet || !RootBox.IsValid())
+    {
+        return;
+    }
+
+    const TArray<FTMX50MapMarker> Markers = Tablet->GetMapMarkers();
+    const TArray<FVector2D> Route = Tablet->GetPlannedRoute();
+
+    RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
+    [
+        SNew(STextBlock).Text(FText::FromString(FString::Printf(
+            TEXT("AO: %s // %d markers // %d route points"),
+            *MissionSnapshot.Area.ToString(), Markers.Num(), Route.Num())))
+    ];
+
+    if (Markers.Num() == 0)
+    {
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 4.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("NO MISSION MAP OVERLAYS LOADED")))
+        ];
+        return;
+    }
+
+    constexpr int32 Columns = 12;
+    constexpr int32 Rows = 8;
+    TSharedPtr<SGridPanel> Grid;
+    RootBox->AddSlot().AutoHeight().Padding(12.0f, 8.0f)
+    [
+        SNew(SBox)
+        .WidthOverride(900.0f)
+        .HeightOverride(360.0f)
+        [
+            SAssignNew(Grid, SGridPanel)
+        ]
+    ];
+
+    for (int32 Row = 0; Row < Rows; ++Row)
+    {
+        for (int32 Column = 0; Column < Columns; ++Column)
+        {
+            Grid->AddSlot(Column, Row).Padding(1.0f)
+            [
+                SNew(SBorder)
+                .Padding(2.0f)
+                [
+                    SNew(STextBlock).Text(FText::FromString(TEXT("·")))
+                ]
+            ];
+        }
+    }
+
+    TWeakObjectPtr<UTUBriefingWidget> WeakThis(this);
+    for (const FTMX50MapMarker& Marker : Markers)
+    {
+        if (!Marker.bVisible || Marker.MarkerId.IsNone())
+        {
+            continue;
+        }
+
+        const int32 Column = FMath::Clamp(FMath::FloorToInt(Marker.NormalizedPosition.X * Columns), 0, Columns - 1);
+        const int32 Row = FMath::Clamp(FMath::FloorToInt(Marker.NormalizedPosition.Y * Rows), 0, Rows - 1);
+        const FName MarkerId = Marker.MarkerId;
+        const FString ButtonText = FString::Printf(TEXT("%s\n%s"), *GetMarkerTypeLabel(Marker.Type).ToString(), *Marker.Label.ToString());
+
+        Grid->AddSlot(Column, Row).Padding(1.0f)
+        [
+            SNew(SButton)
+            .Text(FText::FromString(ButtonText))
+            .OnClicked_Lambda([WeakThis, MarkerId]()
+            {
+                if (WeakThis.IsValid())
+                {
+                    WeakThis->SelectMapMarker(MarkerId);
+                }
+                return FReply::Handled();
+            })
+        ];
+    }
+
+    FTMX50MapMarker Selected;
+    if (Tablet->GetSelectedMapMarker(Selected))
+    {
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 8.0f, 12.0f, 2.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(FString::Printf(
+                TEXT("SELECTED: %s // %s // FLOOR %d // (%.2f, %.2f)"),
+                *GetMarkerTypeLabel(Selected.Type).ToString(),
+                *Selected.Label.ToString(),
+                Selected.Floor,
+                Selected.NormalizedPosition.X,
+                Selected.NormalizedPosition.Y)))
+        ];
+        if (!Selected.Details.IsEmpty())
+        {
+            RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
+            [
+                SNew(STextBlock).Text(Selected.Details)
+            ];
+        }
+    }
+}
+
+void UTUBriefingWidget::AddVideoPage()
+{
+    UTUMX50TabletComponent* Tablet = GetTabletState();
+    if (!Tablet || !RootBox.IsValid())
+    {
+        return;
+    }
+
+    const TArray<FTMX50VideoFeed> Feeds = Tablet->GetVideoFeeds();
+    if (Feeds.Num() == 0)
+    {
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 3.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("NO REGISTERED VIDEO SOURCES")))
+        ];
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 3.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("FPV, bodycam and fixed-camera providers register here when available.")))
+        ];
+        return;
+    }
+
+    TWeakObjectPtr<UTUBriefingWidget> WeakThis(this);
+    for (const FTMX50VideoFeed& Feed : Feeds)
+    {
+        const FName FeedId = Feed.FeedId;
+        const FString Text = FString::Printf(
+            TEXT("%s // %s // %s"),
+            *GetVideoFeedTypeLabel(Feed.Type).ToString(),
+            *Feed.DisplayName.ToString(),
+            Feed.bAvailable ? TEXT("AVAILABLE") : TEXT("OFFLINE"));
+
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
+        [
+            SNew(SButton)
+            .Text(FText::FromString(Text))
+            .IsEnabled(Feed.bAvailable)
+            .OnClicked_Lambda([WeakThis, FeedId]()
+            {
+                if (WeakThis.IsValid())
+                {
+                    WeakThis->SelectVideoFeed(FeedId);
+                }
+                return FReply::Handled();
+            })
+        ];
+    }
+
+    FTMX50VideoFeed Selected;
+    if (Tablet->GetSelectedVideoFeed(Selected))
+    {
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 8.0f, 12.0f, 2.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(FString::Printf(
+                TEXT("SELECTED FEED: %s // %s"),
+                *Selected.DisplayName.ToString(),
+                *Selected.StatusText.ToString())))
+        ];
+        RootBox->AddSlot().AutoHeight().Padding(12.0f, 2.0f)
+        [
+            SNew(STextBlock).Text(FText::FromString(TEXT("Live render-target viewport connects here when the selected provider supplies video.")))
+        ];
+    }
+}
+
 void UTUBriefingWidget::AddCurrentPageContent()
 {
     if (!RootBox.IsValid())
@@ -195,28 +405,21 @@ void UTUBriefingWidget::AddCurrentPageContent()
             break;
 
         case ETUMX50Page::Map:
-            AddLine(FText::FromString(FString::Printf(TEXT("AO: %s"), *MissionSnapshot.Area.ToString())));
-            AddLine(FText::FromString(TEXT("Tactical map layer reserved for mission geometry / floor plans.")));
-            AddLine(FText::FromString(TEXT("Planned overlays: entry points, objectives, rally points, known threats and squad marks.")));
-            AddLine(FText::FromString(TEXT("No fabricated map data is shown until the mission service supplies it.")));
+            AddMapPage();
             break;
 
         case ETUMX50Page::Intel:
             AddLine(FText::FromString(FString::Printf(TEXT("Threat assessment: %s"), *MissionSnapshot.ThreatSummary.ToString())));
-            AddLine(FText::FromString(TEXT("Future intel package: imagery, documents, target photos, ROE notes and collected evidence.")));
+            AddLine(FText::FromString(TEXT("Intel attachments remain a mission-data integration boundary: imagery, documents, target photos, ROE notes and evidence.")));
             break;
 
         case ETUMX50Page::Team:
             AddLine(MissionSnapshot.TeamSummary);
-            AddLine(FText::FromString(TEXT("Future co-op layer: callsigns, roles, readiness, health/status and leader launch authority.")));
+            AddLine(FText::FromString(TEXT("Co-op integration boundary: callsigns, roles, readiness, health/status and leader launch authority.")));
             break;
 
         case ETUMX50Page::Drone:
-            AddLine(FText::FromString(MissionSnapshot.bDroneFeedAvailable
-                ? TEXT("FPV / VIDEO LINK: AVAILABLE")
-                : TEXT("FPV / VIDEO LINK: NO ACTIVE FEED")));
-            AddLine(FText::FromString(TEXT("This page is the integration boundary for FPV drone video, body cameras and remote observation feeds.")));
-            AddLine(FText::FromString(TEXT("The current tablet branch does not depend on the separate FPV PR.")));
+            AddVideoPage();
             break;
 
         case ETUMX50Page::Loadout:
@@ -242,6 +445,12 @@ void UTUBriefingWidget::RebuildContent()
     if (!RootBox.IsValid())
     {
         return;
+    }
+
+    if (UTUMX50TabletComponent* Tablet = GetTabletState())
+    {
+        MissionSnapshot = Tablet->GetMissionSnapshot();
+        ActivePage = Tablet->GetActivePage();
     }
 
     RootBox->ClearChildren();

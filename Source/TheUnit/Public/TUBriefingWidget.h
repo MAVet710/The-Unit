@@ -7,6 +7,7 @@
 
 class ATU_ArmedOperatorCharacter;
 class SVerticalBox;
+class UTUMX50TabletComponent;
 
 /** Native prototype UI rendered while the operator raises the chest-mounted MX50. */
 UCLASS(Blueprintable)
@@ -40,7 +41,14 @@ private:
     void RebuildContent();
     void AddNavigation();
     void AddCurrentPageContent();
+    void AddMapPage();
+    void AddVideoPage();
+    void SelectMapMarker(FName MarkerId);
+    void SelectVideoFeed(FName FeedId);
+    UTUMX50TabletComponent* GetTabletState() const;
     FText GetPageLabel(ETUMX50Page Page) const;
+    FText GetMarkerTypeLabel(ETUMX50MapMarkerType Type) const;
+    FText GetVideoFeedTypeLabel(ETUMX50VideoFeedType Type) const;
 
     TWeakObjectPtr<ATU_ArmedOperatorCharacter> Operator;
     TSharedPtr<SVerticalBox> RootBox;
