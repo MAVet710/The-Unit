@@ -1,0 +1,133 @@
+{
+  "catalog_version": 1,
+  "scope": "Public civilian architecture references for The Unit's Donetsk map",
+  "baseline": "Prefer pre-war / civilian imagery, especially 2007-2013, for clean architectural reconstruction; author mission damage separately.",
+  "confidence_levels": [
+    "Documented",
+    "PhotoMatched",
+    "TypologyApproximation",
+    "Surveyed"
+  ],
+  "buildings": [
+    {
+      "reference_id": "DON_A60",
+      "name": "Artema Street 60",
+      "type": "civic_administrative",
+      "construction_year": 1928,
+      "documented_floors_current": 4,
+      "documented_floors_original": 3,
+      "reconstruction_note": "Postwar restoration/reconstruction added the fourth floor; public histories also describe parapet, balcony balustrades, altered stair-tower windows and facade decoration.",
+      "style": "Constructivism / early Soviet modernism with later reconstruction layers",
+      "documented_features": [
+        "semicircular street-facing projection",
+        "tall stair-tower windows",
+        "white columns",
+        "strong horizontal floor layering",
+        "decorative parapet",
+        "balustrade treatment"
+      ],
+      "working_dimensions_cm": {
+        "floor_to_floor": 360,
+        "facade_width": 5000,
+        "depth": 1800,
+        "note": "Working blockout estimates only; replace through photo matching / measured plans before production-ready label."
+      },
+      "confidence": "Documented",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:60_Artema_Street,_Donetsk",
+        "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60.jpg",
+        "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_2.jpg",
+        "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_4.jpg",
+        "https://commons.wikimedia.org/wiki/File:1930._Donetsk_artema_60.jpg",
+        "https://ru.wikipedia.org/wiki/Административное_здание_по_Артёма_60"
+      ]
+    },
+    {
+      "reference_id": "DON_ARTEMA76",
+      "name": "Artema Street 76 / Lenin Square frontage",
+      "type": "civic_square_frontage",
+      "documented_floors_current": null,
+      "style": "Central Donetsk civic frontage",
+      "documented_features": [],
+      "working_dimensions_cm": null,
+      "confidence": "PhotoMatched",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Artema_Street_76,_Donetsk"
+      ],
+      "next_measurement": "Count floors/bays and measure facade ratios from the 27-image category before production mesh."
+    },
+    {
+      "reference_id": "DON_ARTEMA119",
+      "name": "Artema Street 119 / Gurova Avenue cluster",
+      "type": "central_street_frontage",
+      "documented_floors_current": null,
+      "style": "Central Donetsk mixed frontage",
+      "working_dimensions_cm": null,
+      "confidence": "PhotoMatched",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Artema_Street_119,_Donetsk",
+        "https://commons.wikimedia.org/wiki/File:Artema_-_panoramio.jpg"
+      ],
+      "next_measurement": "Use the 2012 oblique street photo for bay spacing, sidewalk/setback and street-wall scale."
+    },
+    {
+      "reference_id": "DON_ILY20",
+      "name": "Ilicha Avenue 20 / 20a",
+      "type": "residential_highrise",
+      "documented_floors_current": null,
+      "style": "Late-Soviet / post-Soviet high-rise residential",
+      "working_dimensions_cm": null,
+      "confidence": "PhotoMatched",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Ilicha_Avenue,_Donetsk_(part_in_Kalininskyi_Raion)",
+        "https://commons.wikimedia.org/wiki/File:Просп._Ілліча,_20а_і_20.jpg"
+      ],
+      "next_measurement": "Count stories, balcony stacks, stair/elevator core widths and end-wall panel rhythm from Donetsk-specific photographs."
+    },
+    {
+      "reference_id": "DON_ILY24",
+      "name": "Ilicha Avenue 24 / 26",
+      "type": "residential_block_pair",
+      "documented_floors_current": null,
+      "style": "Donetsk residential block morphology",
+      "working_dimensions_cm": null,
+      "confidence": "PhotoMatched",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Ilicha_Avenue,_Donetsk_(part_in_Kalininskyi_Raion)",
+        "https://commons.wikimedia.org/wiki/File:Просп._Ілліча,_24_і_26.jpg"
+      ],
+      "next_measurement": "Derive local panel/brick kit variants from facade/end-wall relationship."
+    },
+    {
+      "reference_id": "DON_ROZY_DORM",
+      "name": "Donetsk National University dormitory family / Rozy Luxemburg Street",
+      "type": "institutional_residential",
+      "documented_floors_current": null,
+      "style": "Soviet institutional residential",
+      "working_dimensions_cm": null,
+      "confidence": "PhotoMatched",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Rozy_Luxemburg_Street,_Donetsk"
+      ],
+      "next_measurement": "Extract the dormitory subcategory's 18 photographs and create a local facade/entrance kit."
+    },
+    {
+      "reference_id": "DON_STATION",
+      "name": "Donetsk Railway Station",
+      "type": "transport_civic",
+      "construction_year": 1951,
+      "documented_floors_current": null,
+      "reconstruction_note": "Large modernization and expansion completed for 2012; public project material describes steel/glass transition volumes, concourses and atrium spaces joining the renewed historic building to newer additions.",
+      "style": "Postwar civic core + 2012 modern transit expansion",
+      "working_dimensions_cm": null,
+      "confidence": "Documented",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/Category:Donetsk_Railway_Station",
+        "https://commons.wikimedia.org/wiki/File:Donetsk_rail_station_2012.JPG",
+        "https://commons.wikimedia.org/wiki/File:Another_angle_inside_donetsk_voksal_2012.jpg",
+        "https://www.archilovers.com/projects/106713/concourse-interior.html",
+        "https://www.archilovers.com/projects/155237/atrium.html"
+      ]
+    }
+  ]
+}
