@@ -5,7 +5,7 @@
 #include "TUMX50TabletComponent.h"
 #include "TUMissionPackageData.generated.h"
 
-/** Data-authored operation package consumed by the operator-worn MX50. */
+/** Data-authored operation package consumed by the operator-worn MX50 and mission lifecycle. */
 UCLASS(BlueprintType)
 class THEUNIT_API UTUMissionPackageData : public UDataAsset
 {
@@ -14,6 +14,10 @@ class THEUNIT_API UTUMissionPackageData : public UDataAsset
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Mission")
     FTMX50MissionSnapshot Mission;
+
+    /** Unreal map/level name opened after the team confirms deployment. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Mission|Travel")
+    FName DestinationMap = NAME_None;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Map")
     TArray<FTMX50MapMarker> MapMarkers;
