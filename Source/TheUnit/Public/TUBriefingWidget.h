@@ -34,7 +34,7 @@ public:
     ETUMX50Page GetPage() const { return ActivePage; }
 
     UFUNCTION(BlueprintPure, Category="MX50")
-    const FTMX50MissionSnapshot& GetMissionSnapshot() const { return MissionSnapshot; }
+    FTMX50MissionSnapshot GetMissionSnapshot() const { return MissionSnapshot; }
 
 private:
     void RebuildContent();
