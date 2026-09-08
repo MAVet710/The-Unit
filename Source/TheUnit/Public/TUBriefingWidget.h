@@ -2,12 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "TUMX50TabletComponent.h"
 #include "TUBriefingWidget.generated.h"
 
 class ATU_ArmedOperatorCharacter;
 class SVerticalBox;
 
-/** Native prototype mission board used by the physical Briefing Room. */
+/** Native prototype UI rendered while the operator raises the chest-mounted MX50. */
 UCLASS(Blueprintable)
 class THEUNIT_API UTUBriefingWidget : public UUserWidget
 {
@@ -17,17 +18,32 @@ public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
-    UFUNCTION(BlueprintCallable, Category="Briefing")
+    UFUNCTION(BlueprintCallable, Category="MX50")
     void Configure(ATU_ArmedOperatorCharacter* InOperator, FName InMissionId, const FText& InMissionTitle);
 
-    UFUNCTION(BlueprintCallable, Category="Briefing")
+    UFUNCTION(BlueprintCallable, Category="MX50")
+    void SetMissionSnapshot(const FTMX50MissionSnapshot& InSnapshot);
+
+    UFUNCTION(BlueprintCallable, Category="MX50")
     void Refresh();
+
+    UFUNCTION(BlueprintCallable, Category="MX50")
+    void SetPage(ETUMX50Page Page);
+
+    UFUNCTION(BlueprintPure, Category="MX50")
+    ETUMX50Page GetPage() const { return ActivePage; }
+
+    UFUNCTION(BlueprintPure, Category="MX50")
+    FTMX50MissionSnapshot GetMissionSnapshot() const { return MissionSnapshot; }
 
 private:
     void RebuildContent();
+    void AddNavigation();
+    void AddCurrentPageContent();
+    FText GetPageLabel(ETUMX50Page Page) const;
 
     TWeakObjectPtr<ATU_ArmedOperatorCharacter> Operator;
     TSharedPtr<SVerticalBox> RootBox;
-    FName MissionId = TEXT("OP_KILLHOUSE");
-    FText MissionTitle = FText::FromString(TEXT("Kill House Evaluation"));
+    FTMX50MissionSnapshot MissionSnapshot;
+    ETUMX50Page ActivePage = ETUMX50Page::Mission;
 };
