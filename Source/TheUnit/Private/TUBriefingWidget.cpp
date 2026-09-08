@@ -1,6 +1,7 @@
 #include "TUBriefingWidget.h"
 
 #include "TU_ArmedOperatorCharacter.h"
+#include "TU_PlayerController.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
@@ -33,6 +34,22 @@ void UTUBriefingWidget::ReleaseSlateResources(bool bReleaseChildren)
 void UTUBriefingWidget::Configure(ATU_ArmedOperatorCharacter* InOperator, FName InMissionId, const FText& InMissionTitle)
 {
     Operator = InOperator;
+
+    if (Operator.IsValid())
+    {
+        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+        {
+            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
+            {
+                Tablet->SetMissionContext(InMissionId, InMissionTitle);
+                MissionSnapshot = Tablet->GetMissionSnapshot();
+                ActivePage = Tablet->GetActivePage();
+                Refresh();
+                return;
+            }
+        }
+    }
+
     if (!InMissionId.IsNone())
     {
         MissionSnapshot.MissionId = InMissionId;
@@ -47,6 +64,18 @@ void UTUBriefingWidget::Configure(ATU_ArmedOperatorCharacter* InOperator, FName 
 void UTUBriefingWidget::SetMissionSnapshot(const FTMX50MissionSnapshot& InSnapshot)
 {
     MissionSnapshot = InSnapshot;
+
+    if (Operator.IsValid())
+    {
+        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+        {
+            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
+            {
+                Tablet->SetMissionSnapshot(InSnapshot);
+            }
+        }
+    }
+
     Refresh();
 }
 
@@ -63,6 +92,18 @@ void UTUBriefingWidget::SetPage(ETUMX50Page Page)
     }
 
     ActivePage = Page;
+
+    if (Operator.IsValid())
+    {
+        if (ATU_PlayerController* PC = Cast<ATU_PlayerController>(Operator->GetController()))
+        {
+            if (UTUMX50TabletComponent* Tablet = PC->GetMX50Tablet())
+            {
+                Tablet->SetActivePage(Page);
+            }
+        }
+    }
+
     Refresh();
 }
 
