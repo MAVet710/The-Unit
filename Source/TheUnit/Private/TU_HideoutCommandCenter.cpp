@@ -2,6 +2,7 @@
 
 #include "TUHideoutLifecycleSubsystem.h"
 #include "TUHideoutProgressionComponent.h"
+#include "TUMissionPackageData.h"
 #include "TU_CommandCenterStation.h"
 #include "TU_HideoutCommandCenterDecorator.h"
 #include "TU_HideoutUpgradeStation.h"
@@ -21,6 +22,7 @@ void ATU_HideoutCommandCenter::BeginPlay()
 {
     Super::BeginPlay();
     RestorePersistentState();
+    EnsureDefaultMissionPackage();
     WireMissionStations();
     if (bSpawnUpgradeStations)
     {
@@ -85,6 +87,61 @@ void ATU_HideoutCommandCenter::CapturePersistentState()
         Lifecycle->CaptureHideoutState(Progression);
         Lifecycle->SaveProfile();
     }
+}
+
+void ATU_HideoutCommandCenter::EnsureDefaultMissionPackage()
+{
+    if (DefaultMissionPackage || !bCreateFallbackTrainingMission || FallbackTrainingMapName.IsNone())
+    {
+        return;
+    }
+
+    RuntimeFallbackMissionPackage = NewObject<UTUMissionPackageData>(this, TEXT("RuntimeKillhouseMission"));
+    if (!RuntimeFallbackMissionPackage)
+    {
+        return;
+    }
+
+    RuntimeFallbackMissionPackage->Mission.MissionId = TEXT("OP_KILLHOUSE");
+    RuntimeFallbackMissionPackage->Mission.MissionTitle = FText::FromString(TEXT("Kill House Evaluation"));
+    RuntimeFallbackMissionPackage->Mission.Objective = FText::FromString(TEXT("Clear the training structure and extract after completing the evaluation."));
+    RuntimeFallbackMissionPackage->Mission.Area = FText::FromString(TEXT("Command Training Facility"));
+    RuntimeFallbackMissionPackage->Mission.ThreatSummary = FText::FromString(TEXT("Controlled training threat package. Live intelligence replaces this fallback package for authored operations."));
+    RuntimeFallbackMissionPackage->Mission.TeamSummary = FText::FromString(TEXT("Local operator training package. Co-op roster data replaces this fallback when available."));
+    RuntimeFallbackMissionPackage->Mission.bDeploymentAuthorized = true;
+    RuntimeFallbackMissionPackage->DestinationMap = FallbackTrainingMapName;
+
+    FTMX50MapMarker Entry;
+    Entry.MarkerId = TEXT("ENTRY_START");
+    Entry.Label = FText::FromString(TEXT("Start / Entry"));
+    Entry.Type = ETUMX50MapMarkerType::Entry;
+    Entry.NormalizedPosition = FVector2D(0.50f, 0.92f);
+    Entry.Details = FText::FromString(TEXT("Training start position."));
+    RuntimeFallbackMissionPackage->MapMarkers.Add(Entry);
+
+    FTMX50MapMarker Objective;
+    Objective.MarkerId = TEXT("OBJ_CLEAR");
+    Objective.Label = FText::FromString(TEXT("Clear Structure"));
+    Objective.Type = ETUMX50MapMarkerType::Objective;
+    Objective.NormalizedPosition = FVector2D(0.50f, 0.48f);
+    Objective.Details = FText::FromString(TEXT("Complete the assigned kill-house evaluation."));
+    RuntimeFallbackMissionPackage->MapMarkers.Add(Objective);
+
+    FTMX50MapMarker Extraction;
+    Extraction.MarkerId = TEXT("EXTRACT_END");
+    Extraction.Label = FText::FromString(TEXT("Extraction"));
+    Extraction.Type = ETUMX50MapMarkerType::Extraction;
+    Extraction.NormalizedPosition = FVector2D(0.50f, 0.08f);
+    Extraction.Details = FText::FromString(TEXT("Return to headquarters after the evaluation."));
+    RuntimeFallbackMissionPackage->MapMarkers.Add(Extraction);
+
+    RuntimeFallbackMissionPackage->PlannedRoute = {
+        Entry.NormalizedPosition,
+        Objective.NormalizedPosition,
+        Extraction.NormalizedPosition
+    };
+
+    DefaultMissionPackage = RuntimeFallbackMissionPackage;
 }
 
 void ATU_HideoutCommandCenter::WireMissionStations()
