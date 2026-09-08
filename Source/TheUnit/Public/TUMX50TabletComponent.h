@@ -181,6 +181,9 @@ public:
     bool UpsertVideoFeed(const FTMX50VideoFeed& Feed);
 
     UFUNCTION(BlueprintCallable, Category="MX50|Video")
+    bool RemoveVideoFeed(FName FeedId);
+
+    UFUNCTION(BlueprintCallable, Category="MX50|Video")
     bool SelectVideoFeed(FName FeedId);
 
     UFUNCTION(BlueprintCallable, Category="MX50|Video")
@@ -219,4 +222,8 @@ protected:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="MX50|Video")
     FName SelectedVideoFeedId = NAME_None;
+
+private:
+    void RefreshMapSelection();
+    void RefreshVideoDerivedState();
 };
