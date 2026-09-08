@@ -56,13 +56,15 @@ if ($LASTEXITCODE -ne 0) {
 
 $CommandCenter = Join-Path $RepoRoot 'Content\TheUnit\Maps\CommandCenter.umap'
 $Killhouse = Join-Path $RepoRoot 'Content\TheUnit\Maps\Killhouse.umap'
+$Donetsk = Join-Path $RepoRoot 'Content\TheUnit\Maps\Donetsk.umap'
 
-if (-not (Test-Path $CommandCenter) -or -not (Test-Path $Killhouse)) {
-    throw "Unreal exited successfully but one or both expected map files were not created. Check Saved\Logs\TheUnit.log."
+if (-not (Test-Path $CommandCenter) -or -not (Test-Path $Killhouse) -or -not (Test-Path $Donetsk)) {
+    throw "Unreal exited successfully but one or more expected map files were not created. Check Saved\Logs\TheUnit.log."
 }
 
 Write-Host '[TheUnit] CommandCenter.umap created.'
 Write-Host '[TheUnit] Killhouse.umap created.'
+Write-Host '[TheUnit] Donetsk.umap created with the Donetsk reference-district GameMode.'
 Write-Host '[TheUnit] CommandCenter configured as startup/default map.'
 
 if ($KeepEditorOpen) {
