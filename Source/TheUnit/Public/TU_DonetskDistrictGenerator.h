@@ -48,6 +48,9 @@ private:
     TObjectPtr<UStaticMesh> CubeMesh;
 
     UPROPERTY(Transient)
+    TObjectPtr<UStaticMesh> CylinderMesh;
+
+    UPROPERTY(Transient)
     TArray<TObjectPtr<UActorComponent>> GeneratedComponents;
 
     int32 GeneratedNameCounter = 0;
@@ -56,6 +59,8 @@ private:
     void ClearGenerated();
 
     UStaticMeshComponent* AddBox(const FVector& Location, const FVector& Extents, const FString& BaseName,
+        const FRotator& Rotation = FRotator::ZeroRotator);
+    UStaticMeshComponent* AddCylinder(const FVector& Location, float RadiusCm, float HeightCm, const FString& BaseName,
         const FRotator& Rotation = FRotator::ZeroRotator);
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
 
