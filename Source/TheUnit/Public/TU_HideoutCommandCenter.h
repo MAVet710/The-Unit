@@ -8,6 +8,7 @@ class UChildActorComponent;
 class ATU_HideoutCommandCenterDecorator;
 class ATU_HideoutUpgradeStation;
 class UTUHideoutProgressionComponent;
+class UTUMissionPackageData;
 
 /**
  * Preferred pre-mission hub actor: existing functional command center plus the
@@ -40,13 +41,24 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout|Upgrades")
     bool bSpawnUpgradeStations = true;
 
+    /** Keeps a functional HQ -> Killhouse loop before designers author the first MissionPackage asset. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout|Mission")
+    bool bCreateFallbackTrainingMission = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout|Mission")
+    FName FallbackTrainingMapName = TEXT("Killhouse");
+
 private:
     UPROPERTY(Transient)
     TArray<TObjectPtr<ATU_HideoutUpgradeStation>> UpgradeStations;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTUMissionPackageData> RuntimeFallbackMissionPackage;
 
     void RestorePersistentState();
     void CapturePersistentState();
     void SpawnUpgradeStations();
     void ClearUpgradeStations();
+    void EnsureDefaultMissionPackage();
     void WireMissionStations();
 };
