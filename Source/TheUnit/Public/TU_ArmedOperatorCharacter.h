@@ -13,9 +13,8 @@ class UStaticMeshComponent;
 class UTUArmoryWidget;
 class UTUBriefingWidget;
 class UTUMeleeLoadoutComponent;
-class UTUMX50TabletComponent;
 
-/** Operator layer that owns primary, secondary, selectable melee and command-center/MX50 UI. */
+/** Operator layer that owns primary, secondary, selectable melee and command-center station UI. */
 UCLASS(Blueprintable)
 class THEUNIT_API ATU_ArmedOperatorCharacter : public ATU_OperatorCharacter
 {
@@ -107,37 +106,26 @@ public:
     UFUNCTION(BlueprintPure, Category="Armory")
     bool IsArmoryOpen() const { return IsValid(ArmoryWidget); }
 
-    /** Opens the MX50 with the supplied command-center mission context. */
-    UFUNCTION(BlueprintCallable, Category="MX50")
+    UFUNCTION(BlueprintCallable, Category="Briefing|MX50")
     bool OpenBriefing(FName MissionId, const FText& MissionTitle);
 
-    /** Raises the operator-worn MX50 anywhere field access is permitted. */
-    UFUNCTION(BlueprintCallable, Category="MX50")
-    bool OpenMX50();
-
-    UFUNCTION(BlueprintCallable, Category="MX50")
+    UFUNCTION(BlueprintCallable, Category="Briefing|MX50")
     void CloseBriefing();
 
-    UFUNCTION(BlueprintCallable, Category="MX50")
-    void ToggleMX50();
-
-    UFUNCTION(BlueprintPure, Category="MX50")
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
     bool IsBriefingOpen() const { return IsValid(BriefingWidget); }
 
-    UFUNCTION(BlueprintPure, Category="MX50")
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
     bool IsMX50Raised() const { return bMX50Raised; }
 
-    UFUNCTION(BlueprintPure, Category="MX50")
+    UFUNCTION(BlueprintPure, Category="Briefing|MX50")
     FName GetMX50ChestSocket() const { return MX50ChestSocket; }
-
-    UFUNCTION(BlueprintPure, Category="MX50")
-    UTUMX50TabletComponent* GetMX50Tablet() const { return MX50Tablet; }
 
     UFUNCTION(BlueprintPure, Category="Command Center")
     bool IsCommandCenterUIOpen() const { return IsArmoryOpen() || IsBriefingOpen(); }
 
     /** Animation/art bridge for replacing the prototype tablet presentation with final chest-rig/hand animation. */
-    UFUNCTION(BlueprintImplementableEvent, Category="MX50")
+    UFUNCTION(BlueprintImplementableEvent, Category="Briefing|MX50")
     void BP_OnMX50RaisedChanged(bool bRaised);
 
 protected:
@@ -186,39 +174,31 @@ protected:
     UPROPERTY(Transient)
     TObjectPtr<UTUArmoryWidget> ArmoryWidget = nullptr;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Briefing")
     TSubclassOf<UTUBriefingWidget> BriefingWidgetClass;
 
     UPROPERTY(Transient)
     TObjectPtr<UTUBriefingWidget> BriefingWidget = nullptr;
 
-    /** Persistent mission/page state for the operator-worn tablet. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MX50")
-    TObjectPtr<UTUMX50TabletComponent> MX50Tablet;
-
     /** Third-person chest-rig placeholder. Final modular carrier supplies this socket in the operator/equipment branch. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Briefing|MX50")
     TObjectPtr<UStaticMeshComponent> MX50ChestVisual;
 
     /** Owner-only raised tablet placeholder used while the tactical interface is open. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Briefing|MX50")
     TObjectPtr<UStaticMeshComponent> MX50FirstPersonVisual;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
     FName MX50ChestSocket = TEXT("tablet_chest_socket");
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
     FTransform MX50ChestFallbackTransform = FTransform(FRotator(0.0f, 90.0f, 0.0f), FVector(5.0f, 0.0f, 18.0f), FVector(0.03f, 0.28f, 0.18f));
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Briefing|MX50")
     FTransform MX50RaisedTransform = FTransform(FRotator::ZeroRotator, FVector(45.0f, 0.0f, -12.0f), FVector(0.03f, 0.28f, 0.18f));
 
-    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="MX50")
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Briefing|MX50")
     bool bMX50Raised = false;
-
-    /** Allows the chest-mounted tablet to be raised away from command-center briefing stations. */
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="MX50")
-    bool bAllowFieldMX50 = true;
 
     /** Developer escape hatch. Production command-center flow accesses armory physically with F. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command Center|Debug")
@@ -247,7 +227,6 @@ private:
     void ToggleMelee();
     void CycleMeleeInput();
     void ToggleArmoryInput();
-    void ToggleMX50Input();
     void FinishMeleeHolster();
     void DestroyCurrentMelee();
 
