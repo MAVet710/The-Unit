@@ -2,6 +2,8 @@
 
 #include "Misc/AutomationTest.h"
 #include "TUMX50TabletComponent.h"
+#include "TU_GameMode.h"
+#include "TU_PlayerController.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTUMX50TabletStateTest, "TheUnit.MX50.StateAndPages",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -43,6 +45,24 @@ bool FTUMX50TabletStateTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Full snapshot replacement updates mission id"), Tablet->GetMissionSnapshot().MissionId, FName(TEXT("OP_REPLACED")));
     TestEqual(TEXT("Full snapshot replacement updates area"), Tablet->GetMissionSnapshot().Area.ToString(), FString(TEXT("Test AO")));
     TestFalse(TEXT("Full snapshot replacement updates feed state"), Tablet->GetMissionSnapshot().bDroneFeedAvailable);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTUMX50ControllerWiringTest, "TheUnit.MX50.ControllerWiring",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FTUMX50ControllerWiringTest::RunTest(const FString& Parameters)
+{
+    const ATU_GameMode* GameModeCDO = GetDefault<ATU_GameMode>();
+    if (!TestNotNull(TEXT("The Unit GameMode CDO"), GameModeCDO))
+    {
+        return false;
+    }
+
+    TestEqual(
+        TEXT("Native GameMode uses the tactical PlayerController"),
+        GameModeCDO->PlayerControllerClass,
+        ATU_PlayerController::StaticClass());
     return true;
 }
 
