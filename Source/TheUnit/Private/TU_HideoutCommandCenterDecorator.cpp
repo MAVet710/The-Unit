@@ -68,6 +68,7 @@ UStaticMeshComponent* ATU_HideoutCommandCenterDecorator::AddCube(const FName& Na
         return nullptr;
     }
 
+    AddInstanceComponent(Component);
     Component->SetupAttachment(Root);
     Component->SetStaticMesh(CubeMesh);
     Component->SetRelativeLocation(Location);
@@ -87,6 +88,7 @@ void ATU_HideoutCommandCenterDecorator::Rebuild()
     BuildMaintenance();
     BuildMedical();
     BuildCommsAndPlanning();
+    BuildArmoryAndRangeSupport();
 }
 
 void ATU_HideoutCommandCenterDecorator::BuildUtilities()
@@ -178,6 +180,10 @@ void ATU_HideoutCommandCenterDecorator::BuildMedical()
     {
         AddCube(TEXT("MedicalSupplyRack"), FVector(2250.0f, 2150.0f, 110.0f), FVector(85.0f, 120.0f, 110.0f), FRotator::ZeroRotator, true);
     }
+    if (Level >= 3)
+    {
+        AddCube(TEXT("MedicalWorkSurface"), FVector(1860.0f, 2200.0f, 42.0f), FVector(220.0f, 75.0f, 42.0f), FRotator::ZeroRotator, true);
+    }
 }
 
 void ATU_HideoutCommandCenterDecorator::BuildCommsAndPlanning()
@@ -204,6 +210,40 @@ void ATU_HideoutCommandCenterDecorator::BuildCommsAndPlanning()
         if (PlanningLevel >= 2)
         {
             AddCube(TEXT("MissionArchiveCabinet"), FVector(2250.0f, 1100.0f, 110.0f), FVector(80.0f, 90.0f, 110.0f), FRotator::ZeroRotator, true);
+        }
+    }
+}
+
+void ATU_HideoutCommandCenterDecorator::BuildArmoryAndRangeSupport()
+{
+    const int32 ArmoryLevel = Progression ? Progression->GetModuleLevel(ETUHideoutModuleType::ArmorySupport) : 0;
+    const int32 RangeLevel = Progression ? Progression->GetModuleLevel(ETUHideoutModuleType::RangeSupport) : 0;
+
+    if (ArmoryLevel > 0)
+    {
+        AddCube(TEXT("ArmoryAmmoCase"), FVector(-2150.0f, -2450.0f, 40.0f), FVector(120.0f, 85.0f, 40.0f), FRotator::ZeroRotator, true);
+        AddCube(TEXT("ArmoryAccessoryShelf"), FVector(-2225.0f, -1250.0f, 145.0f), FVector(55.0f, 260.0f, 105.0f));
+        if (ArmoryLevel >= 2)
+        {
+            AddCube(TEXT("ArmoryOpticsCabinet"), FVector(-1950.0f, -1250.0f, 110.0f), FVector(85.0f, 95.0f, 110.0f), FRotator::ZeroRotator, true);
+        }
+        if (ArmoryLevel >= 3)
+        {
+            AddCube(TEXT("ArmoryInspectionBench"), FVector(-1050.0f, -2450.0f, 42.0f), FVector(220.0f, 85.0f, 42.0f), FRotator::ZeroRotator, true);
+        }
+    }
+
+    if (RangeLevel > 0)
+    {
+        AddCube(TEXT("RangeAmmoBench"), FVector(1150.0f, -2950.0f, 42.0f), FVector(230.0f, 80.0f, 42.0f), FRotator::ZeroRotator, true);
+        AddCube(TEXT("RangeTargetStorage"), FVector(950.0f, -3150.0f, 105.0f), FVector(75.0f, 120.0f, 105.0f), FRotator::ZeroRotator, true);
+        if (RangeLevel >= 2)
+        {
+            AddCube(TEXT("RangeMaintenanceCart"), FVector(1450.0f, -3150.0f, 55.0f), FVector(100.0f, 65.0f, 55.0f), FRotator::ZeroRotator, true);
+        }
+        if (RangeLevel >= 3)
+        {
+            AddCube(TEXT("RangeChronoStation"), FVector(1750.0f, -3050.0f, 70.0f), FVector(65.0f, 65.0f, 70.0f), FRotator::ZeroRotator, true);
         }
     }
 }
