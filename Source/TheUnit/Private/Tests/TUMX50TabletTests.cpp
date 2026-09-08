@@ -59,10 +59,9 @@ bool FTUMX50ControllerWiringTest::RunTest(const FString& Parameters)
         return false;
     }
 
-    TestEqual(
+    TestTrue(
         TEXT("Native GameMode uses the tactical PlayerController"),
-        GameModeCDO->PlayerControllerClass,
-        ATU_PlayerController::StaticClass());
+        GameModeCDO->PlayerControllerClass == ATU_PlayerController::StaticClass());
 
     const ATU_PlayerController* ControllerCDO = GetDefault<ATU_PlayerController>();
     if (!TestNotNull(TEXT("Tactical PlayerController CDO"), ControllerCDO))
