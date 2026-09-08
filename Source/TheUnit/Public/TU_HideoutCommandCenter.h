@@ -48,4 +48,5 @@ private:
     void CapturePersistentState();
     void SpawnUpgradeStations();
     void ClearUpgradeStations();
+    void WireMissionStations();
 };
