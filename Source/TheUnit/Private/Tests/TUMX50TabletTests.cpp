@@ -113,9 +113,20 @@ bool FTUMX50MissionPackageTest::RunTest(const FString& Parameters)
     FTMX50MapMarker SelectedMarker;
     TestTrue(TEXT("Selected marker resolves"), Tablet->GetSelectedMapMarker(SelectedMarker));
     TestEqual(TEXT("Selected marker id is objective"), SelectedMarker.MarkerId, FName(TEXT("OBJ_ONE")));
-
     TestTrue(TEXT("Selected marker can be removed"), Tablet->RemoveMapMarker(TEXT("OBJ_ONE")));
     TestFalse(TEXT("Removed marker cannot be selected"), Tablet->SelectMapMarker(TEXT("OBJ_ONE")));
+
+    FTMX50MapMarker Rally;
+    Rally.MarkerId = TEXT("RALLY_ONE");
+    Rally.Label = FText::FromString(TEXT("Rally One"));
+    Rally.Type = ETUMX50MapMarkerType::Rally;
+    Rally.NormalizedPosition = FVector2D(0.25, 0.75);
+    TestTrue(TEXT("Runtime map marker can be added"), Tablet->UpsertMapMarker(Rally));
+    TestEqual(TEXT("Map marker count returns to two"), Tablet->GetMapMarkers().Num(), 2);
+
+    Entry.bVisible = false;
+    TestTrue(TEXT("Existing map marker can be hidden via upsert"), Tablet->UpsertMapMarker(Entry));
+    TestEqual(TEXT("Selection moves away from a hidden marker"), Tablet->GetSelectedMapMarkerId(), FName(TEXT("RALLY_ONE")));
 
     const TArray<FVector2D> Route = Tablet->GetPlannedRoute();
     TestEqual(TEXT("Three route points loaded"), Route.Num(), 3);
@@ -128,12 +139,22 @@ bool FTUMX50MissionPackageTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Selected feed is FPV"), SelectedFeed.Type, ETUMX50VideoFeedType::FPVDrone);
     TestFalse(TEXT("Offline feed cannot be selected"), Tablet->SelectVideoFeed(TEXT("CAM_ONE")));
 
-    FTMX50MapMarker Rally;
-    Rally.MarkerId = TEXT("RALLY_ONE");
-    Rally.Type = ETUMX50MapMarkerType::Rally;
-    Rally.NormalizedPosition = FVector2D(0.25, 0.75);
-    TestTrue(TEXT("Runtime map marker can be added"), Tablet->UpsertMapMarker(Rally));
-    TestEqual(TEXT("Map marker count returns to two"), Tablet->GetMapMarkers().Num(), 2);
+    FTMX50VideoFeed DroneBravo;
+    DroneBravo.FeedId = TEXT("FPV_BRAVO");
+    DroneBravo.DisplayName = FText::FromString(TEXT("FPV Bravo"));
+    DroneBravo.Type = ETUMX50VideoFeedType::FPVDrone;
+    DroneBravo.StatusText = FText::FromString(TEXT("Link Ready"));
+    DroneBravo.bAvailable = true;
+    TestTrue(TEXT("Second FPV feed can register at runtime"), Tablet->UpsertVideoFeed(DroneBravo));
+
+    Drone.bAvailable = false;
+    Drone.StatusText = FText::FromString(TEXT("Link Lost"));
+    TestTrue(TEXT("Primary FPV feed can transition offline"), Tablet->UpsertVideoFeed(Drone));
+    TestTrue(TEXT("Drone availability remains true while backup FPV is live"), Tablet->GetMissionSnapshot().bDroneFeedAvailable);
+    TestEqual(TEXT("Selection fails over to available FPV"), Tablet->GetSelectedVideoFeedId(), FName(TEXT("FPV_BRAVO")));
+
+    TestTrue(TEXT("Backup FPV feed can be removed"), Tablet->RemoveVideoFeed(TEXT("FPV_BRAVO")));
+    TestFalse(TEXT("No available FPV means drone availability is false"), Tablet->GetMissionSnapshot().bDroneFeedAvailable);
 
     return true;
 }
