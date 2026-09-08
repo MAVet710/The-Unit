@@ -23,6 +23,10 @@ public:
     UFUNCTION(BlueprintPure, Category="Hideout")
     UTUHideoutProgressionComponent* GetProgression() const { return Progression; }
 
+    /** Rebuild graybox/environment state after persistence or an upgrade changes module levels. */
+    UFUNCTION(BlueprintCallable, Category="Hideout")
+    void RefreshFromProgression();
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hideout")
     TObjectPtr<USceneComponent> Root;
@@ -33,6 +37,9 @@ protected:
     /** If true, the decorator aligns to the first command-center generator found at BeginPlay. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout")
     bool bSnapToCommandCenterAtBeginPlay = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout")
+    bool bGenerateLabels = true;
 
 private:
     UPROPERTY(Transient)
@@ -49,5 +56,4 @@ private:
     void BuildMaintenance();
     void BuildMedical();
     void BuildCommsAndPlanning();
-    void BuildArmoryAndRangeSupport();
 };
