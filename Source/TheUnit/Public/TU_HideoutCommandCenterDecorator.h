@@ -34,9 +34,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout")
     bool bSnapToCommandCenterAtBeginPlay = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Hideout")
-    bool bGenerateLabels = true;
-
 private:
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> CubeMesh;
@@ -52,4 +49,5 @@ private:
     void BuildMaintenance();
     void BuildMedical();
     void BuildCommsAndPlanning();
+    void BuildArmoryAndRangeSupport();
 };
