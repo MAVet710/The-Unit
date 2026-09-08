@@ -2,11 +2,13 @@
 
 #include "TUHideoutLifecycleSubsystem.h"
 #include "TUHideoutProgressionComponent.h"
+#include "TU_CommandCenterStation.h"
 #include "TU_HideoutCommandCenterDecorator.h"
 #include "TU_HideoutUpgradeStation.h"
 #include "Components/ChildActorComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 
 ATU_HideoutCommandCenter::ATU_HideoutCommandCenter()
 {
@@ -19,6 +21,7 @@ void ATU_HideoutCommandCenter::BeginPlay()
 {
     Super::BeginPlay();
     RestorePersistentState();
+    WireMissionStations();
     if (bSpawnUpgradeStations)
     {
         SpawnUpgradeStations();
@@ -81,6 +84,29 @@ void ATU_HideoutCommandCenter::CapturePersistentState()
     {
         Lifecycle->CaptureHideoutState(Progression);
         Lifecycle->SaveProfile();
+    }
+}
+
+void ATU_HideoutCommandCenter::WireMissionStations()
+{
+    if (!DefaultMissionPackage || !GetWorld())
+    {
+        return;
+    }
+
+    for (TActorIterator<ATU_CommandCenterStation> It(GetWorld()); It; ++It)
+    {
+        ATU_CommandCenterStation* Station = *It;
+        if (!Station || Station->GetOwner() != this)
+        {
+            continue;
+        }
+
+        const ETUCommandCenterStationType Type = Station->GetStationType();
+        if (Type == ETUCommandCenterStationType::Briefing || Type == ETUCommandCenterStationType::MissionLaunch)
+        {
+            Station->SetMissionPackage(DefaultMissionPackage);
+        }
     }
 }
 
