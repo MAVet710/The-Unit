@@ -1,0 +1,73 @@
+{
+  "reference_id": "DON_A60",
+  "display_name": "Artema Street 60",
+  "location_context": "Donetsk, Ukraine",
+  "heritage_context": "local cultural heritage monument of architecture",
+  "documented": {
+    "construction_year": 1928,
+    "original_storeys": 3,
+    "current_storeys": 4,
+    "original_use": "Builders' Club",
+    "architect_original": "G. Yanovitskiy",
+    "postwar_reconstruction_period": "1947-1948",
+    "postwar_architect": "L. Barash",
+    "facade_features": [
+      "semicircular street projection",
+      "tall stair-tower windows",
+      "white columns",
+      "strong horizontal floor stratification",
+      "decorative parapet",
+      "balustrades on balconies"
+    ]
+  },
+  "photo_match_working_estimates_cm": {
+    "frontage": 5200,
+    "depth": 1900,
+    "ground_floor_height": 360,
+    "upper_floor_height": 340,
+    "rounded_projection_radius": 430,
+    "stair_tower_width": 640
+  },
+  "estimate_status": "PhotoMatchedWorkingEstimate",
+  "estimate_warning": "These dimensions are not survey measurements. Recalibrate when reliable drawings, cadastral footprint geometry, or photogrammetric control dimensions become available.",
+  "reference_sources": [
+    {
+      "type": "multi_angle_category",
+      "url": "https://commons.wikimedia.org/wiki/Category:60_Artema_Street,_Donetsk",
+      "note": "14 public reference files listed by Wikimedia Commons"
+    },
+    {
+      "type": "current_facade",
+      "url": "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60.jpg"
+    },
+    {
+      "type": "current_oblique",
+      "url": "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_2.jpg"
+    },
+    {
+      "type": "historic_1930",
+      "url": "https://commons.wikimedia.org/wiki/File:1930._Donetsk_artema_60.jpg"
+    },
+    {
+      "type": "building_history",
+      "url": "https://infodon.org.ua/time/201"
+    },
+    {
+      "type": "architecture_catalog",
+      "url": "https://photobuildings.com/object/245491/"
+    },
+    {
+      "type": "modernism_reference",
+      "url": "https://docomomojournal.com/index.php/journal/article/download/543/445"
+    }
+  ],
+  "unreal_actor": "/Script/TheUnit.TU_DonetskArtema60Building",
+  "next_accuracy_gate": [
+    "download full 14-image category set",
+    "calibrate straight-facade bay widths from current frontal/oblique views",
+    "calibrate rounded projection radius and street projection depth",
+    "validate stair-tower height/window locations",
+    "validate rear/courtyard footprint before authoring interiors",
+    "replace primitive reference plates with production modular facade meshes"
+  ]
+}
