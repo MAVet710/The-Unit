@@ -23,33 +23,84 @@ This gives us:
 
 ### 1. Artema Street / central-city architecture
 
-Wikimedia Commons provides a very large street-level archive and address-indexed building categories.
+Wikimedia Commons provides a large street-level archive and address-indexed building categories.
 
 - Architecture of Donetsk: https://commons.wikimedia.org/wiki/Category:Architecture_of_Donetsk
 - Buildings by address: https://commons.wikimedia.org/wiki/Category:Buildings_in_Donetsk_by_address
 - Artema Street: https://commons.wikimedia.org/wiki/Category:Artema_Street,_Donetsk
 - Historical Artema Street photography: https://commons.wikimedia.org/wiki/Category:Historical_photos_of_Artema_Street,_Donetsk
 
-These references are the basis for the central boulevard scale, formal street wall, trolley/tram visual language and mixed 1920s–Soviet–post-Soviet building fabric.
+These references are the basis for central boulevard scale, formal street walls, trolley/tram visual language and mixed 1920s–Soviet–post-Soviet building fabric.
 
-### 2. Artema Street 60 — exact reference anchor
+### 2. Artema Street 60 — first dedicated production-reference building
 
-Public sources establish the important facts used by the generator:
+Artema 60 is no longer one-off geometry inside the district generator. It is now the reusable `ATU_DonetskArtema60Building` actor and is instanced by `ATU_DonetskDistrictGenerator` through a child-actor component.
+
+Public sources establish the documented facts used by the actor:
 
 - built in 1928;
 - original constructivist design;
 - originally three storeys;
-- postwar reconstruction added a fourth storey;
-- street facade includes a semicircular projection, tall arched/pointed stair-tower windows, white columns, parapet/balustrade treatment and strong horizontal floor layering.
+- original use as a builders' club;
+- G. Yanovitskiy is identified as the original architect in architecture references;
+- the building was reworked for the Palace of Pioneers in 1936;
+- postwar reconstruction in 1947–1948 added a fourth storey;
+- street facade includes a semicircular projection, tall stair-tower windows, white columns, parapet/balustrade treatment and strong horizontal floor layering.
 
 References:
 
 - Wikimedia category: https://commons.wikimedia.org/wiki/Category:60_Artema_Street,_Donetsk
 - Facade photo: https://commons.wikimedia.org/wiki/File:Donetsk_artema_60.jpg
+- Oblique facade: https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_2.jpg
 - Historical 1930 view: https://commons.wikimedia.org/wiki/File:1930._Donetsk_artema_60.jpg
-- Architectural history overview: https://ru.wikipedia.org/wiki/Административное_здание_по_Артёма_60
+- Historical/building overview: https://infodon.org.ua/time/201
+- Architecture catalog: https://photobuildings.com/object/245491/
+- Docomomo Ukraine modernism reference: https://docomomojournal.com/index.php/journal/article/download/543/445
 
-The procedural version in `ATU_DonetskDistrictGenerator` is a **facade-proportion blockout**, not a survey model. Final production art must be rebuilt from front/oblique/side photographs and measured facade ratios before being labeled as an accurate replica.
+At the time this production-reference workflow was added, the Wikimedia category contained **14 media files** for Artema 60, including the 1930 historical image and multiple current facade/oblique photographs.
+
+#### Artema 60 photo-match calibration
+
+`ATU_DonetskArtema60Building` exposes editable working values instead of burying estimates in geometry:
+
+- frontage: 5200 cm;
+- depth: 1900 cm;
+- ground-floor height: 360 cm;
+- upper-floor height: 340 cm;
+- rounded-projection radius: 430 cm;
+- stair-tower width: 640 cm.
+
+These are **photo-match working estimates, not survey dimensions**. They are recorded in `Tools/Reference/artema60_calibration.json` so future corrections have one traceable source of truth.
+
+The actor supports both:
+
+- current/postwar four-storey configuration; and
+- historical three-storey comparison configuration.
+
+The primitive dark facade plates are calibration markers for window/opening rhythm, not production windows or boolean openings.
+
+#### Full reference-set downloader
+
+Run:
+
+```powershell
+.\Tools\Reference\get_artema60_reference_set.ps1
+```
+
+The script queries the Wikimedia Commons category directly, downloads every current image into the git-ignored local reference directory and produces `artema60_reference_ledger.json` containing source URLs, dimensions, author and license metadata.
+
+Use the full set to calibrate in this order:
+
+1. overall four-storey silhouette and straight-facade bay rhythm;
+2. semicircular projection radius/depth from oblique photographs;
+3. stair-tower projection and tall-window placement;
+4. column spacing around the rounded projection;
+5. balcony slab/balustrade proportions;
+6. parapet/cornice profile;
+7. side/rear/courtyard footprint;
+8. historical three-storey silhouette against the 1930 photograph.
+
+Do not label the building production-accurate until these checks are complete.
 
 ### 3. Lenin Square / Artema 76 public building cluster
 
@@ -95,6 +146,8 @@ General Khrushchev-era reference context:
 - https://en.wikipedia.org/wiki/Khrushchevka
 
 For final Donetsk production assets, generic typology references are not enough: collect Donetsk-specific multi-angle photographs for every facade family before texture/final-mesh approval.
+
+Ilicha Avenue is the next residential target because Commons contains address-specific Donetsk imagery including 20/20a and 24/26.
 
 ## Accuracy hierarchy
 
@@ -213,7 +266,7 @@ This lets mission designers vary condition without destroying the reference accu
 `ATU_DonetskDistrictGenerator` currently creates an architecture-study graybox with:
 
 - broad central boulevard and formal sidewalks;
-- Artema 60 reference anchor;
+- dedicated Artema 60 child actor;
 - 5-storey Khrushchev-era residential courtyard;
 - 9-storey Brezhnev-era blocks;
 - Stalin-era street-wall blocks;
@@ -227,7 +280,7 @@ The geometry is deliberately labeled in-editor so the art team can see which sec
 
 Priority order:
 
-1. **Artema 60 production facade** — first exact civic building study.
+1. **Finish Artema 60 multi-angle calibration and replace primitive facade plates with production modules.**
 2. **Donetsk 5-storey residential kit** — collect specific local reference buildings and replace generic Khrushchev blockout.
 3. **Donetsk 9-storey panel kit** — local balcony/end-wall/stair-core variants.
 4. **central street-wall kit** — 1930s–1950s facade modules.
@@ -239,3 +292,14 @@ Priority order:
 ## Acceptance rule
 
 A building should not be called an accurate Donetsk replica merely because it "looks Soviet." Final acceptance requires traceable Donetsk-specific references and matching major proportions/silhouette. The procedural generator is the research/blockout foundation, not the final art claim.
+
+## Validation gate
+
+The Donetsk branch remains draft until:
+
+1. UE 5.7 UHT/C++ compilation succeeds;
+2. `TheUnit.Maps.Donetsk.*` automation executes successfully;
+3. the map bootstrap creates `Donetsk.umap`;
+4. PIE traversal/collision/scale is validated;
+5. Artema 60 receives the complete local multi-angle photo-match pass;
+6. the first Donetsk-specific residential family receives a calibrated production-art pass.
