@@ -1,5 +1,7 @@
 #include "TU_DonetskDistrictGenerator.h"
 
+#include "TU_DonetskArtema60Building.h"
+#include "Components/ChildActorComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -13,6 +15,11 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     SetRootComponent(Root);
+
+    Artema60Anchor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Artema60Anchor"));
+    Artema60Anchor->SetupAttachment(Root);
+    Artema60Anchor->SetChildActorClass(ATU_DonetskArtema60Building::StaticClass());
+    Artema60Anchor->SetRelativeLocation(FVector(-6200.0f, -5200.0f, 0.0f));
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
     CubeMesh = CubeFinder.Object;
@@ -34,7 +41,6 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
     }
 
     BuildRoadNetwork();
-    BuildArtema60Reference();
     BuildKhrushchyovkaCourtyard();
     BuildBrezhnevkaBlocks();
     BuildStalinistStreetWall();
@@ -45,6 +51,10 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
     {
         BuildStreetFurniture();
     }
+
+    AddLabel(
+        TEXT("REFERENCE ANCHOR // ARTEMA STREET 60 // DEDICATED PHOTO-MATCH ACTOR"),
+        FVector(-6200.0f, -6500.0f, 1720.0f));
 }
 
 void ATU_DonetskDistrictGenerator::ClearGenerated()
@@ -150,39 +160,6 @@ void ATU_DonetskDistrictGenerator::BuildSimpleFacadeBlock(
             }
         }
     }
-}
-
-void ATU_DonetskDistrictGenerator::BuildArtema60Reference()
-{
-    // Artema 60: four-storey 1928 constructivist building, later rebuilt with a fourth floor,
-    // decorative parapet/balustrades, tall arched/pointed stair-tower windows and a rounded street projection.
-    const FVector Origin(-6200.0f, -5200.0f, 0.0f);
-    const float FloorHeight = 360.0f;
-    const float MainHeight = FloorHeight * 4.0f;
-
-    AddBox(Origin + FVector(0.0f, 0.0f, MainHeight * 0.5f), FVector(2500.0f, 900.0f, MainHeight * 0.5f), TEXT("Artema60_MainMass"));
-    AddBox(Origin + FVector(1750.0f, -930.0f, MainHeight * 0.52f), FVector(620.0f, 290.0f, MainHeight * 0.52f), TEXT("Artema60_RoundedProjection_Blockout"));
-    AddBox(Origin + FVector(-2100.0f, -940.0f, MainHeight * 0.58f), FVector(500.0f, 250.0f, MainHeight * 0.58f), TEXT("Artema60_StairTower"));
-
-    // Layered horizontal floor bands are central to the building's tectonic composition.
-    for (int32 Floor = 1; Floor < 4; ++Floor)
-    {
-        AddBox(Origin + FVector(0.0f, -920.0f, Floor * FloorHeight), FVector(2520.0f, 30.0f, 18.0f), TEXT("Artema60_FloorBand"));
-    }
-
-    // Street facade rhythm derived from the public facade photographs; exact survey dimensions are intentionally not claimed.
-    for (int32 Floor = 0; Floor < 4; ++Floor)
-    {
-        for (int32 Bay = 0; Bay < 10; ++Bay)
-        {
-            const float X = Origin.X - 2050.0f + Bay * 455.0f;
-            const float Z = FloorHeight * (Floor + 0.52f);
-            AddBox(FVector(X, Origin.Y - 925.0f, Z), FVector(105.0f, 24.0f, Floor == 0 ? 115.0f : 125.0f), TEXT("Artema60_WindowRhythm"));
-        }
-    }
-
-    AddBox(Origin + FVector(0.0f, -950.0f, MainHeight + 55.0f), FVector(2520.0f, 35.0f, 55.0f), TEXT("Artema60_Parapet"));
-    AddLabel(TEXT("REFERENCE ANCHOR // ARTEMA STREET 60 // 1928 + POSTWAR 4TH FLOOR"), Origin + FVector(0.0f, -1250.0f, 1720.0f));
 }
 
 void ATU_DonetskDistrictGenerator::BuildKhrushchyovkaCourtyard()
