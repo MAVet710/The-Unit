@@ -30,9 +30,12 @@ Key references:
 - architecture catalog: https://photobuildings.com/object/245491/
 - Docomomo Ukraine modernism overview: https://docomomojournal.com/index.php/journal/article/download/543/445
 
-The documented/history data and the current working dimensions are recorded separately in:
+Runtime source of truth:
 
+- `ATU_DonetskArtema60Building`
 - `Tools/Reference/artema60_calibration.json`
+
+The district generator instances the dedicated building actor instead of embedding a second copy of Artema 60 geometry. That keeps later photo-match corrections synchronized across maps.
 
 The current working dimensions remain `PhotoMatchedWorkingEstimate`, not `Surveyed`.
 
