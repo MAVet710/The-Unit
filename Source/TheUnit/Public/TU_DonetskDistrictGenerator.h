@@ -5,6 +5,7 @@
 #include "TU_DonetskDistrictGenerator.generated.h"
 
 class UActorComponent;
+class UChildActorComponent;
 class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
@@ -30,6 +31,10 @@ public:
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Donetsk")
     TObjectPtr<USceneComponent> Root;
+
+    /** Dedicated reusable Artema 60 reconstruction; this replaces the old one-off blockout mass. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Donetsk|Reference Anchors")
+    TObjectPtr<UChildActorComponent> Artema60Anchor;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Donetsk|Layout", meta=(ClampMin="12000.0"))
     float DistrictWidthCm = 52000.0f;
@@ -60,7 +65,6 @@ private:
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
 
     void BuildRoadNetwork();
-    void BuildArtema60Reference();
     void BuildKhrushchyovkaCourtyard();
     void BuildBrezhnevkaBlocks();
     void BuildStalinistStreetWall();
