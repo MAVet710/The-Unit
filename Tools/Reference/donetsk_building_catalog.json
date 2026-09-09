@@ -1,5 +1,5 @@
 {
-  "catalog_version": 1,
+  "catalog_version": 2,
   "scope": "Public civilian architecture references for The Unit's Donetsk map",
   "baseline": "Prefer pre-war / civilian imagery, especially 2007-2013, for clean architectural reconstruction; author mission damage separately.",
   "confidence_levels": [
@@ -16,7 +16,7 @@
       "construction_year": 1928,
       "documented_floors_current": 4,
       "documented_floors_original": 3,
-      "reconstruction_note": "Postwar restoration/reconstruction added the fourth floor; public histories also describe parapet, balcony balustrades, altered stair-tower windows and facade decoration.",
+      "reconstruction_note": "Postwar restoration/reconstruction in 1947-1948 added the fourth floor; public histories also describe parapet, balcony balustrades, altered stair-tower windows and facade decoration.",
       "style": "Constructivism / early Soviet modernism with later reconstruction layers",
       "documented_features": [
         "semicircular street-facing projection",
@@ -27,20 +27,30 @@
         "balustrade treatment"
       ],
       "working_dimensions_cm": {
-        "floor_to_floor": 360,
-        "facade_width": 5000,
-        "depth": 1800,
-        "note": "Working blockout estimates only; replace through photo matching / measured plans before production-ready label."
+        "frontage": 5200,
+        "depth": 1900,
+        "ground_floor_height": 360,
+        "upper_floor_height": 340,
+        "rounded_projection_radius": 430,
+        "stair_tower_width": 640,
+        "status": "PhotoMatchedWorkingEstimate",
+        "note": "Not survey dimensions. Recalibrate from the full multi-angle reference set or reliable plans before ProductionReady."
       },
-      "confidence": "Documented",
+      "runtime_actor": "/Script/TheUnit.TU_DonetskArtema60Building",
+      "documented_confidence": "Documented",
+      "dimension_confidence": "PhotoMatched",
       "sources": [
         "https://commons.wikimedia.org/wiki/Category:60_Artema_Street,_Donetsk",
         "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60.jpg",
         "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_2.jpg",
         "https://commons.wikimedia.org/wiki/File:Donetsk_artema_60_4.jpg",
         "https://commons.wikimedia.org/wiki/File:1930._Donetsk_artema_60.jpg",
-        "https://ru.wikipedia.org/wiki/Административное_здание_по_Артёма_60"
-      ]
+        "https://infodon.org.ua/time/201",
+        "https://photobuildings.com/object/245491/",
+        "https://docomomojournal.com/index.php/journal/article/download/543/445"
+      ],
+      "local_reference_command": ".\\Tools\\Reference\\get_artema60_reference_set.ps1",
+      "next_measurement": "Use the full 14-image category set to recalibrate straight-facade bays, rounded projection, stair tower, columns, balconies, parapet and rear/courtyard footprint."
     },
     {
       "reference_id": "DON_ARTEMA76",
