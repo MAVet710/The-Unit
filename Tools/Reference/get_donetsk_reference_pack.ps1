@@ -127,5 +127,12 @@ foreach ($Url in $CategoryReferences) {
 
 $AttributionPath = Join-Path $OutputDirectory 'ATTRIBUTION.md'
 $Attribution -join "`r`n" | Set-Content -Path $AttributionPath -Encoding UTF8
+
+$ArtemaFetcher = Join-Path $PSScriptRoot 'get_artema60_reference_set.ps1'
+if (Test-Path $ArtemaFetcher) {
+    Write-Host '[TheUnit] Fetching full Artema 60 building category for production calibration...'
+    & $ArtemaFetcher -OutputDirectory (Join-Path $OutputDirectory 'Artema60_FullCategory') -Force:$Force
+}
+
 Write-Host "[TheUnit] Reference pack ready: $OutputDirectory"
 Write-Host "[TheUnit] Attribution ledger: $AttributionPath"
