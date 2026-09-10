@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "TU_PlayerController.generated.h"
 
+class APawn;
 class UTUMX50TabletComponent;
 
 /** Player input and local-control bridge for tactical UI commands. */
@@ -20,6 +21,8 @@ public:
 
 protected:
     virtual void SetupInputComponent() override;
+    virtual void OnPossess(APawn* InPawn) override;
+    virtual void OnUnPossess() override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MX50")
     TObjectPtr<UTUMX50TabletComponent> MX50Tablet;

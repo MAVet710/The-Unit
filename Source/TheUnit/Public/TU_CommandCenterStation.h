@@ -31,7 +31,7 @@ public:
     ATU_CommandCenterStation();
 
     UFUNCTION(BlueprintCallable, Category="Command Center")
-    bool UseStation(ATU_ArmedOperatorCharacter* Operator);
+    virtual bool UseStation(ATU_ArmedOperatorCharacter* Operator);
 
     UFUNCTION(BlueprintCallable, Category="Command Center")
     void ConfigureStation(ETUCommandCenterStationType NewType, const FText& NewLabel, FName NewMissionId = NAME_None);

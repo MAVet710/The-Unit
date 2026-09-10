@@ -10,5 +10,14 @@
       "LoadingPhase": "Default"
     }
   ],
-  "Plugins": []
+  "Plugins": [
+    {
+      "Name": "PythonScriptPlugin",
+      "Enabled": true
+    },
+    {
+      "Name": "EditorScriptingUtilities",
+      "Enabled": true
+    }
+  ]
 }

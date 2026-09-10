@@ -11,6 +11,7 @@ class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
 class UTextRenderComponent;
+class UTUMissionPackageData;
 
 /**
  * Editor-visible graybox for The Unit's walkable pre-mission headquarters.
@@ -29,6 +30,12 @@ public:
 
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
+
+    UFUNCTION(BlueprintCallable, Category="Command Center|Mission")
+    void SetDefaultMissionPackage(UTUMissionPackageData* InMissionPackage) { DefaultMissionPackage = InMissionPackage; }
+
+    UFUNCTION(BlueprintPure, Category="Command Center|Mission")
+    UTUMissionPackageData* GetDefaultMissionPackage() const { return DefaultMissionPackage; }
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Command Center")
@@ -52,6 +59,10 @@ protected:
     /** Spawn functional interaction actors at the authored station markers during BeginPlay. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Stations")
     bool bSpawnRuntimeStations = true;
+
+    /** Full mission package injected into generated Briefing and Mission Launch stations. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Mission")
+    TObjectPtr<UTUMissionPackageData> DefaultMissionPackage = nullptr;
 
 private:
     UPROPERTY(Transient)

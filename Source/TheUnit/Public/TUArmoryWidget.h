@@ -15,7 +15,7 @@ enum class ETUArmoryViewMode : uint8
     Gear UMETA(DisplayName="Gear / Cage")
 };
 
-/** Native command-center armory UI. Physical stations choose which room-specific view is shown. */
+/** Native command-center armory/Cage UI. Physical stations choose which room-specific view is shown. */
 UCLASS(Blueprintable)
 class THEUNIT_API UTUArmoryWidget : public UUserWidget
 {
@@ -44,7 +44,9 @@ private:
     void AddSecondaryChoices();
     void AddMeleeChoices();
     void AddEquipmentChoices();
+    void AddTacticalGearChoices();
     void AddSummary();
+    void PersistSelections();
 
     TWeakObjectPtr<ATU_ArmedOperatorCharacter> Operator;
     TSharedPtr<SVerticalBox> RootBox;

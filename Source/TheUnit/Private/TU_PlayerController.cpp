@@ -1,8 +1,10 @@
 #include "TU_PlayerController.h"
 
+#include "TUHideoutLifecycleSubsystem.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TUMX50TabletComponent.h"
 #include "Components/InputComponent.h"
+#include "Engine/GameInstance.h"
 
 ATU_PlayerController::ATU_PlayerController()
 {
@@ -17,6 +19,39 @@ void ATU_PlayerController::SetupInputComponent()
     {
         InputComponent->BindAction(TEXT("ToggleMX50"), IE_Pressed, this, &ATU_PlayerController::ToggleMX50);
     }
+}
+
+void ATU_PlayerController::OnPossess(APawn* InPawn)
+{
+    Super::OnPossess(InPawn);
+
+    if (ATU_ArmedOperatorCharacter* Operator = Cast<ATU_ArmedOperatorCharacter>(InPawn))
+    {
+        if (UGameInstance* GameInstance = GetGameInstance())
+        {
+            if (UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>())
+            {
+                Lifecycle->ApplyOperatorLoadout(Operator);
+            }
+        }
+    }
+}
+
+void ATU_PlayerController::OnUnPossess()
+{
+    if (ATU_ArmedOperatorCharacter* Operator = Cast<ATU_ArmedOperatorCharacter>(GetPawn()))
+    {
+        if (UGameInstance* GameInstance = GetGameInstance())
+        {
+            if (UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>())
+            {
+                Lifecycle->CaptureOperatorLoadout(Operator);
+                Lifecycle->SaveProfile();
+            }
+        }
+    }
+
+    Super::OnUnPossess();
 }
 
 void ATU_PlayerController::ToggleMX50()
