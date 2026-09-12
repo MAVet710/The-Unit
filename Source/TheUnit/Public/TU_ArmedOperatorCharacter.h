@@ -5,6 +5,7 @@
 #include "TU_OperatorCharacter.h"
 #include "TUOperatorLoadoutComponent.h"
 #include "TUArmoryWidget.h"
+#include "TUBriefingWidget.h"
 #include "TU_ArmedOperatorCharacter.generated.h"
 
 class ATU_OTFKnife;

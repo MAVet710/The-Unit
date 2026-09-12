@@ -1,5 +1,7 @@
 #include "TUCalloutManagerComponent.h"
 
+#include "Engine/World.h"
+
 UTUCalloutManagerComponent::UTUCalloutManagerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
