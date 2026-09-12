@@ -1,5 +1,7 @@
 #include "TU_ExtractionZone.h"
 
+#include "Engine/World.h"
+
 #include "TUHideoutLifecycleSubsystem.h"
 #include "Components/BoxComponent.h"
 #include "Engine/GameInstance.h"
