@@ -48,11 +48,11 @@ ATU_DonetskEnvironmentDressing::ATU_DonetskEnvironmentDressing()
     Manholes = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Manholes"));
     Puddles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Puddles"));
 
-    UHierarchicalInstancedStaticMeshComponent* Layers[] = {
+    UHierarchicalInstancedStaticMeshComponent* DressingLayers[] = {
         LampPosts, RoadDashes, Barriers, Sedans, Dumpsters, BusShelters, UtilityCabinets, Kiosks,
         RubblePiles, Pallets, TrafficSigns, Benches, Planters, Crates, Manholes, Puddles
     };
-    for (UHierarchicalInstancedStaticMeshComponent* Layer : Layers)
+    for (UHierarchicalInstancedStaticMeshComponent* Layer : DressingLayers)
         Layer->SetupAttachment(Root);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Lamp(TEXT("/Game/TheUnit/Donetsk/Environment/SM_Donetsk_Prop_LampPost.SM_Donetsk_Prop_LampPost"));
@@ -108,11 +108,11 @@ void ATU_DonetskEnvironmentDressing::OnConstruction(const FTransform& Transform)
 
 void ATU_DonetskEnvironmentDressing::RebuildDressing()
 {
-    UHierarchicalInstancedStaticMeshComponent* Layers[] = {
+    UHierarchicalInstancedStaticMeshComponent* DressingLayers[] = {
         LampPosts, RoadDashes, Barriers, Sedans, Dumpsters, BusShelters, UtilityCabinets, Kiosks,
         RubblePiles, Pallets, TrafficSigns, Benches, Planters, Crates, Manholes, Puddles
     };
-    for (UHierarchicalInstancedStaticMeshComponent* Layer : Layers)
+    for (UHierarchicalInstancedStaticMeshComponent* Layer : DressingLayers)
         if (Layer) Layer->ClearInstances();
 
     FRandomStream Random(0xD07E57);
