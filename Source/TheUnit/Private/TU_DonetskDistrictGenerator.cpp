@@ -197,10 +197,7 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
 
 void ATU_DonetskDistrictGenerator::AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation)
 {
-#if !WITH_EDITOR
-    // Reference labels are editor calibration aids only. Never render them in packaged gameplay.
-    return;
-#endif
+#if WITH_EDITOR
     if (!bGenerateReferenceLabels)
     {
         return;
@@ -215,6 +212,13 @@ void ATU_DonetskDistrictGenerator::AddLabel(const FString& Text, const FVector& 
     Label->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
     Label->RegisterComponent();
     GeneratedComponents.Add(Label);
+#else
+    // Reference labels are editor calibration aids only. Explicitly consume
+    // parameters so packaged builds compile cleanly with warnings-as-errors.
+    (void)Text;
+    (void)Location;
+    (void)Rotation;
+#endif
 }
 
 void ATU_DonetskDistrictGenerator::BuildRoadNetwork()
