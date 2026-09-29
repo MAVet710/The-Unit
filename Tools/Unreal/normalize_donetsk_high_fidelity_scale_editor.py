@@ -22,9 +22,10 @@ def trace(message):
 
 
 def get_dimensions_cm(mesh):
+    # UStaticMesh.get_bounding_box() returns unreal.Box. In UE 5.7 Python,
+    # use the reflected min/max vectors directly rather than a C++ helper method.
     box = mesh.get_bounding_box()
-    center, dimensions = box.get_box_center_size()
-    return dimensions
+    return box.max - box.min
 
 
 def select_measure(dimensions, mode):
