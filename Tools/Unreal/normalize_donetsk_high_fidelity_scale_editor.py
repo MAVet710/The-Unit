@@ -75,27 +75,49 @@ def main():
             if measured_before <= 0.001:
                 raise RuntimeError(f"invalid measured dimension {measured_before}")
 
-            factor = target_cm / measured_before
-            trace(
-                f"SCALE {target_name} mode={mode} target={target_cm:.2f} "
-                f"before=({before.x:.2f},{before.y:.2f},{before.z:.2f}) factor={factor:.6f}"
-            )
-
             lod_count = max(1, int(subsystem.get_lod_count(mesh)))
-            for lod_index in range(lod_count):
-                settings = subsystem.get_lod_build_settings(mesh, lod_index)
-                old_scale = settings.get_editor_property("build_scale3d")
-                settings.set_editor_property(
-                    "build_scale3d",
-                    unreal.Vector(
-                        float(old_scale.x) * factor,
-                        float(old_scale.y) * factor,
-                        float(old_scale.z) * factor,
-                    ),
-                )
-                subsystem.set_lod_build_settings(mesh, lod_index, settings)
+            cumulative_factor = 1.0
+            passes = []
 
-            unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+            for pass_index in range(1, 5):
+                current = get_dimensions_cm(mesh)
+                measured_current = select_measure(current, mode)
+                if measured_current <= 0.001:
+                    raise RuntimeError(f"invalid measured dimension {measured_current}")
+
+                relative_error_current = abs(measured_current - target_cm) / target_cm
+                passes.append({
+                    "pass": pass_index,
+                    "dimensions_cm": vector_dict(current),
+                    "measured_cm": measured_current,
+                    "relative_error": relative_error_current,
+                })
+
+                if relative_error_current <= TOLERANCE:
+                    break
+
+                factor = target_cm / measured_current
+                cumulative_factor *= factor
+
+                trace(
+                    f"SCALE_PASS {target_name} pass={pass_index} mode={mode} "
+                    f"target={target_cm:.2f} measured={measured_current:.2f} factor={factor:.6f}"
+                )
+
+                for lod_index in range(lod_count):
+                    settings = subsystem.get_lod_build_settings(mesh, lod_index)
+                    old_scale = settings.get_editor_property("build_scale3d")
+                    settings.set_editor_property(
+                        "build_scale3d",
+                        unreal.Vector(
+                            float(old_scale.x) * factor,
+                            float(old_scale.y) * factor,
+                            float(old_scale.z) * factor,
+                        ),
+                    )
+                    subsystem.set_lod_build_settings(mesh, lod_index, settings)
+
+                unreal.EditorAssetLibrary.save_loaded_asset(mesh)
 
             after = get_dimensions_cm(mesh)
             measured_after = select_measure(after, mode)
@@ -104,7 +126,8 @@ def main():
 
             trace(
                 f"RESULT {target_name} after=({after.x:.2f},{after.y:.2f},{after.z:.2f}) "
-                f"measured={measured_after:.2f} error={relative_error:.4%} pass={passed}"
+                f"measured={measured_after:.2f} error={relative_error:.4%} "
+                f"cumulative_factor={cumulative_factor:.6f} pass={passed}"
             )
 
             result = {
@@ -113,7 +136,8 @@ def main():
                 "scale_mode": mode,
                 "target_cm": target_cm,
                 "before_dimensions_cm": vector_dict(before),
-                "applied_factor": factor,
+                "applied_factor": cumulative_factor,
+                "passes": passes,
                 "after_dimensions_cm": vector_dict(after),
                 "measured_after_cm": measured_after,
                 "relative_error": relative_error,
