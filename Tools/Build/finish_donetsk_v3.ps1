@@ -29,7 +29,16 @@ if($hf.imported_count -ne $hf.required_count -or $hf.missing_count -ne 0 -or $hf
 
 Note 'BUILD_GAME_START'
 & $dotnet $ubt TheUnit Win64 Development $proj -WaitMutex -NoHotReloadFromIDE -NoXGE -NoUBA -MaxParallelActions=1 *>> $summary
-if($LASTEXITCODE -ne 0){ throw "Game build failed $LASTEXITCODE" }
+if($LASTEXITCODE -ne 0){
+  $ubtLog=Join-Path $env:LOCALAPPDATA 'UnrealBuildTool\Log.txt'
+  if(Test-Path $ubtLog){
+    Note 'BUILD_GAME_ERRORS_BEGIN'
+    Select-String -Path $ubtLog -Pattern 'error C[0-9]+|fatal error|error:' -CaseSensitive:$false |
+      Select-Object -Last 80 | ForEach-Object {$_.Line} | Out-File $summary -Append
+    Note 'BUILD_GAME_ERRORS_END'
+  }
+  throw "Game build failed $LASTEXITCODE"
+}
 Note 'BUILD_GAME_OK'
 
 Note 'TEST_START'
