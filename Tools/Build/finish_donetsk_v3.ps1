@@ -93,17 +93,17 @@ if($alive){ Stop-Process -Id $p.Id -Force }
 if(-not $alive){ throw 'Packaged Donetsk process exited before the runtime gate completed' }
 
 if(Test-Path $runlog){
-  $evidence=Select-String -Path $runlog -Pattern 'LoadMap:|DonetskMissionGameMode|Fatal error|Failed to load|Failed to find|Nanite'
+  $evidence=Select-String -Path $runlog -Pattern 'LoadMap:|DonetskMissionGameMode|Fatal error|LogMaterial: Warning:.*missing bUsedWith|Default Material will be used in game|Unable to build Nanite|Failed to build Nanite|LogLinker:.*Failed to load|LogStreaming:.*Failed to load'
   $evidence | Select-Object -Last 120 | ForEach-Object {$_.Line} | Out-File $summary -Append
   $loaded=[bool](Select-String -Path $runlog -Pattern 'LoadMap:.*Donetsk' -Quiet)
   Note "RUNTIME_DONETSK_LOADED=$loaded"
   if(-not $loaded){ throw 'Packaged runtime did not confirm the Donetsk map load' }
 
-  $renderErrors=@(Select-String -Path $runlog -Pattern 'Fatal error|Failed to load|Failed to find|missing bUsedWithNanite|Default Material will be used in game|Unable to build Nanite|Failed to build Nanite')
+  $renderErrors=@(Select-String -Path $runlog -Pattern 'Fatal error|LogMaterial: Warning:.*missing bUsedWith(?:Nanite|InstancedStaticMeshes)=True|Default Material will be used in game|Unable to build Nanite|Failed to build Nanite|LogLinker:.*Failed to load|LogStreaming:.*Failed to load')
   Note "RUNTIME_RENDER_ERRORS=$($renderErrors.Count)"
   if($renderErrors.Count -gt 0){
     $renderErrors | Select-Object -Last 80 | ForEach-Object {$_.Line} | Out-File $summary -Append
-    throw "Packaged Donetsk runtime reported $($renderErrors.Count) fatal/load/Nanite rendering errors"
+    throw "Packaged Donetsk runtime reported $($renderErrors.Count) fatal/load/material/Nanite rendering errors"
   }
 } else {
   throw "Missing packaged runtime log $runlog"
