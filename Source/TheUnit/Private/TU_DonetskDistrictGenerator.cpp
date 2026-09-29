@@ -159,6 +159,21 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddBox(
     return Mesh;
 }
 
+UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddHiddenBox(
+    const FVector& Location,
+    const FVector& Extents,
+    const FString& BaseName,
+    const FRotator& Rotation)
+{
+    UStaticMeshComponent* Mesh = AddBox(Location, Extents, BaseName, Rotation);
+    if (Mesh)
+    {
+        Mesh->SetVisibility(false, true);
+        Mesh->SetHiddenInGame(true, true);
+    }
+    return Mesh;
+}
+
 UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
     UStaticMesh* Asset, const FVector& Location, const FString& BaseName, const FRotator& Rotation)
 {
@@ -181,6 +196,10 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
 
 void ATU_DonetskDistrictGenerator::AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation)
 {
+#if !WITH_EDITOR
+    // Reference labels are editor calibration aids only. Never render them in packaged gameplay.
+    return;
+#endif
     if (!bGenerateReferenceLabels)
     {
         return;
@@ -272,8 +291,8 @@ void ATU_DonetskDistrictGenerator::BuildCentralSquareReference()
     for (int32 Row = -3; Row <= 3; ++Row)
     {
         const float Y = Row * 5200.0f;
-        AddBox(FVector(4300.0f, Y, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchW"));
-        AddBox(FVector(15500.0f, Y + 1800.0f, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchE"));
+        AddHiddenBox(FVector(4300.0f, Y, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchW"));
+        AddHiddenBox(FVector(15500.0f, Y + 1800.0f, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchE"));
     }
 
     AddLabel(TEXT("CENTRAL CIVIC SQUARE // DOCUMENTED 140m x 480m PLANNING SCALE"),
@@ -362,7 +381,7 @@ void ATU_DonetskDistrictGenerator::BuildBrezhnevkaBlocks()
     BuildSimpleFacadeBlock(Origin + FVector(1500.0f, 5200.0f, 0.0f), 9, 10, 340.0f, 1450.0f, FloorHeight, TEXT("Brezhnev_9F_B"), true, true);
 
     // Elevator/stair cores read as stronger vertical masses than Khrushchev-era blocks.
-    AddBox(Origin + FVector(-2050.0f, -760.0f, 1280.0f), FVector(320.0f, 220.0f, 1280.0f), TEXT("Brezhnev_StairCore"));
+    AddHiddenBox(Origin + FVector(-2050.0f, -760.0f, 1280.0f), FVector(320.0f, 220.0f, 1280.0f), TEXT("Brezhnev_StairCore"));
     AddLabel(TEXT("9-STOREY BREZHNEV-ERA PANEL HOUSING TYPOLOGY"), Origin + FVector(0.0f, -1150.0f, 2850.0f));
 }
 
@@ -417,7 +436,7 @@ void ATU_DonetskDistrictGenerator::BuildIndustrialEdge()
     for (int32 Index = 0; Index < 8; ++Index)
     {
         const float X = Origin.X - 4500.0f + Index * 1350.0f;
-        AddBox(FVector(X, Origin.Y - 3650.0f, 120.0f), FVector(18.0f, 18.0f, 120.0f), TEXT("Industrial_FencePost"));
+        AddHiddenBox(FVector(X, Origin.Y - 3650.0f, 120.0f), FVector(18.0f, 18.0f, 120.0f), TEXT("Industrial_FencePost"));
     }
     if (IndustrialEdgeMesh)
     {
@@ -435,26 +454,26 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
     for (int32 Index = -7; Index <= 7; ++Index)
     {
         const float Y = Index * 3600.0f;
-        AddBox(FVector(-1480.0f, Y, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_W"));
-        AddBox(FVector(1480.0f, Y + 1800.0f, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_E"));
+        AddHiddenBox(FVector(-1480.0f, Y, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_W"));
+        AddHiddenBox(FVector(1480.0f, Y + 1800.0f, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_E"));
     }
 
     // Trolley-contact wire pair and cross spans. Thin collision boxes are deliberate
     // at this stage: they establish authentic vertical scale and wire rhythm while
     // remaining deterministic across network peers.
     for (float WireX : {-720.0f, 720.0f})
-        AddBox(FVector(WireX, 0.0f, 610.0f), FVector(6.0f, DistrictLengthCm * 0.46f, 4.0f), TEXT("TransitWire_Longitudinal"));
+        AddHiddenBox(FVector(WireX, 0.0f, 610.0f), FVector(6.0f, DistrictLengthCm * 0.46f, 4.0f), TEXT("TransitWire_Longitudinal"));
     for (int32 Index = -7; Index <= 7; ++Index)
-        AddBox(FVector(0.0f, Index * 3600.0f, 630.0f), FVector(1480.0f, 5.0f, 4.0f), TEXT("TransitWire_CrossSpan"));
+        AddHiddenBox(FVector(0.0f, Index * 3600.0f, 630.0f), FVector(1480.0f, 5.0f, 4.0f), TEXT("TransitWire_CrossSpan"));
 
     // Bus/tram stop shelter blockout.
-    AddBox(FVector(2350.0f, -7200.0f, 115.0f), FVector(360.0f, 90.0f, 115.0f), TEXT("TransitStop_Back"));
-    AddBox(FVector(2350.0f, -7200.0f, 240.0f), FVector(390.0f, 130.0f, 14.0f), TEXT("TransitStop_Roof"));
+    AddHiddenBox(FVector(2350.0f, -7200.0f, 115.0f), FVector(360.0f, 90.0f, 115.0f), TEXT("TransitStop_Back"));
+    AddHiddenBox(FVector(2350.0f, -7200.0f, 240.0f), FVector(390.0f, 130.0f, 14.0f), TEXT("TransitStop_Roof"));
 
     // Kiosks and utility cabinets are part of the everyday street texture rather than combat-specific set dressing.
-    AddBox(FVector(-2800.0f, 3400.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_A"));
-    AddBox(FVector(-2800.0f, 3850.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_B"));
-    AddBox(FVector(2750.0f, 11800.0f, 75.0f), FVector(90.0f, 70.0f, 75.0f), TEXT("UtilityCabinet"));
+    AddHiddenBox(FVector(-2800.0f, 3400.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_A"));
+    AddHiddenBox(FVector(-2800.0f, 3850.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_B"));
+    AddHiddenBox(FVector(2750.0f, 11800.0f, 75.0f), FVector(90.0f, 70.0f, 75.0f), TEXT("UtilityCabinet"));
 }
 
 void ATU_DonetskDistrictGenerator::BuildUrbanVegetation()
@@ -522,20 +541,20 @@ void ATU_DonetskDistrictGenerator::BuildMissionDamageLayer()
         {FVector(3300,-23800,36), FVector(155,90,36), FRotator(-10,-22,8)}
     };
     for (const FRubblePiece& Piece : Rubble)
-        AddBox(Piece.P, Piece.E, TEXT("Damage_RubbleConcrete"), Piece.R);
+        AddHiddenBox(Piece.P, Piece.E, TEXT("Damage_RubbleConcrete"), Piece.R);
 
     // Improvised road-control positions create extraction-shooter cover without
     // blocking the documented Artema boulevard or the two extraction lanes.
     for (int32 I=0; I<4; ++I)
     {
-        AddBox(FVector(-900.f + I*600.f, -20500.f + (I%2)*180.f, 55.f),
+        AddHiddenBox(FVector(-900.f + I*600.f, -20500.f + (I%2)*180.f, 55.f),
             FVector(210.f, 65.f, 55.f), TEXT("Damage_RubbleBarrier"),
             FRotator(0.f, I%2 ? 8.f : -6.f, 0.f));
     }
 
-    AddBox(FVector(4300,-18700,125), FVector(290,20,125), TEXT("Damage_RustSheet"), FRotator(0,22,4));
-    AddBox(FVector(4700,-18450,95), FVector(220,18,95), TEXT("Damage_RustSheet"), FRotator(0,-17,-3));
-    AddBox(FVector(-18400,-12600,110), FVector(250,18,110), TEXT("Damage_RustSheet"), FRotator(0,9,5));
+    AddHiddenBox(FVector(4300,-18700,125), FVector(290,20,125), TEXT("Damage_RustSheet"), FRotator(0,22,4));
+    AddHiddenBox(FVector(4700,-18450,95), FVector(220,18,95), TEXT("Damage_RustSheet"), FRotator(0,-17,-3));
+    AddHiddenBox(FVector(-18400,-12600,110), FVector(250,18,110), TEXT("Damage_RustSheet"), FRotator(0,9,5));
 }
 
 void ATU_DonetskDistrictGenerator::BeginPlay()
