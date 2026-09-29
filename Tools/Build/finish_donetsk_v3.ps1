@@ -27,6 +27,16 @@ if($hf.imported_count -ne $hf.required_count -or $hf.missing_count -ne 0 -or $hf
   throw "High-fidelity Donetsk asset gate failed. Prototype visual meshes are forbidden in the packaged release."
 }
 
+$scaleReceipt=Join-Path $repo 'ExternalAssets\DonetskHighFidelity\scale_receipt.json'
+if(!(Test-Path $scaleReceipt)){
+  throw "Donetsk high-fidelity scale receipt is missing: $scaleReceipt. Miniature/unscaled imported art is not release-eligible."
+}
+$scale=Get-Content $scaleReceipt -Raw | ConvertFrom-Json
+Note "HF_SCALE status=$($scale.status) scaled=$($scale.scaled_count) required=$($scale.required_count) failed=$($scale.failed_count)"
+if($scale.status -ne 'success' -or $scale.scaled_count -ne $scale.required_count -or $scale.failed_count -ne 0){
+  throw "Donetsk high-fidelity scale gate failed. Imported art must be normalized to gameplay scale before release."
+}
+
 Note 'BUILD_GAME_START'
 & $dotnet $ubt TheUnit Win64 Development $proj -WaitMutex -NoHotReloadFromIDE -NoXGE -NoUBA -MaxParallelActions=1 *>> $summary
 if($LASTEXITCODE -ne 0){
