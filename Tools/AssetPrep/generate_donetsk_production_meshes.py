@@ -39,6 +39,26 @@ newmtl Concrete
 Kd 0.34 0.34 0.33
 Ks 0.03 0.03 0.03
 Ns 8
+newmtl Asphalt
+Kd 0.095 0.10 0.105
+Ks 0.035 0.035 0.035
+Ns 6
+newmtl Paving
+Kd 0.42 0.40 0.37
+Ks 0.025 0.025 0.025
+Ns 7
+newmtl UrbanGrass
+Kd 0.15 0.22 0.11
+Ks 0.015 0.015 0.015
+Ns 3
+newmtl DrySoil
+Kd 0.25 0.19 0.13
+Ks 0.01 0.01 0.01
+Ns 2
+newmtl RustSteel
+Kd 0.26 0.10 0.055
+Ks 0.10 0.08 0.06
+Ns 16
 '''
 (out/"DonetskMaterials.mtl").write_text(mtl,encoding="utf-8")
 
@@ -170,7 +190,15 @@ def artema60():
                 o.box((x,y,z),(20,180,190),"DarkGlass")
     o.write(out/"SM_Artema60_Production.obj")
 
+def surface_palette():
+    o=Obj("SM_Donetsk_SurfacePalette")
+    mats=["Asphalt","Paving","UrbanGrass","DrySoil","RustSteel"]
+    for i,mat in enumerate(mats):
+        o.box((i*120,0,25),(100,100,50),mat)
+    o.write(out/"SM_Donetsk_SurfacePalette.obj")
+
 artema60()
+surface_palette()
 facade("SM_Donetsk_Khrush_5F_16",5,16,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_14",5,14,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_12",5,12,315,1150,280,"khrush",False,False)

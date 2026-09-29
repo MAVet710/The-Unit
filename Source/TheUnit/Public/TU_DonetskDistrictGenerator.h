@@ -9,6 +9,7 @@ class UChildActorComponent;
 class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
+class UMaterialInterface;
 class UTextRenderComponent;
 
 /**
@@ -53,6 +54,10 @@ protected:
     UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
     bool bGenerateTransitFurniture = true;
 
+    /** Fictional mission damage, intentionally separate from clean reference architecture. */
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
+    bool bGenerateMissionDamage = true;
+
 private:
     bool bInitialLayoutReceived = false;
     UPROPERTY(Transient)
@@ -65,6 +70,13 @@ private:
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Brezhnev10Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka12Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka10Mesh;
+
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> AsphaltMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> PavingMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> GrassMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> SoilMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> RustMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> ConcreteMaterial;
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UActorComponent>> GeneratedComponents;
@@ -88,6 +100,7 @@ private:
     void BuildRailStationReference();
     void BuildIndustrialEdge();
     void BuildStreetFurniture();
+    void BuildMissionDamageLayer();
 
     void BuildSimpleFacadeBlock(const FVector& Origin, int32 Floors, int32 Bays, float BayWidthCm,
         float DepthCm, float FloorHeightCm, const FString& Prefix, bool bBalconies, bool bRaisedGroundFloor);

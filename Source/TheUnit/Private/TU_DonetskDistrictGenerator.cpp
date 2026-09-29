@@ -7,6 +7,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
 #include "Misc/Crc.h"
@@ -36,10 +37,19 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Brezhnev10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Brezhnev_9F_10.SM_Donetsk_Brezhnev_9F_10"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka12Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_12.SM_Donetsk_Stalinka_5F_12"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_10.SM_Donetsk_Stalinka_5F_10"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> AsphaltFinder(TEXT("/Game/TheUnit/Donetsk/Production/Asphalt.Asphalt"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> PavingFinder(TEXT("/Game/TheUnit/Donetsk/Production/Paving.Paving"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> GrassFinder(TEXT("/Game/TheUnit/Donetsk/Production/UrbanGrass.UrbanGrass"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> SoilFinder(TEXT("/Game/TheUnit/Donetsk/Production/DrySoil.DrySoil"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> RustFinder(TEXT("/Game/TheUnit/Donetsk/Production/RustSteel.RustSteel"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> ConcreteFinder(TEXT("/Game/TheUnit/Donetsk/Production/Concrete.Concrete"));
     CubeMesh = CubeFinder.Object;
     Khrush16Mesh = Khrush16Finder.Object; Khrush14Mesh = Khrush14Finder.Object; Khrush12Mesh = Khrush12Finder.Object;
     Brezhnev14Mesh = Brezhnev14Finder.Object; Brezhnev10Mesh = Brezhnev10Finder.Object;
     Stalinka12Mesh = Stalinka12Finder.Object; Stalinka10Mesh = Stalinka10Finder.Object;
+    AsphaltMaterial = AsphaltFinder.Object; PavingMaterial = PavingFinder.Object;
+    GrassMaterial = GrassFinder.Object; SoilMaterial = SoilFinder.Object;
+    RustMaterial = RustFinder.Object; ConcreteMaterial = ConcreteFinder.Object;
 }
 
 void ATU_DonetskDistrictGenerator::OnConstruction(const FTransform& Transform)
@@ -69,6 +79,10 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
     if (bGenerateTransitFurniture)
     {
         BuildStreetFurniture();
+    }
+    if (bGenerateMissionDamage)
+    {
+        BuildMissionDamageLayer();
     }
 
     AddLabel(
@@ -103,6 +117,29 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddBox(
     Mesh->SetRelativeScale3D(Extents / 50.0f);
     Mesh->SetMobility(EComponentMobility::Static);
     Mesh->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+
+    UMaterialInterface* Surface = nullptr;
+    if (BaseName.Contains(TEXT("Boulevard")) || BaseName.Contains(TEXT("Street")) ||
+        BaseName.Contains(TEXT("Road")) || BaseName.Contains(TEXT("Asphalt")))
+        Surface = AsphaltMaterial;
+    else if (BaseName.Contains(TEXT("Sidewalk")) || BaseName.Contains(TEXT("Hardscape")) ||
+             BaseName.Contains(TEXT("Apron")) || BaseName.Contains(TEXT("Steps")) ||
+             BaseName.Contains(TEXT("ServiceYard")) || BaseName.Contains(TEXT("Playground")))
+        Surface = PavingMaterial;
+    else if (BaseName.Contains(TEXT("Parterre")) || BaseName.Contains(TEXT("Median")))
+        Surface = GrassMaterial;
+    else if (BaseName.Contains(TEXT("DistrictGround")))
+        Surface = SoilMaterial;
+    else if (BaseName.Contains(TEXT("Pole")) || BaseName.Contains(TEXT("Wire")) ||
+             BaseName.Contains(TEXT("Rail")) || BaseName.Contains(TEXT("Fence")) ||
+             BaseName.Contains(TEXT("Bollard")) || BaseName.Contains(TEXT("Cabinet")) ||
+             BaseName.Contains(TEXT("Damage_Rust")))
+        Surface = RustMaterial;
+    else if (BaseName.Contains(TEXT("Damage_Rubble")) || BaseName.Contains(TEXT("Civic")) ||
+             BaseName.Contains(TEXT("Industrial")) || BaseName.Contains(TEXT("Station")))
+        Surface = ConcreteMaterial;
+    if (Surface) Mesh->SetMaterial(0, Surface);
+
     Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
     Mesh->RegisterComponent();
     GeneratedComponents.Add(Mesh);
@@ -377,6 +414,39 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
     AddBox(FVector(2750.0f, 11800.0f, 75.0f), FVector(90.0f, 70.0f, 75.0f), TEXT("UtilityCabinet"));
 }
 
+void ATU_DonetskDistrictGenerator::BuildMissionDamageLayer()
+{
+    // This layer is an original raid-state fiction, not a claim about the exact
+    // damage state of any referenced building. Keep it spatially separate from
+    // the calibrated architecture so it can be replaced per mission/era.
+    struct FRubblePiece { FVector P; FVector E; FRotator R; };
+    const FRubblePiece Rubble[] = {
+        {FVector(-5200,-17600,42), FVector(170,95,42), FRotator(12,28,8)},
+        {FVector(-4860,-17480,30), FVector(120,80,30), FRotator(-8,-14,5)},
+        {FVector(15400,-14200,52), FVector(220,110,52), FRotator(18,42,-6)},
+        {FVector(15820,-13950,34), FVector(135,90,34), FRotator(-12,5,9)},
+        {FVector(5200,16600,38), FVector(180,105,38), FRotator(9,-31,7)},
+        {FVector(5500,16950,26), FVector(105,70,26), FRotator(-4,17,-3)},
+        {FVector(-3200,-23100,45), FVector(190,115,45), FRotator(14,36,5)},
+        {FVector(3300,-23800,36), FVector(155,90,36), FRotator(-10,-22,8)}
+    };
+    for (const FRubblePiece& Piece : Rubble)
+        AddBox(Piece.P, Piece.E, TEXT("Damage_RubbleConcrete"), Piece.R);
+
+    // Improvised road-control positions create extraction-shooter cover without
+    // blocking the documented Artema boulevard or the two extraction lanes.
+    for (int32 I=0; I<4; ++I)
+    {
+        AddBox(FVector(-900.f + I*600.f, -20500.f + (I%2)*180.f, 55.f),
+            FVector(210.f, 65.f, 55.f), TEXT("Damage_RubbleBarrier"),
+            FRotator(0.f, I%2 ? 8.f : -6.f, 0.f));
+    }
+
+    AddBox(FVector(4300,-18700,125), FVector(290,20,125), TEXT("Damage_RustSheet"), FRotator(0,22,4));
+    AddBox(FVector(4700,-18450,95), FVector(220,18,95), TEXT("Damage_RustSheet"), FRotator(0,-17,-3));
+    AddBox(FVector(-18400,-12600,110), FVector(250,18,110), TEXT("Damage_RustSheet"), FRotator(0,9,5));
+}
+
 void ATU_DonetskDistrictGenerator::BeginPlay()
 {
     // PostNetInit invokes BeginPlay after the initial authoritative layout properties arrive.
@@ -392,6 +462,7 @@ void ATU_DonetskDistrictGenerator::GetLifetimeReplicatedProps(TArray<FLifetimePr
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, DistrictLengthCm, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateReferenceLabels, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateTransitFurniture, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateMissionDamage, COND_InitialOnly);
 }
 
 int32 ATU_DonetskDistrictGenerator::GetGeneratedCollisionComponentCount() const
