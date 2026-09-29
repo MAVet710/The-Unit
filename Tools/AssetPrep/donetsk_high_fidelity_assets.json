@@ -1,11 +1,12 @@
 {
-  "version": 1,
+  "version": 2,
   "purpose": "Replace Donetsk prototype visuals without changing gameplay collision/layout.",
   "source_root": "ExternalAssets/DonetskHighFidelity",
   "notes": [
     "Prototype meshes remain only for layout/collision fallback during development.",
     "Packaged Donetsk releases require a completed high-fidelity import receipt.",
-    "Prefer CC0 Meshy community assets or user-owned/generated assets with commercial rights."
+    "Prefer CC0 Meshy community assets or user-owned/generated assets with commercial rights.",
+    "All high-fidelity Meshy assets are normalized to gameplay-scale dimensions in centimeters after import."
   ],
   "assets": [
     {
@@ -14,7 +15,9 @@
       "expected_source": "Khrush_5F_A.fbx",
       "source_url": "https://www.meshy.ai/es/3d-models/019d6b41-da92-71c2-893c-df7485800418",
       "license": "CC0",
-      "role": "primary post-Soviet Ukrainian residential block"
+      "role": "primary post-Soviet Ukrainian residential block",
+      "scale_mode": "height_cm",
+      "target_cm": 1500
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_14",
@@ -22,7 +25,9 @@
       "expected_source": "Khrush_5F_B.fbx",
       "source_url": "https://www.meshy.ai/3d-models/Soviet-Brick-Apartment-Building-v2-01989083-a2e5-7cd5-920d-48b52ee50073",
       "license": "CC0",
-      "role": "brick residential block variation"
+      "role": "brick residential block variation",
+      "scale_mode": "height_cm",
+      "target_cm": 1500
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_12",
@@ -30,7 +35,9 @@
       "expected_source": "Khrush_5F_C.fbx",
       "source_url": "https://www.meshy.ai/3d-models/v2-01985729-a02e-70ab-87bf-e9e95ca566ca",
       "license": "CC0",
-      "role": "panel residential block variation"
+      "role": "panel residential block variation",
+      "scale_mode": "height_cm",
+      "target_cm": 1500
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_14",
@@ -38,7 +45,9 @@
       "expected_source": "Brezhnev_9F_A.fbx",
       "source_url": "https://www.meshy.ai/3d-models/Apartment-Building-v2-019c3ca4-bc29-78ca-bff9-f1cc63bc5430",
       "license": "CC0",
-      "role": "taller late-Soviet residential mass"
+      "role": "taller late-Soviet residential mass",
+      "scale_mode": "height_cm",
+      "target_cm": 2700
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_10",
@@ -46,7 +55,9 @@
       "expected_source": "Brezhnev_9F_B.fbx",
       "source_url": "https://www.meshy.ai/3d-models/Khrushchev-big-panel-condominium-soviet-old-big-panel-condominium-hard-edge-without-environment-3d-art-high-quality-details-low-poly-simple-construction-close-doors-and-windows-accuracy-edge-one-enter-with-double-door-in-building-old-roof-without-windows-white-walls-no-artifacts-on-model-realistic-high-quality-and-accuracy-texture-v2-0194c290-9850-75ed-bf30-c8681b62080b",
       "license": "CC0",
-      "role": "late-Soviet panel housing variation"
+      "role": "late-Soviet panel housing variation",
+      "scale_mode": "height_cm",
+      "target_cm": 2700
     },
     {
       "target_name": "SM_Donetsk_Prop_BusShelter",
@@ -54,7 +65,9 @@
       "expected_source": "BusShelter.fbx",
       "source_url": "https://www.meshy.ai/3d-models/The-object-is-a-rectangular-bus-shelter-with-a-corrugated-metal-roof-supported-by-cylindrical-posts-featuring-benches-inside-and-a-weathered-graffiticovered-surface-extremely-detailed-high-resolution-texture-v2-01951f8d-4797-74d9-b931-c8b2d774b1cd",
       "license": "CC0",
-      "role": "weathered civilian bus shelter"
+      "role": "weathered civilian bus shelter",
+      "scale_mode": "height_cm",
+      "target_cm": 260
     },
     {
       "target_name": "SM_Donetsk_Prop_Sedan",
@@ -62,7 +75,9 @@
       "expected_source": "CivilianSedan.fbx",
       "source_url": "https://www.meshy.ai/3d-models/old-russian-car-ladalike-for-postapocaliptic-game-v2-01940316-16b8-75f7-863e-b30310543cb5",
       "license": "CC0",
-      "role": "Eastern-European civilian sedan"
+      "role": "Eastern-European civilian sedan",
+      "scale_mode": "longest_cm",
+      "target_cm": 430
     },
     {
       "target_name": "SM_Donetsk_StreetTree_A",
@@ -70,7 +85,9 @@
       "expected_source": "StreetTree_A.fbx",
       "source_url": "https://www.meshy.ai/3d-models/an-ultra-realistic-tree-with-realistic-textures-and-colors-v2-019968be-f128-7bd9-8d1b-730b243dbcd6",
       "license": "CC0",
-      "role": "mature deciduous street tree"
+      "role": "mature deciduous street tree",
+      "scale_mode": "height_cm",
+      "target_cm": 1300
     },
     {
       "target_name": "SM_Donetsk_StreetTree_B",
@@ -78,7 +95,9 @@
       "expected_source": "StreetTree_B.fbx",
       "source_url": "https://www.meshy.ai/3d-models/realistic-tree-with-small-leaves-v2-0196d5d6-413c-7bfd-b078-4e693e21d9ac",
       "license": "CC0",
-      "role": "secondary deciduous street tree"
+      "role": "secondary deciduous street tree",
+      "scale_mode": "height_cm",
+      "target_cm": 1100
     },
     {
       "target_name": "SM_Donetsk_Prop_RubblePile",
@@ -86,7 +105,9 @@
       "expected_source": "RubblePile.fbx",
       "source_url": "https://www.meshy.ai/3d-models/Ruined-apartment-building-v2-019c4c43-6a98-71c9-b7f3-ce911b76bce1",
       "license": "CC0",
-      "role": "reference source for realistic masonry/concrete debris"
+      "role": "reference source for realistic masonry/concrete debris",
+      "scale_mode": "longest_cm",
+      "target_cm": 700
     }
   ]
 }
