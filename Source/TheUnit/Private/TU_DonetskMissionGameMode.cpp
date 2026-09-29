@@ -1,6 +1,7 @@
 #include "TU_DonetskMissionGameMode.h"
 
 #include "TU_DonetskDistrictGenerator.h"
+#include "TU_DonetskEnvironmentDressing.h"
 #include "TU_ExtractionZone.h"
 #include "TU_ObjectiveBase.h"
 #include "TU_RaidCombatant.h"
@@ -49,6 +50,21 @@ void ATU_DonetskMissionGameMode::StartPlay()
             FActorSpawnParameters Params;
             Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
             World->SpawnActor<ATU_DonetskDistrictGenerator>(DistrictClass, DistrictTransform, Params);
+        }
+
+        bool bHasDressing = false;
+        for (TActorIterator<ATU_DonetskEnvironmentDressing> It(World); It; ++It)
+        {
+            bHasDressing = true;
+            break;
+        }
+
+        if (!bHasDressing)
+        {
+            FActorSpawnParameters Params;
+            Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            World->SpawnActor<ATU_DonetskEnvironmentDressing>(
+                ATU_DonetskEnvironmentDressing::StaticClass(), FTransform::Identity, Params);
         }
 
         bool bHasExtraction = false;
