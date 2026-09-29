@@ -61,6 +61,13 @@ def create_or_replace_material(surface):
         return None
 
     try:
+        # Every Donetsk static-mesh material must compile the Nanite permutation.
+        # Without this UE substitutes the default material in packaged builds.
+        mat.set_editor_property("used_with_nanite", True)
+    except Exception as exc:
+        print("NANITE_MATERIAL_USAGE_WARN", surface, exc)
+
+    try:
         unreal.MaterialEditingLibrary.delete_all_material_expressions(mat)
     except Exception:
         pass
