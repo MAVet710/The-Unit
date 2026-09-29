@@ -71,6 +71,7 @@ private:
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
 
     void BuildRoadNetwork();
+    void BuildCentralSquareReference();
     void BuildKhrushchyovkaCourtyard();
     void BuildBrezhnevkaBlocks();
     void BuildStalinistStreetWall();

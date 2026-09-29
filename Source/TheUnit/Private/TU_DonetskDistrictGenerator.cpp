@@ -49,6 +49,7 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
     }
 
     BuildRoadNetwork();
+    BuildCentralSquareReference();
     BuildKhrushchyovkaCourtyard();
     BuildBrezhnevkaBlocks();
     BuildStalinistStreetWall();
@@ -136,6 +137,55 @@ void ATU_DonetskDistrictGenerator::BuildRoadNetwork()
     AddLabel(TEXT("DONETSK REFERENCE BOULEVARD // PUBLIC CIVILIAN ARCHITECTURE STUDY"), FVector(0.0f, -28000.0f, 130.0f));
 }
 
+void ATU_DonetskDistrictGenerator::BuildCentralSquareReference()
+{
+    // Documented planning anchor: the central square was laid out as an elongated
+    // approximately 140 m x 480 m rectangle east of Artema Street between the
+    // Komsomolskyi and Gurova cross axes. This establishes real-world scale and
+    // street hierarchy; individual civic-building dimensions remain photo-match work.
+    const FVector SquareCenter(10000.0f, 0.0f, 0.0f);
+    AddBox(SquareCenter + FVector(0.0f, 0.0f, 3.0f),
+        FVector(7000.0f, 24000.0f, 8.0f), TEXT("CentralSquare_Hardscape"));
+
+    // Artema-side pedestrian apron and eastern service street frame the square.
+    AddBox(FVector(2750.0f, 0.0f, 8.0f), FVector(350.0f, 24000.0f, 12.0f), TEXT("CentralSquare_WestApron"));
+    AddBox(FVector(18150.0f, 0.0f, 0.0f), FVector(650.0f, 24000.0f, 10.0f), TEXT("CentralSquare_EastStreet"));
+
+    // Parterre / planted end zones retain the large civic scale without filling the
+    // entire plaza with collision-heavy detail.
+    AddBox(FVector(10000.0f, -21500.0f, 14.0f), FVector(6100.0f, 1700.0f, 14.0f), TEXT("CentralSquare_SouthParterre"));
+    AddBox(FVector(10000.0f, 21500.0f, 14.0f), FVector(6100.0f, 1700.0f, 14.0f), TEXT("CentralSquare_NorthParterre"));
+
+    // Photo-match working civic edge. Keep these clean; mission damage is authored
+    // as a separate layer so reference proportions do not get baked into rubble.
+    AddBox(FVector(22100.0f, 0.0f, 900.0f), FVector(2850.0f, 4100.0f, 900.0f),
+        TEXT("CentralSquare_CivicCore"), FRotator(0.0f, 90.0f, 0.0f));
+    AddBox(FVector(21350.0f, -11000.0f, 700.0f), FVector(2200.0f, 3300.0f, 700.0f),
+        TEXT("CentralSquare_CivicSouth"), FRotator(0.0f, 90.0f, 0.0f));
+    AddBox(FVector(21350.0f, 11000.0f, 700.0f), FVector(2200.0f, 3300.0f, 700.0f),
+        TEXT("CentralSquare_CivicNorth"), FRotator(0.0f, 90.0f, 0.0f));
+
+    // Formal stair/column rhythm on the central civic frontage.
+    AddBox(FVector(18680.0f, 0.0f, 45.0f), FVector(520.0f, 2500.0f, 45.0f), TEXT("CentralSquare_CivicSteps"));
+    for (int32 Column = -5; Column <= 5; ++Column)
+    {
+        AddBox(FVector(19000.0f, Column * 390.0f, 480.0f),
+            FVector(22.0f, 22.0f, 480.0f), TEXT("CentralSquare_Column"));
+    }
+
+    // Human-scale benches and bollards prevent the plaza from reading as an empty
+    // game arena while preserving long civic sightlines.
+    for (int32 Row = -3; Row <= 3; ++Row)
+    {
+        const float Y = Row * 5200.0f;
+        AddBox(FVector(4300.0f, Y, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchW"));
+        AddBox(FVector(15500.0f, Y + 1800.0f, 45.0f), FVector(145.0f, 38.0f, 45.0f), TEXT("CentralSquare_BenchE"));
+    }
+
+    AddLabel(TEXT("CENTRAL CIVIC SQUARE // DOCUMENTED 140m x 480m PLANNING SCALE"),
+        FVector(10000.0f, 0.0f, 2050.0f), FRotator(0.0f, 180.0f, 0.0f));
+}
+
 void ATU_DonetskDistrictGenerator::BuildSimpleFacadeBlock(
     const FVector& Origin,
     int32 Floors,
@@ -192,10 +242,10 @@ void ATU_DonetskDistrictGenerator::BuildKhrushchyovkaCourtyard()
 void ATU_DonetskDistrictGenerator::BuildBrezhnevkaBlocks()
 {
     const float FloorHeight = 285.0f;
-    const FVector Origin(9800.0f, 6700.0f, 0.0f);
+    const FVector Origin(19700.0f, 7600.0f, 0.0f);
 
     BuildSimpleFacadeBlock(Origin, 9, 14, 340.0f, 1450.0f, FloorHeight, TEXT("Brezhnev_9F_A"), true, true);
-    BuildSimpleFacadeBlock(Origin + FVector(5400.0f, 3300.0f, 0.0f), 9, 10, 340.0f, 1450.0f, FloorHeight, TEXT("Brezhnev_9F_B"), true, true);
+    BuildSimpleFacadeBlock(Origin + FVector(1500.0f, 5200.0f, 0.0f), 9, 10, 340.0f, 1450.0f, FloorHeight, TEXT("Brezhnev_9F_B"), true, true);
 
     // Elevator/stair cores read as stronger vertical masses than Khrushchev-era blocks.
     AddBox(Origin + FVector(-2050.0f, -760.0f, 1280.0f), FVector(320.0f, 220.0f, 1280.0f), TEXT("Brezhnev_StairCore"));
@@ -205,7 +255,7 @@ void ATU_DonetskDistrictGenerator::BuildBrezhnevkaBlocks()
 void ATU_DonetskDistrictGenerator::BuildStalinistStreetWall()
 {
     // Central-city street wall: taller floor-to-floor heights, formal frontage and raised ground floors.
-    const FVector Origin(5900.0f, -2900.0f, 0.0f);
+    const FVector Origin(7600.0f, 26300.0f, 0.0f);
     BuildSimpleFacadeBlock(Origin, 5, 12, 390.0f, 1500.0f, 330.0f, TEXT("Stalinka_Block_A"), false, true);
     BuildSimpleFacadeBlock(Origin + FVector(5300.0f, 0.0f, 0.0f), 5, 10, 390.0f, 1500.0f, 330.0f, TEXT("Stalinka_Block_B"), true, true);
     AddLabel(TEXT("CENTRAL DONETSK STALIN-ERA STREET-WALL TYPOLOGY"), Origin + FVector(2400.0f, -1100.0f, 1850.0f));
@@ -215,7 +265,7 @@ void ATU_DonetskDistrictGenerator::BuildRailStationReference()
 {
     // Public 2012 station imagery/reference: restored historic central volume linked to newer steel/glass transit additions.
     // This is a recognizable architectural study, not a survey-accurate station plan.
-    const FVector Origin(10800.0f, 17600.0f, 0.0f);
+    const FVector Origin(-17000.0f, 23800.0f, 0.0f);
 
     AddBox(Origin + FVector(0.0f, 0.0f, 520.0f), FVector(3000.0f, 1250.0f, 520.0f), TEXT("Station_HistoricCentralMass"));
     AddBox(Origin + FVector(-3550.0f, 150.0f, 390.0f), FVector(620.0f, 1050.0f, 390.0f), TEXT("Station_WestWing"));
@@ -258,6 +308,14 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
         AddBox(FVector(-1480.0f, Y, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_W"));
         AddBox(FVector(1480.0f, Y + 1800.0f, 420.0f), FVector(18.0f, 18.0f, 420.0f), TEXT("TransitPole_E"));
     }
+
+    // Trolley-contact wire pair and cross spans. Thin collision boxes are deliberate
+    // at this stage: they establish authentic vertical scale and wire rhythm while
+    // remaining deterministic across network peers.
+    for (float WireX : {-720.0f, 720.0f})
+        AddBox(FVector(WireX, 0.0f, 610.0f), FVector(6.0f, DistrictLengthCm * 0.46f, 4.0f), TEXT("TransitWire_Longitudinal"));
+    for (int32 Index = -7; Index <= 7; ++Index)
+        AddBox(FVector(0.0f, Index * 3600.0f, 630.0f), FVector(1480.0f, 5.0f, 4.0f), TEXT("TransitWire_CrossSpan"));
 
     // Bus/tram stop shelter blockout.
     AddBox(FVector(2350.0f, -7200.0f, 115.0f), FVector(360.0f, 90.0f, 115.0f), TEXT("TransitStop_Back"));

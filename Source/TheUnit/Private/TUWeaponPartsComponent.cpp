@@ -96,35 +96,49 @@ bool UTUWeaponPartsComponent::Configure()
     if (!Match) {
         if (bSupported && Source) Source->SetVisibility(true, false);
         if (VisualRoot) VisualRoot->SetVisibility(false, true);
+        if (OwnerVisualRoot) OwnerVisualRoot->SetVisibility(false, true);
         bSupported = false; return false;
     }
     if (!VisualRoot) {
         Weapon->OnShotFired.AddUniqueDynamic(this, &UTUWeaponPartsComponent::OnShot);
         VisualRoot = NewObject<USceneComponent>(Weapon, TEXT("RiflePartsVisualRoot"));
-        Weapon->AddInstanceComponent(VisualRoot);
+        OwnerVisualRoot = NewObject<USceneComponent>(Weapon, TEXT("RifleOwnerViewRoot"));
+        Weapon->AddInstanceComponent(VisualRoot); Weapon->AddInstanceComponent(OwnerVisualRoot);
         VisualRoot->SetupAttachment(Weapon->GetRootComponent()); VisualRoot->RegisterComponent();
-        auto Make = [&](const TCHAR* Name, UStaticMesh* Asset) {
+        OwnerVisualRoot->SetupAttachment(Weapon->GetRootComponent()); OwnerVisualRoot->RegisterComponent();
+        auto Make = [&](USceneComponent* Parent, const TCHAR* Name, UStaticMesh* Asset, bool bOwnerOnly) {
             auto* Mesh = NewObject<UStaticMeshComponent>(Weapon, Name);
-            Weapon->AddInstanceComponent(Mesh); Mesh->SetupAttachment(VisualRoot);
+            Weapon->AddInstanceComponent(Mesh); Mesh->SetupAttachment(Parent);
             Mesh->SetStaticMesh(Asset); Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            Mesh->SetGenerateOverlapEvents(false); Mesh->SetCastShadow(true); Mesh->SetVisibility(false);
+            Mesh->SetGenerateOverlapEvents(false);
+            Mesh->SetFirstPersonPrimitiveType(bOwnerOnly
+                ? EFirstPersonPrimitiveType::FirstPerson
+                : EFirstPersonPrimitiveType::WorldSpaceRepresentation);
+            Mesh->SetOnlyOwnerSee(bOwnerOnly); Mesh->SetOwnerNoSee(!bOwnerOnly);
+            Mesh->SetCastShadow(!bOwnerOnly); Mesh->SetVisibility(false);
             Mesh->RegisterComponent(); return Mesh;
         };
-        ReceiverVisual = Make(TEXT("RifleReceiverVisual"), ReceiverAsset);
-        InsertedVisual = Make(TEXT("RifleInsertedMagazineVisual"), MagazineAsset);
-        MovingVisual=Make(TEXT("RifleMovingMagazineVisual"),MagazineAsset);
-        ActionVisual=Make(TEXT("RifleActionVisual"),ActionAsset);
-        ControlVisual=Make(TEXT("RifleControlVisual"),ControlAsset);
+        ReceiverVisual = Make(VisualRoot,TEXT("RifleReceiverVisual"),ReceiverAsset,false);
+        InsertedVisual = Make(VisualRoot,TEXT("RifleInsertedMagazineVisual"),MagazineAsset,false);
+        MovingVisual = Make(VisualRoot,TEXT("RifleMovingMagazineVisual"),MagazineAsset,false);
+        ActionVisual = Make(VisualRoot,TEXT("RifleActionVisual"),ActionAsset,false);
+        ControlVisual = Make(VisualRoot,TEXT("RifleControlVisual"),ControlAsset,false);
+        OwnerReceiverVisual = Make(OwnerVisualRoot,TEXT("RifleOwnerReceiverVisual"),ReceiverAsset,true);
+        OwnerInsertedVisual = Make(OwnerVisualRoot,TEXT("RifleOwnerInsertedMagazineVisual"),MagazineAsset,true);
+        OwnerMovingVisual = Make(OwnerVisualRoot,TEXT("RifleOwnerMovingMagazineVisual"),MagazineAsset,true);
+        OwnerActionVisual = Make(OwnerVisualRoot,TEXT("RifleOwnerActionVisual"),ActionAsset,true);
+        OwnerControlVisual = Make(OwnerVisualRoot,TEXT("RifleOwnerControlVisual"),ControlAsset,true);
     }
-    Source->SetVisibility(false, false); VisualRoot->SetVisibility(true, false);
-    ReceiverVisual->SetVisibility(true); bSupported = true; return true;
+    Source->SetVisibility(false, false);
+    VisualRoot->SetVisibility(true, false); OwnerVisualRoot->SetVisibility(true, false);
+    ReceiverVisual->SetVisibility(true); OwnerReceiverVisual->SetVisibility(true);
+    bSupported = true; return true;
 }
 void UTUWeaponPartsComponent::UpdatePresentation(float DeltaSeconds)
 {
     if (!Configure()) return;
     WeaponKickCm *= FMath::Exp(-22.f * FMath::Max(0.f, DeltaSeconds));
     const float Kick = bWeaponRecoilEnabled ? WeaponKickCm : 0.f;
-    VisualRoot->SetRelativeTransform(FTransform(FRotator(Kick * .45f, 0, 0), FVector(-Kick, 0, Kick * .12f)));
     const auto Action = Weapon->GetActionState();
     const auto Ledger = Weapon->ExportItemLedger();
     if (Ledger.Revision != Action.Revision) return; // Preserve the last coherent visual snapshot.
@@ -136,16 +150,28 @@ void UTUWeaponPartsComponent::UpdatePresentation(float DeltaSeconds)
     Frame=Evaluate(Ledger,Action,Progress);
     const float Load=Action.bActive && (Action.Phase==ETUWeaponActionPhase::Removed || Action.Phase==ETUWeaponActionPhase::Acquired)?1.5f:0.f;
     SupportLoadRoll=FMath::Lerp(SupportLoadRoll,Load,1.f-FMath::Exp(-12.f*FMath::Max(0.f,DeltaSeconds)));
-    VisualRoot->SetRelativeTransform(FTransform(FRotator(Kick*.45f+Frame.SeatReaction,0,SupportLoadRoll),FVector(-Kick-Frame.SeatReaction,0,Kick*.12f)));
+    const FTransform WorldRoot(FRotator(Kick*.45f+Frame.SeatReaction,0,SupportLoadRoll),
+        FVector(-Kick-Frame.SeatReaction,0,Kick*.12f));
+    VisualRoot->SetRelativeTransform(WorldRoot);
+    // First-person composition is handled by UE's render-only first-person
+    // projection. Keep the owner's physical transform identical to world geometry.
+    OwnerVisualRoot->SetRelativeTransform(WorldRoot);
     const FTransform MeshInActor = FTransform(FRotator(0.f,0.f,90.f)) * Weapon->GetWeaponBodyMesh()->GetRelativeTransform();
-    ReceiverVisual->SetRelativeTransform(Weapon->GetWeaponBodyMesh()->GetRelativeTransform());
-    InsertedVisual->SetRelativeTransform(MeshInActor);
-    ActionVisual->SetRelativeTransform(Weapon->GetWeaponBodyMesh()->GetRelativeTransform()*FTransform(FVector(-Frame.ActionTravelCm,0,0)));
-    ControlVisual->SetRelativeTransform(Weapon->GetWeaponBodyMesh()->GetRelativeTransform()*FTransform(FVector(0,Frame.ControlPress*.2f,0)));
-    ActionVisual->SetVisibility(true);ControlVisual->SetVisibility(true);
+    const FTransform ReceiverInActor = Weapon->GetWeaponBodyMesh()->GetRelativeTransform();
+    const FTransform ActionInActor = ReceiverInActor*FTransform(FVector(-Frame.ActionTravelCm,0,0));
+    const FTransform ControlInActor = ReceiverInActor*FTransform(FVector(0,Frame.ControlPress*.2f,0));
+    ReceiverVisual->SetRelativeTransform(ReceiverInActor); OwnerReceiverVisual->SetRelativeTransform(ReceiverInActor);
+    InsertedVisual->SetRelativeTransform(MeshInActor); OwnerInsertedVisual->SetRelativeTransform(MeshInActor);
+    ActionVisual->SetRelativeTransform(ActionInActor); OwnerActionVisual->SetRelativeTransform(ActionInActor);
+    ControlVisual->SetRelativeTransform(ControlInActor); OwnerControlVisual->SetRelativeTransform(ControlInActor);
     MovingVisual->SetRelativeTransform(MeshInActor * Frame.MovingInActor);
-    InsertedVisual->SetVisibility(Frame.InsertedId.IsValid());
-    MovingVisual->SetVisibility(Frame.MovingId.IsValid() && Frame.MovingId != Frame.InsertedId);
+    OwnerMovingVisual->SetRelativeTransform(MeshInActor * Frame.MovingInActor);
+    ActionVisual->SetVisibility(true); ControlVisual->SetVisibility(true);
+    OwnerActionVisual->SetVisibility(true); OwnerControlVisual->SetVisibility(true);
+    const bool bInserted=Frame.InsertedId.IsValid();
+    const bool bMoving=Frame.MovingId.IsValid() && Frame.MovingId != Frame.InsertedId;
+    InsertedVisual->SetVisibility(bInserted); OwnerInsertedVisual->SetVisibility(bInserted);
+    MovingVisual->SetVisibility(bMoving); OwnerMovingVisual->SetVisibility(bMoving);
 }
 FTransform UTUWeaponPartsComponent::GetVisibleActorWorld() const
 {
@@ -154,6 +180,14 @@ FTransform UTUWeaponPartsComponent::GetVisibleActorWorld() const
 FTransform UTUWeaponPartsComponent::GetVisibleMeshWorld() const
 {
     return bSupported && VisualRoot ? Weapon->GetWeaponBodyMesh()->GetRelativeTransform() * VisualRoot->GetComponentTransform() : (Weapon ? Weapon->GetWeaponBodyMesh()->GetComponentTransform() : FTransform::Identity);
+}
+FTransform UTUWeaponPartsComponent::GetOwnerVisibleActorWorld() const
+{
+    return bSupported && OwnerVisualRoot ? OwnerVisualRoot->GetComponentTransform() : GetVisibleActorWorld();
+}
+FTransform UTUWeaponPartsComponent::GetOwnerVisibleMeshWorld() const
+{
+    return bSupported && OwnerVisualRoot ? Weapon->GetWeaponBodyMesh()->GetRelativeTransform() * OwnerVisualRoot->GetComponentTransform() : GetVisibleMeshWorld();
 }
 void UTUWeaponPartsComponent::OnShot(FTUWeaponShotResult Result)
 {

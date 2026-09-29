@@ -38,6 +38,8 @@ public:
     bool IsSupported() const { return bSupported; }
     FTransform GetVisibleMeshWorld() const;
     FTransform GetVisibleActorWorld() const;
+    FTransform GetOwnerVisibleMeshWorld() const;
+    FTransform GetOwnerVisibleActorWorld() const;
     const FTUWeaponPartsFrame& GetFrame() const { return Frame; }
     UStaticMeshComponent* GetInsertedVisual() const { return InsertedVisual; }
     UStaticMeshComponent* GetMovingVisual() const { return MovingVisual; }
@@ -56,11 +58,17 @@ private:
     UPROPERTY() TObjectPtr<UStaticMesh> ActionAsset;
     UPROPERTY() TObjectPtr<UStaticMesh> ControlAsset;
     UPROPERTY() TObjectPtr<USceneComponent> VisualRoot;
+    UPROPERTY() TObjectPtr<USceneComponent> OwnerVisualRoot;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> ReceiverVisual;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> InsertedVisual;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> MovingVisual;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> ActionVisual;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> ControlVisual;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> OwnerReceiverVisual;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> OwnerInsertedVisual;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> OwnerMovingVisual;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> OwnerActionVisual;
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> OwnerControlVisual;
     bool bSupported = false;
     float WeaponKickCm = 0.f;
     float SupportLoadRoll = 0.f;

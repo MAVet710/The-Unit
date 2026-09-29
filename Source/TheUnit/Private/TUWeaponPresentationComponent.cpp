@@ -48,7 +48,7 @@ void UTUWeaponPresentationComponent::InitializeForWeapon(ATU_WeaponBase* Weapon)
             Body->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
             Body->PrimaryComponentTick.TickGroup=TG_PostUpdateWork;
             Body->AddTickPrerequisiteComponent(this);
-            if (Body == Operator->GetOwnerBodyMesh()) Body->HideBoneByName(TEXT("head"), EPhysBodyOp::PBO_None);
+            if (Body == Operator->GetOwnerBodyMesh()) Body->HideBoneByName(TEXT("neck_01"), EPhysBodyOp::PBO_None);
         }
     }
     Weapon->OnShotFired.AddUniqueDynamic(this, &UTUWeaponPresentationComponent::HandleShot);
@@ -209,36 +209,51 @@ void UTUWeaponPresentationComponent::UpdateEvaluatedAnimation(float DeltaTime)
     const FTransform RestRight(FQuat(-.0386802426, .169085932, -.633582251, .753980980), FVector(-16.8238128, 7.09737698, 139.904362));
     const FTransform RestLeft(FQuat(.451083899, .822524815, -.310249447, -.154017938), FVector(-7.62345367, 43.2806608, 141.581820));
     const FTransform GripSocket(FQuat(.0922137539, .146911631, .0851361490, .981155152), FVector(-15.8746737, 14.2863839, 140.790158));
+    FTransform WorldRight = FTransform::Identity, WorldLeft = FTransform::Identity;
+    FTransform OwnerRight = FTransform::Identity, OwnerLeft = FTransform::Identity;
+    auto* Parts = ActiveWeapon->PartsPresentation.Get();
+    auto ComputeContacts = [&](const FTransform& VisibleMesh, const FTransform& ContactActor,
+        FTransform& OutRight, FTransform& OutLeft)
+    {
+        OutRight = RestRight.GetRelativeTransform(GripSocket) * VisibleMesh;
+        OutLeft = RestLeft.GetRelativeTransform(GripSocket) * VisibleMesh;
+        OutLeft.AddToTranslation(ContactActor.TransformVectorNoScale(FVector(-2.f,3.f,6.f)));
+        if (Parts && Parts->IsSupported())
+        {
+            const auto& Frame = Parts->GetFrame();
+            const FTransform MagazineGrip = Frame.HandInActor * ContactActor;
+            FTransform Blended; Blended.Blend(OutLeft, MagazineGrip, Frame.HandContactAlpha);
+            OutLeft = Blended;
+        }
+    };
     if (bCalibratedContacts)
     {
-        auto* Parts = ActiveWeapon->PartsPresentation.Get();
-        const FTransform VisibleMesh = Parts && Parts->IsSupported() ? Parts->GetVisibleMeshWorld() : WeaponMesh->GetComponentTransform();
-        RightGripWorld = RestRight.GetRelativeTransform(GripSocket) * VisibleMesh;
-        LeftGripWorld = RestLeft.GetRelativeTransform(GripSocket) * VisibleMesh;
-        const FTransform ContactActor=Parts && Parts->IsSupported()?Parts->GetVisibleActorWorld():ActiveWeapon->GetActorTransform();
-        // The measured fore-end is above the original generic support pose.
-        LeftGripWorld.AddToTranslation(ContactActor.TransformVectorNoScale(FVector(-2.f,3.f,6.f)));
-        if (Parts && Parts->IsSupported()) {
-            const auto& Frame = Parts->GetFrame();
-            const FTransform MagazineGrip = Frame.HandInActor * Parts->GetVisibleActorWorld();
-            FTransform Blended; Blended.Blend(LeftGripWorld, MagazineGrip, Frame.HandContactAlpha);
-            LeftGripWorld = Blended;
-        }
+        const bool bParts = Parts && Parts->IsSupported();
+        const FTransform WorldMesh = bParts ? Parts->GetVisibleMeshWorld() : WeaponMesh->GetComponentTransform();
+        const FTransform WorldActor = bParts ? Parts->GetVisibleActorWorld() : ActiveWeapon->GetActorTransform();
+        const FTransform OwnerMesh = bParts ? Parts->GetOwnerVisibleMeshWorld() : WorldMesh;
+        const FTransform OwnerActor = bParts ? Parts->GetOwnerVisibleActorWorld() : WorldActor;
+        ComputeContacts(WorldMesh, WorldActor, WorldRight, WorldLeft);
+        ComputeContacts(OwnerMesh, OwnerActor, OwnerRight, OwnerLeft);
+        RightGripWorld = OwnerRight; LeftGripWorld = OwnerLeft;
     }
     for (USkeletalMeshComponent* Body : {Operator->GetMesh(), Operator->GetOwnerBodyMesh()})
     {
         if (!Body) continue;
         if (auto* Anim = Cast<UTUHandlingAnimInstance>(Body->GetAnimInstance()))
         {
+            const bool bOwnerBody = Body == Operator->GetOwnerBodyMesh();
+            const FTransform ActorFrame = Parts && Parts->IsSupported()
+                ? (bOwnerBody ? Parts->GetOwnerVisibleActorWorld() : Parts->GetVisibleActorWorld())
+                : ActiveWeapon->GetActorTransform();
             Anim->Idle = PrototypeIdle; Anim->Reload = PrototypeReload;
             Anim->IdleTime = PrototypeIdle ? FMath::Fmod(MotionTime, static_cast<double>(PrototypeIdle->GetPlayLength())) : 0.f;
             Anim->ActionTime = EvaluatedAnimationTime; Anim->ActionWeight = ReloadWeight;
             Anim->bContactsValid = bCalibratedContacts;
-            const auto* ContactParts=ActiveWeapon->PartsPresentation.Get();
-            Anim->MagazineGripAlpha=ContactParts && ContactParts->IsSupported()?ContactParts->GetFrame().MagazineGripAlpha:0.f;
-            Anim->ControlGripAlpha=ContactParts && ContactParts->IsSupported()?ContactParts->GetFrame().ControlGripAlpha:0.f;
-            Anim->MagazineObjectWorld=ContactParts && ContactParts->IsSupported()?ContactParts->GetFrame().MovingInActor*ContactParts->GetVisibleActorWorld():ActiveWeapon->GetActorTransform();
-            Anim->bOverrideSupportTrajectory = State.bActive && ActiveWeapon->PartsPresentation && ActiveWeapon->PartsPresentation->IsSupported();
+            Anim->MagazineGripAlpha=Parts && Parts->IsSupported()?Parts->GetFrame().MagazineGripAlpha:0.f;
+            Anim->ControlGripAlpha=Parts && Parts->IsSupported()?Parts->GetFrame().ControlGripAlpha:0.f;
+            Anim->MagazineObjectWorld=Parts && Parts->IsSupported()?Parts->GetFrame().MovingInActor*ActorFrame:ActiveWeapon->GetActorTransform();
+            Anim->bOverrideSupportTrajectory = State.bActive && Parts && Parts->IsSupported();
             Anim->ReloadClipBodyWeightScale = TUWeaponContact::ResolveMountProfile(ActiveWeapon->GetWeaponDefinition().WeaponId).ReloadClipBodyWeight;
             const auto* Defaults = Operator->GetClass()->GetDefaultObject<ATU_OperatorCharacter>();
             Anim->CrouchDrop = 2.f * FMath::Max(0.f, Defaults->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - Operator->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
@@ -246,7 +261,8 @@ void UTUWeaponPresentationComponent::UpdateEvaluatedAnimation(float DeltaTime)
             const FQuat AimDeltaWorld = Operator->GetHandlingEyeWorld().GetRotation() * Operator->GetActorQuat().Inverse();
             Anim->AimRotationComponent = ComponentRotation.Inverse() * AimDeltaWorld * ComponentRotation;
             Anim->EyeRotationComponent = ComponentRotation.Inverse() * Operator->GetHandlingEyeWorld().GetRotation();
-            Anim->RightGripWorld = RightGripWorld; Anim->LeftGripWorld = LeftGripWorld;
+            Anim->RightGripWorld = bOwnerBody ? OwnerRight : WorldRight;
+            Anim->LeftGripWorld = bOwnerBody ? OwnerLeft : WorldLeft;
             Anim->RestRightHand = RestRight; Anim->RestLeftHand = RestLeft;
         }
     }

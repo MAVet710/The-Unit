@@ -30,18 +30,24 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
     FirstPersonCamera = CreateDefaultSubobject<UTUHandlingCameraComponent>(TEXT("FirstPersonCamera"));
     FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
     FirstPersonCamera->bUsePawnControlRotation = true;
+    FirstPersonCamera->SetEnableFirstPersonFieldOfView(true);
+    FirstPersonCamera->SetFirstPersonFieldOfView(108.f);
+    FirstPersonCamera->SetEnableFirstPersonScale(true);
+    FirstPersonCamera->SetFirstPersonScale(.90f);
     // Ahead of the template neck/shoulders, still inside the movement capsule.
-    FirstPersonCamera->SetRelativeLocation(FVector(18.f, 0.f, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - 14.f));
+    FirstPersonCamera->SetRelativeLocation(FVector(20.f, 0.f, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - 14.f));
 
     FirstPersonArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonArmsMesh"));
     // Owner body and observer body share the same asset/pose in world space.
     // A hidden owner head avoids putting the camera inside visible face geometry.
     FirstPersonArmsMesh->SetupAttachment(GetCapsuleComponent());
     FirstPersonArmsMesh->SetOnlyOwnerSee(true);
+    FirstPersonArmsMesh->SetFirstPersonPrimitiveType(EFirstPersonPrimitiveType::FirstPerson);
     FirstPersonArmsMesh->bCastDynamicShadow = false;
     FirstPersonArmsMesh->CastShadow = false;
     FirstPersonArmsMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     GetMesh()->SetOwnerNoSee(true);
+    GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
     GetMesh()->bCastHiddenShadow = true;
     GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -90.f), FRotator(0.f, -90.f, 0.f));
     FirstPersonArmsMesh->SetRelativeTransform(GetMesh()->GetRelativeTransform());
@@ -73,7 +79,7 @@ ATU_OperatorCharacter::ATU_OperatorCharacter()
 void ATU_OperatorCharacter::BeginPlay()
 {
     Super::BeginPlay();
-    FirstPersonArmsMesh->HideBoneByName(TEXT("head"), EPhysBodyOp::PBO_None);
+    FirstPersonArmsMesh->HideBoneByName(TEXT("neck_01"), EPhysBodyOp::PBO_None);
 }
 
 void ATU_OperatorCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -194,10 +200,19 @@ void ATU_OperatorCharacter::Tick(float DeltaSeconds)
     {
         FirstPersonCamera->SetRelativeLocation(FVector(18.f, HandlingLean * 8.f, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - 14.f));
         // Camera-only effects deliberately never feed world aiming or hit traces.
-        if(const auto* S=UTUBetaUserSettings::Get()) FirstPersonCamera->SetFieldOfView(S->FieldOfView);
+        const auto* Settings = UTUBetaUserSettings::Get();
+        const float BaseFOV = Settings ? Settings->FieldOfView : 90.f;
+        FirstPersonCamera->SetFieldOfView(BaseFOV);
+        // Hip/reload uses a wider render-only viewmodel projection. ADS converges
+        // to the actual zoomed world FOV so the optic remains truthfully aligned.
+        const float WorldADSFOV = FMath::Max(40.f, BaseFOV - 15.f);
+        const float HipViewmodelFOV = FMath::Clamp(BaseFOV + 68.f, 150.f, 160.f);
+        FirstPersonCamera->SetFirstPersonFieldOfView(
+            FMath::Lerp(HipViewmodelFOV, WorldADSFOV, HandlingADSAlpha));
+        FirstPersonCamera->SetFirstPersonScale(FMath::Lerp(.59f, 1.f, HandlingADSAlpha));
         FirstPersonCamera->ClearAdditiveOffset();
         const FRotator CameraRecoil = WeaponPresentation ? WeaponPresentation->GetCameraRecoilRotation() : FRotator::ZeroRotator;
-        const float Sway = WeaponPresentation && (!UTUBetaUserSettings::Get() || UTUBetaUserSettings::Get()->bCameraSwayEnabled) ? WeaponPresentation->GetSwayOffset() : 0.f;
+        const float Sway = WeaponPresentation && (!Settings || Settings->bCameraSwayEnabled) ? WeaponPresentation->GetSwayOffset() : 0.f;
         // Camera recoil is its own bounded channel. Lean remains the existing base
         // roll and world-space aiming remains untouched.
         const FRotator CameraPresentation(

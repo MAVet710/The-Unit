@@ -151,7 +151,7 @@ struct FTUHandlingAnimProxy final : FAnimInstanceProxy
         {
             FTransform Chest = CSPose.GetComponentSpaceTransform(Spine);
             const FQuat InitialRotation = Chest.GetRotation();
-            Chest.SetRotation((FQuat::Slerp(FQuat::Identity, AimRotation, .5f) * InitialRotation).GetNormalized());
+            Chest.SetRotation((FQuat::Slerp(FQuat::Identity, AimRotation, .32f) * InitialRotation).GetNormalized());
             SetBone(Spine, Chest);
             // Move the shoulders toward an overextended grip by rotating the spine,
             // not by translating a shoulder or stretching an IK segment.
@@ -180,7 +180,7 @@ struct FTUHandlingAnimProxy final : FAnimInstanceProxy
                 const FQuat Delta = Candidate * InitialRotation.Inverse();
                 FVector Axis; float TotalAngle;
                 Delta.ToAxisAndAngle(Axis, TotalAngle);
-                Chest.SetRotation((FQuat(Axis, FMath::Min(TotalAngle, FMath::DegreesToRadians(55.f))) * InitialRotation).GetNormalized());
+                Chest.SetRotation((FQuat(Axis, FMath::Min(TotalAngle, FMath::DegreesToRadians(18.f))) * InitialRotation).GetNormalized());
                 SetBone(Spine, Chest);
             }
         }
@@ -198,14 +198,11 @@ struct FTUHandlingAnimProxy final : FAnimInstanceProxy
             // Keep the same shoulder/hand targets and lengths, selecting the
             // downward/outward elbow solution smoothly only during manipulation.
             const float Side = Hand == RightHand ? 1.f : -1.f;
-            const FVector ReloadHint = U.GetLocation() + EyeRotation.RotateVector(FVector(10.f, Side * 40.f, -50.f));
-            FVector Hint = FMath::Lerp(AuthoredHint, ReloadHint, Weight);
-            if(Hand==RightHand) {
-                // This rig's right metacarpals run along local -X. Choose the
-                // available elbow solution nearest the backward wrist axis.
-                // The hand contact and both segment lengths stay unchanged.
-                Hint=Target.GetLocation()+Target.GetUnitAxis(EAxis::X)*FVector::Distance(L.GetLocation(),H.GetLocation());
-            }
+            const FVector ShoulderHint = U.GetLocation() + EyeRotation.RotateVector(FVector(-8.f, Side * 34.f, -32.f));
+            const FVector ReloadHint = U.GetLocation() + EyeRotation.RotateVector(FVector(6.f, Side * 44.f, -50.f));
+            FVector Hint = Hand == RightHand
+                ? FMath::Lerp(ShoulderHint, ReloadHint, Weight)
+                : FMath::Lerp(AuthoredHint, ReloadHint, Weight);
             AnimationCore::SolveTwoBoneIK(U, L, H, Hint, Target.GetLocation(), false, 1.0, 1.0);
             H.SetRotation(Target.GetRotation());
             TArray<FBoneTransform, TInlineAllocator<3>> Changes;
