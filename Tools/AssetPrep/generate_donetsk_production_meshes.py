@@ -66,9 +66,16 @@ class Obj:
     def write(self,path):
         lines=[f"mtllib DonetskMaterials.mtl",f"o {self.name}"]
         lines += [f"v {x:.4f} {y:.4f} {z:.4f}" for x,y,z in self.v]
+        grouped={}
+        order=[]
         for mat,faces in self.parts:
+            if mat not in grouped:
+                grouped[mat]=[]
+                order.append(mat)
+            grouped[mat].extend(faces)
+        for mat in order:
             lines.append(f"usemtl {mat}")
-            lines += ["f "+" ".join(map(str,f)) for f in faces]
+            lines += ["f "+" ".join(map(str,f)) for f in grouped[mat]]
         path.write_text("\n".join(lines)+"\n",encoding="utf-8")
 
 def facade(name,floors,bays,bayw,depth,floorh,kind,balconies=True,raised=False):
