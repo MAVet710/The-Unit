@@ -1,4 +1,5 @@
 $ErrorActionPreference='Stop'
+$env:COMSPEC='C:\\Windows\\System32\\cmd.exe'
 $repo='C:\Users\ndasi\OneDrive\Documents\GitHub\The-Unit'
 $proj=Join-Path $repo 'TheUnit.uproject'
 $ue='E:\UE_5.7'
@@ -15,7 +16,7 @@ Set-Location $repo
 Note ('START HEAD='+(git rev-parse HEAD))
 
 Note 'BUILD_GAME_START'
-& "$ue\Engine\Build\BatchFiles\Build.bat" TheUnit Win64 Development $proj -WaitMutex -NoHotReloadFromIDE -NoXGE -NoUBA -MaxParallelActions=1 *>> $summary
+& $dotnet $ubt TheUnit Win64 Development $proj -WaitMutex -NoHotReloadFromIDE -NoXGE -NoUBA -MaxParallelActions=1 *>> $summary
 if($LASTEXITCODE -ne 0){ throw "Game build failed $LASTEXITCODE" }
 Note 'BUILD_GAME_OK'
 
