@@ -39,6 +39,10 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_10.SM_Donetsk_Stalinka_5F_10"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeAFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_A.SM_Donetsk_StreetTree_A"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeBFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_B.SM_Donetsk_StreetTree_B"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CivicCoreFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_CivicCore.SM_Donetsk_CivicCore"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CivicWingFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_CivicWing.SM_Donetsk_CivicWing"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> RailStationFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_RailStation_Reference.SM_Donetsk_RailStation_Reference"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> IndustrialFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_IndustrialEdge.SM_Donetsk_IndustrialEdge"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> AsphaltFinder(TEXT("/Game/TheUnit/Donetsk/Production/Asphalt.Asphalt"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> PavingFinder(TEXT("/Game/TheUnit/Donetsk/Production/Paving.Paving"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> GrassFinder(TEXT("/Game/TheUnit/Donetsk/Production/UrbanGrass.UrbanGrass"));
@@ -50,6 +54,8 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     Brezhnev14Mesh = Brezhnev14Finder.Object; Brezhnev10Mesh = Brezhnev10Finder.Object;
     Stalinka12Mesh = Stalinka12Finder.Object; Stalinka10Mesh = Stalinka10Finder.Object;
     StreetTreeAMesh = TreeAFinder.Object; StreetTreeBMesh = TreeBFinder.Object;
+    CivicCoreMesh = CivicCoreFinder.Object; CivicWingMesh = CivicWingFinder.Object;
+    RailStationMesh = RailStationFinder.Object; IndustrialEdgeMesh = IndustrialFinder.Object;
     AsphaltMaterial = AsphaltFinder.Object; PavingMaterial = PavingFinder.Object;
     GrassMaterial = GrassFinder.Object; SoilMaterial = SoilFinder.Object;
     RustMaterial = RustFinder.Object; ConcreteMaterial = ConcreteFinder.Object;
@@ -230,6 +236,7 @@ void ATU_DonetskDistrictGenerator::BuildCentralSquareReference()
     AddBox(FVector(10000.0f, -21500.0f, 14.0f), FVector(6100.0f, 1700.0f, 14.0f), TEXT("CentralSquare_SouthParterre"));
     AddBox(FVector(10000.0f, 21500.0f, 14.0f), FVector(6100.0f, 1700.0f, 14.0f), TEXT("CentralSquare_NorthParterre"));
 
+    const int32 CivicCollisionStart = GeneratedComponents.Num();
     // Photo-match working civic edge. Keep these clean; mission damage is authored
     // as a separate layer so reference proportions do not get baked into rubble.
     AddBox(FVector(22100.0f, 0.0f, 900.0f), FVector(2850.0f, 4100.0f, 900.0f),
@@ -245,6 +252,19 @@ void ATU_DonetskDistrictGenerator::BuildCentralSquareReference()
     {
         AddBox(FVector(19000.0f, Column * 390.0f, 480.0f),
             FVector(22.0f, 22.0f, 480.0f), TEXT("CentralSquare_Column"));
+    }
+
+    if (CivicCoreMesh && CivicWingMesh)
+    {
+        for (int32 Index = CivicCollisionStart; Index < GeneratedComponents.Num(); ++Index)
+            if (UStaticMeshComponent* CollisionPiece = Cast<UStaticMeshComponent>(GeneratedComponents[Index]))
+                CollisionPiece->SetVisibility(false, true);
+        AddProductionVisual(CivicCoreMesh, FVector(22100.0f, 0.0f, 0.0f),
+            TEXT("CentralSquare_CivicCore_Production"), FRotator(0.0f, 90.0f, 0.0f));
+        AddProductionVisual(CivicWingMesh, FVector(21350.0f, -11000.0f, 0.0f),
+            TEXT("CentralSquare_CivicSouth_Production"), FRotator(0.0f, 90.0f, 0.0f));
+        AddProductionVisual(CivicWingMesh, FVector(21350.0f, 11000.0f, 0.0f),
+            TEXT("CentralSquare_CivicNorth_Production"), FRotator(0.0f, 90.0f, 0.0f));
     }
 
     // Human-scale benches and bollards prevent the plaza from reading as an empty
@@ -360,6 +380,7 @@ void ATU_DonetskDistrictGenerator::BuildRailStationReference()
     // Public 2012 station imagery/reference: restored historic central volume linked to newer steel/glass transit additions.
     // This is a recognizable architectural study, not a survey-accurate station plan.
     const FVector Origin(-17000.0f, 23800.0f, 0.0f);
+    const int32 StationCollisionStart = GeneratedComponents.Num();
 
     AddBox(Origin + FVector(0.0f, 0.0f, 520.0f), FVector(3000.0f, 1250.0f, 520.0f), TEXT("Station_HistoricCentralMass"));
     AddBox(Origin + FVector(-3550.0f, 150.0f, 390.0f), FVector(620.0f, 1050.0f, 390.0f), TEXT("Station_WestWing"));
@@ -373,6 +394,13 @@ void ATU_DonetskDistrictGenerator::BuildRailStationReference()
     {
         AddBox(Origin + FVector(Bay * 420.0f, -1270.0f, 480.0f), FVector(110.0f, 22.0f, 180.0f), TEXT("Station_FacadeBay"));
     }
+    if (RailStationMesh)
+    {
+        for (int32 Index = StationCollisionStart; Index < GeneratedComponents.Num(); ++Index)
+            if (UStaticMeshComponent* CollisionPiece = Cast<UStaticMeshComponent>(GeneratedComponents[Index]))
+                CollisionPiece->SetVisibility(false, true);
+        AddProductionVisual(RailStationMesh, Origin, TEXT("Station_ProductionVisual"));
+    }
 
     AddLabel(TEXT("REFERENCE ANCHOR // DONETSK RAILWAY STATION // 1951 CORE + 2012 EXPANSION"), Origin + FVector(0.0f, -1550.0f, 1250.0f));
 }
@@ -380,14 +408,22 @@ void ATU_DonetskDistrictGenerator::BuildRailStationReference()
 void ATU_DonetskDistrictGenerator::BuildIndustrialEdge()
 {
     const FVector Origin(-15500.0f, -15000.0f, 0.0f);
-    AddBox(Origin + FVector(0.0f, 0.0f, 450.0f), FVector(4200.0f, 1800.0f, 450.0f), TEXT("Industrial_Warehouse"));
-    AddBox(Origin + FVector(4800.0f, 400.0f, 320.0f), FVector(1700.0f, 1200.0f, 320.0f), TEXT("Industrial_Workshop"));
+    UStaticMeshComponent* WarehouseCollision = AddBox(
+        Origin + FVector(0.0f, 0.0f, 450.0f), FVector(4200.0f, 1800.0f, 450.0f), TEXT("Industrial_Warehouse"));
+    UStaticMeshComponent* WorkshopCollision = AddBox(
+        Origin + FVector(4800.0f, 400.0f, 320.0f), FVector(1700.0f, 1200.0f, 320.0f), TEXT("Industrial_Workshop"));
     AddBox(Origin + FVector(2000.0f, -2500.0f, 8.0f), FVector(6000.0f, 1200.0f, 8.0f), TEXT("Industrial_ServiceYard"));
 
     for (int32 Index = 0; Index < 8; ++Index)
     {
         const float X = Origin.X - 4500.0f + Index * 1350.0f;
         AddBox(FVector(X, Origin.Y - 3650.0f, 120.0f), FVector(18.0f, 18.0f, 120.0f), TEXT("Industrial_FencePost"));
+    }
+    if (IndustrialEdgeMesh)
+    {
+        if (WarehouseCollision) WarehouseCollision->SetVisibility(false, true);
+        if (WorkshopCollision) WorkshopCollision->SetVisibility(false, true);
+        AddProductionVisual(IndustrialEdgeMesh, Origin, TEXT("Industrial_ProductionVisual"));
     }
 
     AddLabel(TEXT("DONBAS INDUSTRIAL EDGE // WAREHOUSE + SERVICE YARD"), Origin + FVector(1000.0f, -2500.0f, 1050.0f));

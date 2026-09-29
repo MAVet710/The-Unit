@@ -223,6 +223,55 @@ def artema60():
                 o.box((x,y,z),(20,180,190),"DarkGlass")
     o.write(out/"SM_Artema60_Production.obj")
 
+def civic_frontage(name,width,depth,height,floors,bays,formal=False):
+    o=Obj(name)
+    o.box((0,0,height/2),(width,depth,height),"StalinkaSand" if formal else "WhitePlaster")
+    front=-depth/2-12
+    floorh=height/floors
+    for fl in range(floors):
+        z=floorh*(fl+.54)
+        for bay in range(bays):
+            x=-width/2+width/bays*(bay+.5)
+            if fl==0 and bay in {bays//2-1,bays//2}:
+                o.box((x,front-5,floorh*.43),(width/bays*.42,18,floorh*.76),"MetalDark")
+            else:
+                o.box((x,front-5,z),(width/bays*.46,18,floorh*.54),"DarkGlass")
+    if formal:
+        o.box((0,front-110,38),(width*.58,220,76),"Concrete")
+        for k in range(-5,6):
+            x=k*width*.045
+            o.box((x,front-65,height*.53),(34,34,height*.78),"WhitePlaster")
+        o.box((0,front-36,height+52),(width+70,44,104),"WhitePlaster")
+    o.write(out/(name+".obj"))
+
+def station_reference():
+    o=Obj("SM_Donetsk_RailStation_Reference")
+    o.box((0,0,520),(6000,2500,1040),"WhitePlaster")
+    o.box((-3550,150,390),(1240,2100,780),"StalinkaSand")
+    o.box((3550,150,390),(1240,2100,780),"StalinkaSand")
+    o.box((0,2200,330),(8600,1640,660),"Concrete")
+    o.box((0,3200,520),(2400,360,1040),"DarkGlass")
+    front=-1270
+    for bay in range(-6,7):
+        x=bay*420
+        o.box((x,front-18,480),(220,44,360),"DarkGlass")
+    o.box((0,front-45,1085),(6250,70,90),"WhitePlaster")
+    o.write(out/"SM_Donetsk_RailStation_Reference.obj")
+
+def industrial_reference():
+    o=Obj("SM_Donetsk_IndustrialEdge")
+    o.box((0,0,450),(8400,3600,900),"Concrete")
+    o.box((4800,400,320),(3400,2400,640),"PanelCool")
+    # roof monitor / sawtooth rhythm
+    for x in range(-3300,3301,1100):
+        o.box((x,0,980),(420,3300,160),"RustSteel")
+        o.box((x+240,0,1015),(40,3300,230),"DarkGlass")
+    # loading doors and high windows
+    for x in (-2600,-900,900,2600):
+        o.box((x,-1820,250),(800,40,500),"MetalDark")
+        o.box((x,-1825,670),(520,30,180),"DarkGlass")
+    o.write(out/"SM_Donetsk_IndustrialEdge.obj")
+
 def street_tree(name,variant=0):
     o=Obj(name)
     if variant==0:
@@ -250,6 +299,10 @@ artema60()
 surface_palette()
 street_tree("SM_Donetsk_StreetTree_A",0)
 street_tree("SM_Donetsk_StreetTree_B",1)
+civic_frontage("SM_Donetsk_CivicCore",8200,5700,1800,4,12,True)
+civic_frontage("SM_Donetsk_CivicWing",6600,4400,1400,4,10,False)
+station_reference()
+industrial_reference()
 facade("SM_Donetsk_Khrush_5F_16",5,16,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_14",5,14,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_12",5,12,315,1150,280,"khrush",False,False)

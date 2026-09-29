@@ -75,6 +75,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka10Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeAMesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeBMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> CivicCoreMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> CivicWingMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> RailStationMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> IndustrialEdgeMesh;
 
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> AsphaltMaterial;
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> PavingMaterial;
