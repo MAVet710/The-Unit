@@ -4,6 +4,7 @@
 #include "Components/SkyLightComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/PostProcessComponent.h"
+#include "Components/ExponentialHeightFogComponent.h"
 
 ATU_WorldLighting::ATU_WorldLighting()
 {
@@ -15,18 +16,31 @@ ATU_WorldLighting::ATU_WorldLighting()
     Sun->SetupAttachment(RootComponent);
     Sun->SetMobility(EComponentMobility::Movable);
     Sun->SetRelativeRotation(FRotator(-42.f, -35.f, 0.f));
-    // Non-photometric graybox calibration: pair this modest sun with the fixed
-    // exposure below. It is intentionally not a 50,000-lux physical-camera rig.
-    Sun->SetIntensity(10.f);
+    // Cool, restrained daylight keeps concrete/stucco readable without a
+    // cinematic golden-hour treatment.
+    Sun->SetIntensity(8.0f);
     Sun->SetAtmosphereSunLight(true);
     Atmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("DaylightAtmosphere"));
     Atmosphere->SetupAttachment(RootComponent);
     Sky = CreateDefaultSubobject<USkyLightComponent>(TEXT("DaylightSky"));
     Sky->SetupAttachment(RootComponent);
     Sky->SetMobility(EComponentMobility::Movable);
-    Sky->SetIntensity(1.f);
+    Sky->SetIntensity(0.85f);
     Sky->SetRealTimeCapture(true);
     Sky->SetLowerHemisphereColor(FLinearColor(.06f,.07f,.09f));
+
+    DistanceFog = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("UrbanDistanceFog"));
+    DistanceFog->SetupAttachment(RootComponent);
+    DistanceFog->SetMobility(EComponentMobility::Movable);
+    DistanceFog->SetFogDensity(0.0045f);
+    DistanceFog->SetFogHeightFalloff(0.16f);
+    DistanceFog->SetFogInscatteringColor(FLinearColor(0.56f, 0.61f, 0.64f));
+    DistanceFog->SetVolumetricFog(true);
+    DistanceFog->SetVolumetricFogScatteringDistribution(0.25f);
+    DistanceFog->SetVolumetricFogExtinctionScale(0.55f);
+    DistanceFog->SetVolumetricFogAlbedo(FColor(205, 215, 220));
+    DistanceFog->SetVolumetricFogStartDistance(700.0f);
+    DistanceFog->SetVolumetricFogDistance(32000.0f);
 
     BenchmarkExposure = CreateDefaultSubobject<UPostProcessComponent>(TEXT("BenchmarkExposure"));
     BenchmarkExposure->SetupAttachment(RootComponent);

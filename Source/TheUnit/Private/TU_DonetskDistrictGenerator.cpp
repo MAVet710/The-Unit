@@ -37,6 +37,8 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Brezhnev10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Brezhnev_9F_10.SM_Donetsk_Brezhnev_9F_10"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka12Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_12.SM_Donetsk_Stalinka_5F_12"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_10.SM_Donetsk_Stalinka_5F_10"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeAFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_A.SM_Donetsk_StreetTree_A"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeBFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_B.SM_Donetsk_StreetTree_B"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> AsphaltFinder(TEXT("/Game/TheUnit/Donetsk/Production/Asphalt.Asphalt"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> PavingFinder(TEXT("/Game/TheUnit/Donetsk/Production/Paving.Paving"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> GrassFinder(TEXT("/Game/TheUnit/Donetsk/Production/UrbanGrass.UrbanGrass"));
@@ -47,6 +49,7 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     Khrush16Mesh = Khrush16Finder.Object; Khrush14Mesh = Khrush14Finder.Object; Khrush12Mesh = Khrush12Finder.Object;
     Brezhnev14Mesh = Brezhnev14Finder.Object; Brezhnev10Mesh = Brezhnev10Finder.Object;
     Stalinka12Mesh = Stalinka12Finder.Object; Stalinka10Mesh = Stalinka10Finder.Object;
+    StreetTreeAMesh = TreeAFinder.Object; StreetTreeBMesh = TreeBFinder.Object;
     AsphaltMaterial = AsphaltFinder.Object; PavingMaterial = PavingFinder.Object;
     GrassMaterial = GrassFinder.Object; SoilMaterial = SoilFinder.Object;
     RustMaterial = RustFinder.Object; ConcreteMaterial = ConcreteFinder.Object;
@@ -79,6 +82,10 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
     if (bGenerateTransitFurniture)
     {
         BuildStreetFurniture();
+    }
+    if (bGenerateUrbanVegetation)
+    {
+        BuildUrbanVegetation();
     }
     if (bGenerateMissionDamage)
     {
@@ -414,6 +421,54 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
     AddBox(FVector(2750.0f, 11800.0f, 75.0f), FVector(90.0f, 70.0f, 75.0f), TEXT("UtilityCabinet"));
 }
 
+void ATU_DonetskDistrictGenerator::BuildUrbanVegetation()
+{
+    // Mature deciduous street-tree rhythm breaks the boulevard into human-scale
+    // sightline segments. Asset choice/spacing are original composition; no claim
+    // is made that individual trees correspond to a current real-world specimen.
+    int32 TreeIndex = 0;
+    for (int32 Y = -25200; Y <= 25200; Y += 4200)
+    {
+        for (float Side : {-1.0f, 1.0f})
+        {
+            const float X = Side * 2580.0f;
+            UStaticMesh* Tree = ((TreeIndex++ % 3) == 0) ? StreetTreeBMesh : StreetTreeAMesh;
+            AddProductionVisual(Tree, FVector(X, static_cast<float>(Y), 0.0f), TEXT("BoulevardTree"));
+            if (UStaticMeshComponent* Trunk = AddBox(
+                FVector(X, static_cast<float>(Y), 420.0f),
+                FVector(46.0f, 46.0f, 420.0f), TEXT("Vegetation_TrunkCollision")))
+                Trunk->SetVisibility(false, true);
+        }
+    }
+
+    // Central-square perimeter trees maintain the documented open civic core while
+    // giving the long east/west edges a planted transition to adjacent blocks.
+    for (int32 Y = -18000; Y <= 18000; Y += 6000)
+    {
+        for (float X : {4200.0f, 15800.0f})
+        {
+            UStaticMesh* Tree = ((TreeIndex++ & 1) == 0) ? StreetTreeAMesh : StreetTreeBMesh;
+            AddProductionVisual(Tree, FVector(X, static_cast<float>(Y), 0.0f), TEXT("SquareTree"));
+            if (UStaticMeshComponent* Trunk = AddBox(
+                FVector(X, static_cast<float>(Y), 420.0f),
+                FVector(45.0f, 45.0f, 420.0f), TEXT("Vegetation_TrunkCollision")))
+                Trunk->SetVisibility(false, true);
+        }
+    }
+
+    const FVector CourtyardTrees[] = {
+        FVector(-11800,7800,0), FVector(-13300,8300,0), FVector(-14350,10300,0),
+        FVector(-11600,11000,0), FVector(-15100,7200,0)
+    };
+    for (const FVector& P : CourtyardTrees)
+    {
+        AddProductionVisual((TreeIndex++ & 1) ? StreetTreeAMesh : StreetTreeBMesh, P, TEXT("CourtyardTree"));
+        if (UStaticMeshComponent* Trunk = AddBox(P + FVector(0,0,420),
+            FVector(45,45,420), TEXT("Vegetation_TrunkCollision")))
+            Trunk->SetVisibility(false, true);
+    }
+}
+
 void ATU_DonetskDistrictGenerator::BuildMissionDamageLayer()
 {
     // This layer is an original raid-state fiction, not a claim about the exact
@@ -462,6 +517,7 @@ void ATU_DonetskDistrictGenerator::GetLifetimeReplicatedProps(TArray<FLifetimePr
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, DistrictLengthCm, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateReferenceLabels, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateTransitFurniture, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateUrbanVegetation, COND_InitialOnly);
     DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateMissionDamage, COND_InitialOnly);
 }
 

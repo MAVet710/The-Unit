@@ -54,6 +54,9 @@ protected:
     UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
     bool bGenerateTransitFurniture = true;
 
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
+    bool bGenerateUrbanVegetation = true;
+
     /** Fictional mission damage, intentionally separate from clean reference architecture. */
     UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
     bool bGenerateMissionDamage = true;
@@ -70,6 +73,8 @@ private:
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Brezhnev10Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka12Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka10Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeAMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeBMesh;
 
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> AsphaltMaterial;
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> PavingMaterial;
@@ -100,6 +105,7 @@ private:
     void BuildRailStationReference();
     void BuildIndustrialEdge();
     void BuildStreetFurniture();
+    void BuildUrbanVegetation();
     void BuildMissionDamageLayer();
 
     void BuildSimpleFacadeBlock(const FVector& Origin, int32 Floors, int32 Bays, float BayWidthCm,

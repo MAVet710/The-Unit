@@ -59,6 +59,14 @@ newmtl RustSteel
 Kd 0.26 0.10 0.055
 Ks 0.10 0.08 0.06
 Ns 16
+newmtl TreeBark
+Kd 0.18 0.105 0.055
+Ks 0.025 0.025 0.02
+Ns 5
+newmtl TreeLeaves
+Kd 0.12 0.25 0.085
+Ks 0.02 0.025 0.015
+Ns 4
 '''
 (out/"DonetskMaterials.mtl").write_text(mtl,encoding="utf-8")
 
@@ -83,6 +91,31 @@ class Obj:
         for i in range(n):
             j=(i+1)%n; fs.append((start+i,start+j,start+n+j,start+n+i))
         self.parts.append((mat,fs))
+    def ellipsoid(self,c,rx,ry,rz,mat,seg=14,rings=8):
+        cx,cy,cz=c
+        start=len(self.v)+1
+        for j in range(1,rings):
+            phi=math.pi*j/rings
+            sp=math.sin(phi); cp=math.cos(phi)
+            for i in range(seg):
+                a=2*math.pi*i/seg
+                self.v.append((cx+rx*sp*math.cos(a),cy+ry*sp*math.sin(a),cz+rz*cp))
+        top=len(self.v)+1; self.v.append((cx,cy,cz+rz))
+        bottom=len(self.v)+1; self.v.append((cx,cy,cz-rz))
+        faces=[]
+        for i in range(seg):
+            faces.append((top,start+i,start+(i+1)%seg))
+        for j in range(rings-2):
+            row=start+j*seg
+            nxt=row+seg
+            for i in range(seg):
+                ni=(i+1)%seg
+                faces.append((row+i,nxt+i,nxt+ni,row+ni))
+        last=start+(rings-2)*seg
+        for i in range(seg):
+            faces.append((bottom,last+(i+1)%seg,last+i))
+        self.parts.append((mat,faces))
+
     def write(self,path):
         lines=[f"mtllib DonetskMaterials.mtl",f"o {self.name}"]
         lines += [f"v {x:.4f} {y:.4f} {z:.4f}" for x,y,z in self.v]
@@ -190,6 +223,22 @@ def artema60():
                 o.box((x,y,z),(20,180,190),"DarkGlass")
     o.write(out/"SM_Artema60_Production.obj")
 
+def street_tree(name,variant=0):
+    o=Obj(name)
+    if variant==0:
+        o.cyl((0,0,430),48,860,"TreeBark",14)
+        o.cyl((20,5,920),30,340,"TreeBark",12)
+        o.ellipsoid((0,0,1050),330,300,360,"TreeLeaves",14,8)
+        o.ellipsoid((-190,70,1040),220,210,270,"TreeLeaves",12,7)
+        o.ellipsoid((185,-70,1110),230,215,280,"TreeLeaves",12,7)
+    else:
+        o.cyl((0,0,500),42,1000,"TreeBark",14)
+        o.cyl((-18,8,1030),26,300,"TreeBark",12)
+        o.ellipsoid((0,0,1220),255,235,440,"TreeLeaves",14,9)
+        o.ellipsoid((-140,-45,1100),180,175,290,"TreeLeaves",12,7)
+        o.ellipsoid((145,60,1180),175,180,300,"TreeLeaves",12,7)
+    o.write(out/(name+".obj"))
+
 def surface_palette():
     o=Obj("SM_Donetsk_SurfacePalette")
     mats=["Asphalt","Paving","UrbanGrass","DrySoil","RustSteel"]
@@ -199,6 +248,8 @@ def surface_palette():
 
 artema60()
 surface_palette()
+street_tree("SM_Donetsk_StreetTree_A",0)
+street_tree("SM_Donetsk_StreetTree_B",1)
 facade("SM_Donetsk_Khrush_5F_16",5,16,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_14",5,14,315,1150,280,"khrush",True,False)
 facade("SM_Donetsk_Khrush_5F_12",5,12,315,1150,280,"khrush",False,False)
