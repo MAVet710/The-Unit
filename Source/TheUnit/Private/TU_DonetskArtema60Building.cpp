@@ -21,8 +21,19 @@ ATU_DonetskArtema60Building::ATU_DonetskArtema60Building()
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderFinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> ProductionFinder(
+        TEXT("/Game/TheUnit/Donetsk/Production/SM_Artema60_Production.SM_Artema60_Production"));
     CubeMesh = CubeFinder.Object;
     CylinderMesh = CylinderFinder.Object;
+    ProductionMesh = ProductionFinder.Object;
+
+    ProductionVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Artema60ProductionVisual"));
+    ProductionVisual->SetupAttachment(Root);
+    ProductionVisual->SetMobility(EComponentMobility::Static);
+    ProductionVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ProductionVisual->SetGenerateOverlapEvents(false);
+    ProductionVisual->SetCastShadow(true);
+    ProductionVisual->SetStaticMesh(ProductionMesh);
 }
 
 void ATU_DonetskArtema60Building::OnConstruction(const FTransform& Transform)
@@ -66,6 +77,7 @@ UStaticMeshComponent* ATU_DonetskArtema60Building::AddBox(
     Mesh->SetRelativeScale3D(Extents / 50.0f);
     Mesh->SetMobility(EComponentMobility::Static);
     Mesh->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+    Mesh->SetVisibility(!bProductionVisualActive, true);
     Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
     Mesh->RegisterComponent();
     GeneratedComponents.Add(Mesh);
@@ -92,6 +104,7 @@ UStaticMeshComponent* ATU_DonetskArtema60Building::AddCylinder(
     Mesh->SetRelativeScale3D(FVector(RadiusCm / 50.0f, RadiusCm / 50.0f, HeightCm / 100.0f));
     Mesh->SetMobility(EComponentMobility::Static);
     Mesh->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+    Mesh->SetVisibility(!bProductionVisualActive, true);
     Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
     Mesh->RegisterComponent();
     GeneratedComponents.Add(Mesh);
@@ -103,6 +116,13 @@ void ATU_DonetskArtema60Building::RebuildBuilding()
     if (!CubeMesh)
     {
         return;
+    }
+
+    bProductionVisualActive = bCurrentPostwarConfiguration && ProductionMesh != nullptr;
+    if (ProductionVisual)
+    {
+        ProductionVisual->SetStaticMesh(bProductionVisualActive ? ProductionMesh : nullptr);
+        ProductionVisual->SetVisibility(bProductionVisualActive, true);
     }
 
     BuildMainMass();

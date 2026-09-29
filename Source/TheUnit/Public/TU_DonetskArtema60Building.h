@@ -91,7 +91,15 @@ private:
     TObjectPtr<UStaticMesh> CylinderMesh;
 
     UPROPERTY(Transient)
+    TObjectPtr<UStaticMesh> ProductionMesh;
+
+    UPROPERTY(VisibleAnywhere, Category="Donetsk|Artema60|Production")
+    TObjectPtr<UStaticMeshComponent> ProductionVisual;
+
+    UPROPERTY(Transient)
     TArray<TObjectPtr<UActorComponent>> GeneratedComponents;
+
+    bool bProductionVisualActive = false;
 
     int32 GeneratedNameCounter = 0;
 

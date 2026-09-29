@@ -58,6 +58,14 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> CubeMesh;
 
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Khrush16Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Khrush14Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Khrush12Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Brezhnev14Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Brezhnev10Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka12Mesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka10Mesh;
+
     UPROPERTY(Transient)
     TArray<TObjectPtr<UActorComponent>> GeneratedComponents;
 
@@ -68,6 +76,8 @@ private:
 
     UStaticMeshComponent* AddBox(const FVector& Location, const FVector& Extents, const FString& BaseName,
         const FRotator& Rotation = FRotator::ZeroRotator);
+    UStaticMeshComponent* AddProductionVisual(UStaticMesh* Asset, const FVector& Location,
+        const FString& BaseName, const FRotator& Rotation = FRotator::ZeroRotator);
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
 
     void BuildRoadNetwork();

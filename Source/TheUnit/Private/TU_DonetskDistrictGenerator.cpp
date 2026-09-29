@@ -29,7 +29,17 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     Artema60Anchor->SetRelativeLocation(FVector(-6200.0f, -5200.0f, 0.0f));
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Khrush16Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Khrush_5F_16.SM_Donetsk_Khrush_5F_16"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Khrush14Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Khrush_5F_14.SM_Donetsk_Khrush_5F_14"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Khrush12Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Khrush_5F_12.SM_Donetsk_Khrush_5F_12"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Brezhnev14Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Brezhnev_9F_14.SM_Donetsk_Brezhnev_9F_14"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Brezhnev10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Brezhnev_9F_10.SM_Donetsk_Brezhnev_9F_10"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka12Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_12.SM_Donetsk_Stalinka_5F_12"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_10.SM_Donetsk_Stalinka_5F_10"));
     CubeMesh = CubeFinder.Object;
+    Khrush16Mesh = Khrush16Finder.Object; Khrush14Mesh = Khrush14Finder.Object; Khrush12Mesh = Khrush12Finder.Object;
+    Brezhnev14Mesh = Brezhnev14Finder.Object; Brezhnev10Mesh = Brezhnev10Finder.Object;
+    Stalinka12Mesh = Stalinka12Finder.Object; Stalinka10Mesh = Stalinka10Finder.Object;
 }
 
 void ATU_DonetskDistrictGenerator::OnConstruction(const FTransform& Transform)
@@ -93,6 +103,26 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddBox(
     Mesh->SetRelativeScale3D(Extents / 50.0f);
     Mesh->SetMobility(EComponentMobility::Static);
     Mesh->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+    Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+    Mesh->RegisterComponent();
+    GeneratedComponents.Add(Mesh);
+    return Mesh;
+}
+
+UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
+    UStaticMesh* Asset, const FVector& Location, const FString& BaseName, const FRotator& Rotation)
+{
+    if (!Asset) return nullptr;
+    const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
+    UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this, Name);
+    Mesh->SetNetAddressable();
+    Mesh->SetStaticMesh(Asset);
+    Mesh->SetRelativeLocation(Location);
+    Mesh->SetRelativeRotation(Rotation);
+    Mesh->SetMobility(EComponentMobility::Static);
+    Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Mesh->SetGenerateOverlapEvents(false);
+    Mesh->SetCastShadow(true);
     Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
     Mesh->RegisterComponent();
     GeneratedComponents.Add(Mesh);
@@ -197,6 +227,7 @@ void ATU_DonetskDistrictGenerator::BuildSimpleFacadeBlock(
     bool bBalconies,
     bool bRaisedGroundFloor)
 {
+    const int32 CollisionStartIndex = GeneratedComponents.Num();
     const float Width = Bays * BayWidthCm;
     const float Height = Floors * FloorHeightCm;
     AddBox(Origin + FVector(0.0f, 0.0f, Height * 0.5f), FVector(Width * 0.5f, DepthCm * 0.5f, Height * 0.5f), Prefix + TEXT("_Mass"));
@@ -218,6 +249,25 @@ void ATU_DonetskDistrictGenerator::BuildSimpleFacadeBlock(
                 AddBox(FVector(X, FrontY - 125.0f, Z - 5.0f), FVector(BayWidthCm * 0.34f, 8.0f, 55.0f), Prefix + TEXT("_BalconyRail"));
             }
         }
+    }
+
+    UStaticMesh* Production = nullptr;
+    if (Prefix == TEXT("Khrush_A")) Production = Khrush16Mesh;
+    else if (Prefix == TEXT("Khrush_B")) Production = Khrush14Mesh;
+    else if (Prefix == TEXT("Khrush_C")) Production = Khrush12Mesh;
+    else if (Prefix == TEXT("Brezhnev_9F_A")) Production = Brezhnev14Mesh;
+    else if (Prefix == TEXT("Brezhnev_9F_B")) Production = Brezhnev10Mesh;
+    else if (Prefix == TEXT("Stalinka_Block_A")) Production = Stalinka12Mesh;
+    else if (Prefix == TEXT("Stalinka_Block_B")) Production = Stalinka10Mesh;
+
+    if (Production)
+    {
+        // Production mesh owns rendering; generated pieces remain invisible, stable
+        // collision so network identities and traversal do not depend on imported art.
+        for (int32 Index = CollisionStartIndex; Index < GeneratedComponents.Num(); ++Index)
+            if (UStaticMeshComponent* CollisionPiece = Cast<UStaticMeshComponent>(GeneratedComponents[Index]))
+                CollisionPiece->SetVisibility(false, true);
+        AddProductionVisual(Production, Origin, Prefix + TEXT("_ProductionVisual"));
     }
 }
 
