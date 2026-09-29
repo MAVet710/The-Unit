@@ -97,6 +97,8 @@ private:
 
     UStaticMeshComponent* AddBox(const FVector& Location, const FVector& Extents, const FString& BaseName,
         const FRotator& Rotation = FRotator::ZeroRotator);
+    UStaticMeshComponent* AddHiddenBox(const FVector& Location, const FVector& Extents, const FString& BaseName,
+        const FRotator& Rotation = FRotator::ZeroRotator);
     UStaticMeshComponent* AddProductionVisual(UStaticMesh* Asset, const FVector& Location,
         const FString& BaseName, const FRotator& Rotation = FRotator::ZeroRotator);
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
