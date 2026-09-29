@@ -1,14 +1,18 @@
 #include "TU_PlayerController.h"
+#include "TUBetaUserSettings.h"
+#include "STUBetaMenu.h"
 
 #include "TUHideoutLifecycleSubsystem.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TUMX50TabletComponent.h"
+#include "TUExecutionNetworkProbe.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameInstance.h"
 
 ATU_PlayerController::ATU_PlayerController()
 {
     MX50Tablet = CreateDefaultSubobject<UTUMX50TabletComponent>(TEXT("MX50Tablet"));
+    CreateDefaultSubobject<UTUExecutionNetworkProbe>(TEXT("ExecutionNetworkProbe"));
 }
 
 void ATU_PlayerController::SetupInputComponent()
@@ -18,12 +22,14 @@ void ATU_PlayerController::SetupInputComponent()
     if (InputComponent)
     {
         InputComponent->BindAction(TEXT("ToggleMX50"), IE_Pressed, this, &ATU_PlayerController::ToggleMX50);
+        InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &ATU_PlayerController::ToggleFrontEndMenu).bExecuteWhenPaused=true;
     }
 }
 
 void ATU_PlayerController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
+    if(auto* S=UTUBetaUserSettings::Get()) S->ApplyToController(this);
 
     if (ATU_ArmedOperatorCharacter* Operator = Cast<ATU_ArmedOperatorCharacter>(InPawn))
     {

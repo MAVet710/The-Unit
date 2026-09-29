@@ -5,16 +5,24 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/Crc.h"
 
 ATU_CommandCenterGenerator::ATU_CommandCenterGenerator()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicateMovement(false);
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    // The hub is fixed world geometry; its static children require a static parent.
+    Root->SetMobility(EComponentMobility::Static);
     SetRootComponent(Root);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -24,13 +32,20 @@ ATU_CommandCenterGenerator::ATU_CommandCenterGenerator()
 void ATU_CommandCenterGenerator::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    if (GetNetMode() == NM_Client && !bInitialLayoutReceived) return;
     ClearGeneratedComponents();
     BuildHub();
 }
 
 void ATU_CommandCenterGenerator::BeginPlay()
 {
+    if (!HasAuthority())
+    {
+        bInitialLayoutReceived = true;
+        OnConstruction(GetActorTransform());
+    }
     Super::BeginPlay();
+    if (!HasAuthority()) return;
 
     if (StationSpawns.IsEmpty())
     {
@@ -98,6 +113,45 @@ void ATU_CommandCenterGenerator::BuildHub()
     BuildBriefingRoom();
     BuildTestRange();
     BuildOperationsDetails();
+    BuildInteriorLighting();
+}
+
+void ATU_CommandCenterGenerator::BuildInteriorLighting()
+{
+    // Roofed rooms cannot rely on the outdoor sun. Runtime movable lights require
+    // no baked map data and are constructed identically from the initial layout.
+    auto AddLight = [this](FName Name, float X, float Y, float Radius)
+    {
+        UPointLightComponent* Light = NewObject<UPointLightComponent>(this, Name);
+        Light->SetupAttachment(Root);
+        Light->SetRelativeLocation(FVector(X, Y, CeilingHeight - 40.f));
+        Light->SetMobility(EComponentMobility::Movable);
+        Light->SetIntensityUnits(ELightUnits::Lumens);
+        Light->SetUseInverseSquaredFalloff(true);
+        Light->SetIntensity(2200.f);
+        Light->SetLightColor(FLinearColor(1.f, .96f, .90f));
+        Light->SetAttenuationRadius(Radius);
+        Light->SetSourceRadius(8.f);
+        Light->SetCastShadows(true);
+        // Bounded radii/distance and half-resolution shadows keep this a modest
+        // graybox illumination rig rather than an unbounded bank of fill lights.
+        Light->ShadowResolutionScale = .5f;
+        Light->SetMaxDrawDistance(3000.f);
+        Light->MaxDistanceFadeRange = 500.f;
+        Light->RegisterComponent();
+        GeneratedComponents.Add(Light);
+    };
+    for (int32 Index = -3; Index <= 3; ++Index)
+        AddLight(*FString::Printf(TEXT("CorridorPointLight_%d"), Index), 0.f, Index * HubLength / 7.3f, 900.f);
+    AddLight(TEXT("ArmoryPointLightA"), -1350.f, -2250.f, 1200.f);
+    AddLight(TEXT("ArmoryPointLightB"), -1350.f, -1250.f, 1200.f);
+    AddLight(TEXT("CagePointLightA"), -1400.f, 150.f, 1200.f);
+    AddLight(TEXT("CagePointLightB"), -1400.f, 1150.f, 1200.f);
+    AddLight(TEXT("BriefingPointLightA"), 1400.f, 450.f, 1200.f);
+    AddLight(TEXT("BriefingPointLightB"), 1400.f, 1450.f, 1200.f);
+    AddLight(TEXT("RangePointLightA"), 900.f, -2150.f, 950.f);
+    AddLight(TEXT("RangePointLightB"), 1850.f, -2150.f, 950.f);
+    AddLight(TEXT("RangePointLightC"), 2800.f, -2150.f, 950.f);
 }
 
 void ATU_CommandCenterGenerator::BuildSecureCorridor()
@@ -109,6 +163,12 @@ void ATU_CommandCenterGenerator::BuildSecureCorridor()
 
     AddCube(FVector(0.0f, 0.0f, -10.0f), FVector(HalfCorridor, HalfLength, 10.0f), TEXT("CorridorFloor"));
     AddCube(FVector(0.0f, 0.0f, CeilingHeight), FVector(HalfCorridor, HalfLength, 8.0f), TEXT("CorridorDropCeiling"));
+    // The HQ corridor is an interior. Its old open ends let players walk beyond
+    // the generated floor and fall forever; station travel is the only exit.
+    AddCube(FVector(0.f, -HalfLength, CeilingHeight * 0.5f),
+        FVector(HalfCorridor, WallThickness * 0.5f, CeilingHeight * 0.5f), TEXT("CorridorEndSouth"));
+    AddCube(FVector(0.f, HalfLength, CeilingHeight * 0.5f),
+        FVector(HalfCorridor, WallThickness * 0.5f, CeilingHeight * 0.5f), TEXT("CorridorEndNorth"));
 
     auto AddSegmentedWall = [this, HalfLength, WallThickness, DoorHalfWidth](float X, TArray<float> DoorCenters, const FString& Prefix)
     {
@@ -348,6 +408,7 @@ void ATU_CommandCenterGenerator::BuildOperationsDetails()
 UStaticMeshComponent* ATU_CommandCenterGenerator::AddCube(const FVector& Location, const FVector& Extents, const FName& Name, const FRotator& Rotation)
 {
     UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this, Name);
+    Mesh->SetNetAddressable();
     Mesh->SetStaticMesh(CubeMesh);
     Mesh->SetRelativeLocation(Location);
     Mesh->SetRelativeRotation(Rotation);
@@ -422,4 +483,35 @@ void ATU_CommandCenterGenerator::ClearRuntimeStations()
         }
     }
     RuntimeStations.Reset();
+}
+
+int32 ATU_CommandCenterGenerator::GetGeneratedCollisionComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            if (Mesh->IsRegistered() && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision) ++Count;
+    return Count;
+}
+
+FString ATU_CommandCenterGenerator::GetGeneratedGeometrySignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
+}
+
+void ATU_CommandCenterGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, HubWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, HubLength, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, CeilingHeight, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, CorridorWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, bGenerateLabels, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_CommandCenterGenerator, bSpawnRuntimeStations, COND_InitialOnly);
 }

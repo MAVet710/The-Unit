@@ -25,83 +25,89 @@ public:
     ATU_KillhouseGenerator();
 
     virtual void OnConstruction(const FTransform& Transform) override;
+    virtual void BeginPlay() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    /** Independently calculated on each peer; excludes labels and actor network names. */
+    UFUNCTION(BlueprintPure) FString GetGeneratedGeometrySignature() const;
+    UFUNCTION(BlueprintPure) int32 GetGeneratedCollisionComponentCount() const;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Killhouse")
     USceneComponent* Root;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "1800.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "1800.0"))
     float BuildingWidth = 3000.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "2200.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "2200.0"))
     float BuildingLength = 3600.0f;
 
     /** Height of the room walls in centimeters. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "240.0", ClampMax = "450.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "240.0", ClampMax = "450.0"))
     float FloorHeight = 300.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "10.0", ClampMax = "40.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Dimensions", meta = (ClampMin = "10.0", ClampMax = "40.0"))
     float WallThickness = 20.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Doors", meta = (ClampMin = "90.0", ClampMax = "180.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Doors", meta = (ClampMin = "90.0", ClampMax = "180.0"))
     float DoorWidth = 115.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Doors", meta = (ClampMin = "190.0", ClampMax = "280.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Doors", meta = (ClampMin = "190.0", ClampMax = "280.0"))
     float DoorHeight = 225.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "260.0", ClampMax = "500.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "260.0", ClampMax = "500.0"))
     float CatwalkHeight = 330.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "160.0", ClampMax = "450.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "160.0", ClampMax = "450.0"))
     float CatwalkWidth = 250.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "8.0", ClampMax = "30.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "8.0", ClampMax = "30.0"))
     float CatwalkThickness = 12.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "80.0", ClampMax = "140.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "80.0", ClampMax = "140.0"))
     float RailHeight = 105.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "3.0", ClampMax = "15.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Catwalk", meta = (ClampMin = "3.0", ClampMax = "15.0"))
     float RailThickness = 6.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "160.0", ClampMax = "400.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "160.0", ClampMax = "400.0"))
     float StairWidth = 240.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "700.0", ClampMax = "1800.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "700.0", ClampMax = "1800.0"))
     float CenterStairRun = 1350.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "700.0", ClampMax = "1800.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "700.0", ClampMax = "1800.0"))
     float ExteriorStairRun = 1050.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "8", ClampMax = "20"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Stairs", meta = (ClampMin = "8", ClampMax = "20"))
     int32 StairStepCount = 12;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Layout")
     bool bGenerateCatwalk = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Layout")
     bool bGenerateExteriorStair = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Layout")
     bool bGenerateWallPosts = true;
 
     /** The reference layout is intentionally open-top; this remains optional for testing. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Layout")
     bool bGenerateRoof = false;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Visuals")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Visuals")
     UMaterialInterface* WallMaterial = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Visuals")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Visuals")
     UMaterialInterface* FloorMaterial = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Visuals")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Visuals")
     UMaterialInterface* MetalMaterial = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Killhouse|Debug")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "Killhouse|Debug")
     bool bGenerateDebugLabels = false;
 
 private:
+    bool bInitialLayoutReceived = false;
     UPROPERTY(Transient)
     UStaticMesh* CubeMesh;
 

@@ -8,12 +8,19 @@
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/Crc.h"
 
 ATU_KillhouseGenerator::ATU_KillhouseGenerator()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicateMovement(false);
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    // Generated walls/floors are static and must remain attached to this root.
+    Root->SetMobility(EComponentMobility::Static);
     SetRootComponent(Root);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMeshFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -23,6 +30,7 @@ ATU_KillhouseGenerator::ATU_KillhouseGenerator()
 void ATU_KillhouseGenerator::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    if (GetNetMode() == NM_Client && !bInitialLayoutReceived) return;
 
     ClearGeneratedComponents();
     GeneratedNameCounter = 0;
@@ -109,13 +117,13 @@ void ATU_KillhouseGenerator::BuildKillhouse()
     AddMarker(
         FVector(-BuildingWidth * 0.18f, -BuildingLength * 0.08f, 40.0f),
         FRotator::ZeroRotator,
-        FLinearColor::Cyan,
+        FLinearColor(0.0f, 1.0f, 1.0f, 1.0f),
         TEXT("PatrolPoint_A"));
 
     AddMarker(
         FVector(BuildingWidth * 0.18f, BuildingLength * 0.18f, 40.0f),
         FRotator::ZeroRotator,
-        FLinearColor::Cyan,
+        FLinearColor(0.0f, 1.0f, 1.0f, 1.0f),
         TEXT("PatrolPoint_B"));
 
     if (bGenerateDebugLabels)
@@ -134,6 +142,7 @@ UStaticMeshComponent* ATU_KillhouseGenerator::AddCube(
     const FRotator& Rotation)
 {
     UStaticMeshComponent* MeshComponent = NewObject<UStaticMeshComponent>(this, MakeGeneratedName(BaseName));
+    MeshComponent->SetNetAddressable();
     MeshComponent->SetStaticMesh(CubeMesh);
     MeshComponent->SetRelativeLocation(Location);
     MeshComponent->SetRelativeRotation(Rotation);
@@ -769,4 +778,60 @@ void ATU_KillhouseGenerator::ClearGeneratedComponents()
 FName ATU_KillhouseGenerator::MakeGeneratedName(const FString& BaseName)
 {
     return FName(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
+}
+
+void ATU_KillhouseGenerator::BeginPlay()
+{
+    // PostNetInit invokes BeginPlay after the initial authoritative layout properties arrive.
+    // Spawned replication actors do not receive the server's dynamically generated components.
+    if (!HasAuthority()) { bInitialLayoutReceived = true; OnConstruction(GetActorTransform()); }
+    Super::BeginPlay();
+}
+
+void ATU_KillhouseGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, BuildingWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, BuildingLength, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, FloorHeight, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, WallThickness, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, DoorWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, DoorHeight, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, CatwalkHeight, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, CatwalkWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, CatwalkThickness, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, RailHeight, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, RailThickness, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, StairWidth, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, CenterStairRun, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, ExteriorStairRun, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, StairStepCount, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, bGenerateCatwalk, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, bGenerateExteriorStair, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, bGenerateWallPosts, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, bGenerateRoof, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, WallMaterial, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, FloorMaterial, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, MetalMaterial, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_KillhouseGenerator, bGenerateDebugLabels, COND_InitialOnly);
+}
+
+int32 ATU_KillhouseGenerator::GetGeneratedCollisionComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            if (Mesh->IsRegistered() && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision) ++Count;
+    return Count;
+}
+
+FString ATU_KillhouseGenerator::GetGeneratedGeometrySignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
 }

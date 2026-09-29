@@ -3,6 +3,11 @@
 #include "TU_Karambit.h"
 #include "TU_OTFKnife.h"
 
+bool FTUMeleeEquipmentEntry::IsValidEntry() const
+{
+    return !ItemId.IsNone() && MeleeClass.Get() != nullptr;
+}
+
 UTUMeleeLoadoutComponent::UTUMeleeLoadoutComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;

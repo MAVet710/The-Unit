@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_AK105.h"
 #include "TU_G34CM.h"
@@ -21,7 +22,7 @@ bool FTUOperatorLoadoutDataTest::RunTest(const FString& Parameters)
         return false;
     }
 
-    TestEqual(TEXT("Three built-in primary choices"), Loadout->GetPrimaryItems().Num(), 3);
+    TestEqual(TEXT("Four built-in primary choices"), Loadout->GetPrimaryItems().Num(), 4);
     TestEqual(TEXT("Two built-in secondary choices"), Loadout->GetSecondaryItems().Num(), 2);
     TestEqual(TEXT("Equipment boundary begins with one empty choice"), Loadout->GetEquipmentItems().Num(), 1);
     TestEqual(TEXT("TU-556 selected as default primary"), Loadout->GetSelectedPrimaryId(), FName(TEXT("PRIMARY_TU556")));
@@ -55,10 +56,18 @@ bool FTUOperatorWeaponSlotRuntimeTest::RunTest(const FString& Parameters)
         return false;
     }
 
+    if (!TestNotNull(TEXT("Engine for runtime world context"), GEngine))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
+
     ATU_ArmedOperatorCharacter* Operator = World->SpawnActor<ATU_ArmedOperatorCharacter>();
     if (!TestNotNull(TEXT("Armed operator"), Operator))
     {
         World->DestroyWorld(false);
+        GEngine->DestroyWorldContext(World);
         return false;
     }
 
@@ -88,6 +97,7 @@ bool FTUOperatorWeaponSlotRuntimeTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Combined selected loadout weight includes carried slots"), Operator->GetSelectedLoadoutWeightKg() > 0.0f);
 
     World->DestroyWorld(false);
+    GEngine->DestroyWorldContext(World);
     return true;
 }
 

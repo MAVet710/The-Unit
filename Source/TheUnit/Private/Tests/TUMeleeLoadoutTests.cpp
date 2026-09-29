@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_Karambit.h"
 #include "TU_OTFKnife.h"
@@ -74,10 +75,18 @@ bool FTUOperatorMeleeSelectionTest::RunTest(const FString& Parameters)
         return false;
     }
 
+    if (!TestNotNull(TEXT("Engine for runtime world context"), GEngine))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
+
     ATU_ArmedOperatorCharacter* Operator = World->SpawnActor<ATU_ArmedOperatorCharacter>();
     if (!TestNotNull(TEXT("Armed operator"), Operator))
     {
         World->DestroyWorld(false);
+        GEngine->DestroyWorldContext(World);
         return false;
     }
 
@@ -102,6 +111,7 @@ bool FTUOperatorMeleeSelectionTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Cycling is blocked while melee is drawn"), Operator->CycleMeleeSelection(1));
 
     World->DestroyWorld(false);
+    GEngine->DestroyWorldContext(World);
     return true;
 }
 

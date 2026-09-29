@@ -6,6 +6,7 @@
 #include "TUOperatorLoadoutComponent.h"
 #include "TUArmoryWidget.h"
 #include "TUBriefingWidget.h"
+#include "TUExecutionTypes.h"
 #include "TU_ArmedOperatorCharacter.generated.h"
 
 class ATU_OTFKnife;
@@ -28,6 +29,16 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual void Interact() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    FTUItemLedger ExportItemLedger() const;
+    bool ImportItemLedger(const FTUItemLedger& Ledger);
+    bool HasHydratedInventory() const { return bInventoryHydrated; }
+    bool IsCombatDisabled() const { return bCombatDisabled; }
+    virtual bool CanAimWeapon() const override { return !bCombatDisabled && !bMeleeEquipped && !bMX50Raised && !IsCommandCenterUIOpen() && CurrentWeapon != nullptr; }
+    void DisableCombatForOutcome();
+    /** Same guarded reload path used by player input; exposed for deterministic functional capture. */
+    bool TryReloadFromGameplayInput(bool bEmergency = false);
 
     UFUNCTION(BlueprintPure, Category="Weapon")
     ATU_WeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
@@ -139,16 +150,16 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Loadout")
     TObjectPtr<UTUOperatorLoadoutComponent> OperatorLoadout;
 
-    UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    UPROPERTY(Transient, ReplicatedUsing=OnRep_EquippedWeapons, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
     TObjectPtr<ATU_WeaponBase> PrimaryWeapon = nullptr;
 
-    UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    UPROPERTY(Transient, ReplicatedUsing=OnRep_EquippedWeapons, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
     TObjectPtr<ATU_WeaponBase> SecondaryWeapon = nullptr;
 
-    UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon")
+    UPROPERTY(Transient, ReplicatedUsing=OnRep_EquippedWeapons, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon")
     TObjectPtr<ATU_WeaponBase> CurrentWeapon = nullptr;
 
-    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
+    UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapons, VisibleInstanceOnly, BlueprintReadOnly, Category="Weapon|Loadout")
     ETUOperatorWeaponSlot ActiveWeaponSlot = ETUOperatorWeaponSlot::Primary;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Melee|Loadout")
@@ -209,6 +220,18 @@ protected:
     float CommandCenterInteractRangeCm = 400.0f;
 
 private:
+    UFUNCTION() void HandleCombatDeath(AActor* DeadActor);
+    UFUNCTION() void OnRep_EquippedWeapons();
+    UFUNCTION(Server, Reliable) void ServerInteract();
+    UFUNCTION(Server, Reliable) void ServerEquipWeapon(ETUOperatorWeaponSlot RequestedSlot);
+    UFUNCTION() void OnRep_CombatDisabled();
+    UPROPERTY(ReplicatedUsing=OnRep_CombatDisabled) bool bCombatDisabled = false;
+    bool bInventoryHydrated = false;
+    bool bApplyingInventory = false;
+    UPROPERTY() FTUItemLedger UnarmedInventory;
+    void EmergencyReloadWeapon();
+    void InspectWeapon();
+    void CycleWeaponAction();
     ATU_WeaponBase* SpawnWeaponClass(TSubclassOf<ATU_WeaponBase> WeaponClass, bool bVisible);
     bool EnsureWeaponSlotSpawned(ETUOperatorWeaponSlot Slot);
     bool ReplaceWeaponSlot(ETUOperatorWeaponSlot Slot);

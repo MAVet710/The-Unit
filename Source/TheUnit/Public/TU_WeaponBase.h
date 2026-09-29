@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
 #include "TheUnitTypes.h"
+#include "TUExecutionTypes.h"
 #include "TU_WeaponBase.generated.h"
 
 class USceneComponent;
@@ -11,6 +12,8 @@ class UStaticMeshComponent;
 class UTUWeaponAttachmentComponent;
 class UTUWeaponLoadoutData;
 class UTUWeaponComponent;
+class UTUWeaponPartsComponent;
+struct FTUProjectileImpact;
 
 UENUM(BlueprintType)
 enum class ETUFireMode : uint8
@@ -27,6 +30,12 @@ struct FTUWeaponShotResult
 
     UPROPERTY(BlueprintReadOnly)
     bool bFired = false;
+    UPROPERTY(BlueprintReadOnly) FGuid ShotId;
+    UPROPERTY(BlueprintReadOnly) FVector InitialVelocityMps = FVector::ZeroVector;
+    UPROPERTY(BlueprintReadOnly) double LaunchServerTime = 0.;
+    UPROPERTY(BlueprintReadOnly) double FlightSeconds = 0.;
+    UPROPERTY(BlueprintReadOnly) double ImpactEnergyJoules = 0.;
+    UPROPERTY(BlueprintReadOnly) bool bSimulatedFlight = false;
 
     UPROPERTY(BlueprintReadOnly)
     bool bHit = false;
@@ -57,8 +66,35 @@ class THEUNIT_API ATU_WeaponBase : public AActor
 
 public:
     ATU_WeaponBase();
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Presentation")
+    TObjectPtr<UTUWeaponPartsComponent> PartsPresentation;
 
     virtual void BeginPlay() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    FTUItemLedger ExportItemLedger() const;
+    bool ValidateItemLedger(const FTUItemLedger& Value) const;
+    bool ImportItemLedger(const FTUItemLedger& Value);
+    void InterruptWeaponAction();
+    FGuid GetWeaponInstanceId() const;
+    bool RequestReload(FGuid ActionId, int32 ExpectedRevision, ETUReloadPolicy Policy);
+    bool CommitActionPhase(FGuid ActionId, int32 ExpectedRevision);
+#if WITH_DEV_AUTOMATION_TESTS
+    /** Isolated deterministic clock for state-machine tests. Production callbacks cannot skip timing. */
+    bool AdvanceActionClockForTesting();
+    void EnableTimedCadenceForTesting() { bUseTimedFireCadence = true; }
+#endif
+    FTUWeaponActionState GetActionState() const;
+    FTUWeaponActionState GetWeaponActionState() const { return GetActionState(); }
+    FMagazineState Inspect() const { return GetMagazineState(); }
+    bool CycleAction();
+    FVector GetWorldMuzzleLocation() const;
+    FTransform GetWorldMuzzleTransform() const;
+    void ReportProjectileImpact(const FTUProjectileImpact& Impact);
+    bool UsesProjectileFlight() const { return bUseProjectileFlight; }
+    const FTUWeaponShotResult& GetLastShotResult() const { return LastShotResult; }
+    bool IsMuzzleObstructed() const;
+    bool AcceptGroundMagazine(const FTUMagazineInstance& Magazine);
+    void SetItemOwnerId(FGuid OwnerId);
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -101,13 +137,14 @@ public:
     void AddReserveAmmo(int32 Amount);
 
     UFUNCTION(BlueprintCallable, Category = "Weapon")
-    void SetAiming(bool bNewAiming) { bIsAiming = bNewAiming; }
+    void SetAiming(bool bNewAiming);
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     bool IsAiming() const { return bIsAiming; }
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
-    bool IsReloading() const { return bIsReloading; }
+    bool IsReloading() const { return GetActionState().bActive; }
+    float GetPresentationPhaseDuration() const { return FMath::Max(.05f, ReloadDurationSeconds > 0.f ? ReloadDurationSeconds / 5.f : .2f); }
 
     UFUNCTION(BlueprintPure, Category = "Weapon")
     float GetFireIntervalSeconds() const;
@@ -136,6 +173,7 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category="Weapon")
     FTUOnWeaponShot OnShotFired;
+    UPROPERTY(BlueprintAssignable, Category="Weapon") FTUOnWeaponShot OnProjectileImpact;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Visual")
@@ -159,7 +197,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
     TArray<ETUFireMode> AvailableFireModes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category = "Weapon")
     ETUFireMode CurrentFireMode;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "1"))
@@ -174,6 +212,7 @@ protected:
     /** New runtime rifles use timed cadence; false preserves the original deterministic test skeleton. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Runtime")
     bool bUseTimedFireCadence = false;
+    UPROPERTY(EditDefaultsOnly, Category="Weapon|Flight") bool bUseProjectileFlight = false;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Runtime", meta=(ClampMin="0.0"))
     float ReloadDurationSeconds = 0.0f;
@@ -184,7 +223,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Runtime")
     FName MuzzleSocketName = TEXT("Muzzle");
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Runtime")
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Runtime")
     bool bIsAiming = false;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon|Runtime")
@@ -198,6 +237,19 @@ protected:
 
 private:
     void PerformHitscanShot();
+    bool LaunchPhysicalProjectile();
+    UFUNCTION(NetMulticast, Unreliable) void MulticastProjectileImpact(const FTUWeaponShotResult& Result);
+    void ScheduleActionPhase();
+    bool CanOwnerManipulate() const;
+    UFUNCTION(Server, Reliable) void ServerSetAiming(bool bNewAiming);
+    UFUNCTION(Server, Reliable) void ServerSetFireMode(ETUFireMode NewMode);
+    UFUNCTION(Server, Reliable) void ServerStartFire();
+    UFUNCTION(Server, Reliable) void ServerStopFire();
+    UFUNCTION(Server, Reliable) void ServerReload(FGuid ActionId, int32 ExpectedRevision, ETUReloadPolicy Policy);
+    UFUNCTION(Server, Reliable) void ServerCycle(int32 ExpectedRevision);
+    UFUNCTION(Server, Reliable) void ServerInterrupt(FGuid ActionId, int32 ExpectedRevision);
+    UFUNCTION(Client, Reliable) void ClientReconcile(const FTUItemLedger& Ledger, const FTUWeaponActionState& Action);
+    UFUNCTION(NetMulticast, Unreliable) void MulticastShot(const FTUWeaponShotResult& Result);
     void ApplyRecoil();
     void ScheduleNextBurstShot();
     void ScheduleNextFullAutoShot();

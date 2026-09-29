@@ -7,6 +7,7 @@
 #include "TU_HideoutCommandCenterDecorator.h"
 #include "TU_HideoutUpgradeStation.h"
 #include "Components/ChildActorComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -14,6 +15,7 @@
 ATU_HideoutCommandCenter::ATU_HideoutCommandCenter()
 {
     HideoutLayerComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("HideoutLayer"));
+    HideoutLayerComponent->SetIsReplicated(true);
     HideoutLayerComponent->SetupAttachment(GetRootComponent());
     HideoutLayerComponent->SetChildActorClass(ATU_HideoutCommandCenterDecorator::StaticClass());
 }
@@ -21,9 +23,11 @@ ATU_HideoutCommandCenter::ATU_HideoutCommandCenter()
 void ATU_HideoutCommandCenter::BeginPlay()
 {
     Super::BeginPlay();
+    if (!HasAuthority()) return;
     RestorePersistentState();
     EnsureDefaultMissionPackage();
     WireMissionStations();
+    SpawnRaidStations();
     if (bSpawnUpgradeStations)
     {
         SpawnUpgradeStations();
@@ -32,8 +36,13 @@ void ATU_HideoutCommandCenter::BeginPlay()
 
 void ATU_HideoutCommandCenter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    CapturePersistentState();
-    ClearUpgradeStations();
+    if (HasAuthority())
+    {
+        CapturePersistentState();
+        ClearUpgradeStations();
+        for (AActor* Station : RaidStations) if (IsValid(Station)) Station->Destroy();
+        RaidStations.Reset();
+    }
     Super::EndPlay(EndPlayReason);
 }
 
@@ -110,6 +119,7 @@ void ATU_HideoutCommandCenter::EnsureDefaultMissionPackage()
     RuntimeFallbackMissionPackage->Mission.TeamSummary = FText::FromString(TEXT("Local operator training package. Co-op roster data replaces this fallback when available."));
     RuntimeFallbackMissionPackage->Mission.bDeploymentAuthorized = true;
     RuntimeFallbackMissionPackage->DestinationMap = FallbackTrainingMapName;
+    RuntimeFallbackMissionPackage->bTrainingOnly = true;
 
     FTMX50MapMarker Entry;
     Entry.MarkerId = TEXT("ENTRY_START");
@@ -219,5 +229,36 @@ void ATU_HideoutCommandCenter::SpawnUpgradeStations()
             Station->ConfigureUpgradeStation(Spawn.Type, FText::FromString(Spawn.Label));
             UpgradeStations.Add(Station);
         }
+    }
+}
+
+void ATU_HideoutCommandCenter::SpawnRaidStations()
+{
+    if (!HasAuthority() || !GetWorld()) return;
+    RuntimeLiveMissionPackage = NewObject<UTUMissionPackageData>(this);
+    RuntimeLiveMissionPackage->Mission.MissionId = TEXT("OP_RELAY_RECOVERY");
+    RuntimeLiveMissionPackage->Mission.MissionTitle = FText::FromString(TEXT("Relay Recovery"));
+    RuntimeLiveMissionPackage->Mission.Objective = FText::FromString(TEXT("Recover the relay document. Other tasks are optional; use either exit when ready."));
+    RuntimeLiveMissionPackage->Mission.Area = FText::FromString(TEXT("District benchmark"));
+    RuntimeLiveMissionPackage->Mission.bDeploymentAuthorized = true;
+    RuntimeLiveMissionPackage->DestinationMap = TEXT("Donetsk");
+    RuntimeLiveMissionPackage->bTrainingOnly = false;
+    for (int32 Index=0; Index<2; ++Index)
+    {
+        FActorSpawnParameters Params; Params.Owner=this;
+        Params.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        // Keep the station and its 200cm approach inside the briefing-room floor,
+        // rather than placing the approach in the gap beside the corridor.
+        const FVector Location=GetActorTransform().TransformPosition(FVector(650.f,350.f+Index*250.f,65.f));
+        ATU_CommandCenterStation* Station=GetWorld()->SpawnActor<ATU_CommandCenterStation>(Location,GetActorRotation(),Params);
+        if (!Station) continue;
+        const FText Label=FText::FromString(Index==0?TEXT("F: DEPLOY LIVE RAID"):TEXT("F: HAND OVER EXTRACTED ITEMS"));
+        Station->ConfigureStation(Index==0?ETUCommandCenterStationType::MissionLaunch:ETUCommandCenterStationType::TaskHandover,Label);
+        if(Index==0) Station->SetMissionPackage(RuntimeLiveMissionPackage);
+        UTextRenderComponent* Text=NewObject<UTextRenderComponent>(Station);
+        Text->SetupAttachment(Station->GetRootComponent());
+        Text->SetRelativeLocation(FVector(-65,0,115)); Text->SetWorldSize(13.f); Text->SetText(Label);
+        Station->AddInstanceComponent(Text); Text->RegisterComponent();
+        RaidStations.Add(Station);
     }
 }

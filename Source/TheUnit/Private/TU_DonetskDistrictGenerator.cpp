@@ -8,16 +8,23 @@
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/Crc.h"
 
 ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicateMovement(false);
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    Root->SetMobility(EComponentMobility::Static);
     SetRootComponent(Root);
 
     Artema60Anchor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Artema60Anchor"));
     Artema60Anchor->SetupAttachment(Root);
+    Artema60Anchor->SetIsReplicated(true);
     Artema60Anchor->SetChildActorClass(ATU_DonetskArtema60Building::StaticClass());
     Artema60Anchor->SetRelativeLocation(FVector(-6200.0f, -5200.0f, 0.0f));
 
@@ -28,6 +35,7 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
 void ATU_DonetskDistrictGenerator::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    if (GetNetMode() == NM_Client && !bInitialLayoutReceived) return;
     ClearGenerated();
     GeneratedNameCounter = 0;
     RebuildDistrict();
@@ -77,6 +85,7 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddBox(
 {
     const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
     UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this, Name);
+    Mesh->SetNetAddressable();
     Mesh->SetStaticMesh(CubeMesh);
     Mesh->SetRelativeLocation(Location);
     Mesh->SetRelativeRotation(Rotation);
@@ -258,4 +267,41 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
     AddBox(FVector(-2800.0f, 3400.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_A"));
     AddBox(FVector(-2800.0f, 3850.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_B"));
     AddBox(FVector(2750.0f, 11800.0f, 75.0f), FVector(90.0f, 70.0f, 75.0f), TEXT("UtilityCabinet"));
+}
+
+void ATU_DonetskDistrictGenerator::BeginPlay()
+{
+    // PostNetInit invokes BeginPlay after the initial authoritative layout properties arrive.
+    // Spawned replication actors do not receive the server's dynamically generated components.
+    if (!HasAuthority()) { bInitialLayoutReceived = true; OnConstruction(GetActorTransform()); }
+    Super::BeginPlay();
+}
+
+void ATU_DonetskDistrictGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, DistrictWidthCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, DistrictLengthCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateReferenceLabels, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskDistrictGenerator, bGenerateTransitFurniture, COND_InitialOnly);
+}
+
+int32 ATU_DonetskDistrictGenerator::GetGeneratedCollisionComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            if (Mesh->IsRegistered() && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision) ++Count;
+    return Count;
+}
+
+FString ATU_DonetskDistrictGenerator::GetGeneratedGeometrySignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
 }

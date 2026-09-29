@@ -157,6 +157,7 @@ void UTUArmoryWidget::RebuildContent()
     }
 
     AddSummary();
+    AddStashManifest();
 
     TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 16.0f, 4.0f, 4.0f)
@@ -356,12 +357,12 @@ void UTUArmoryWidget::AddTacticalGearChoices()
         }
 
         const FName ItemId = Definition->ItemId;
-        const ETUEquipmentSlot Slot = Definition->Slot;
-        const bool bSelected = Modular->GetEquippedGearId(Slot) == ItemId;
+        const ETUEquipmentSlot EquipmentSlot = Definition->Slot;
+        const bool bSelected = Modular->GetEquippedGearId(EquipmentSlot) == ItemId;
         const FString Label = FString::Printf(
             TEXT("%s%s // %s  |  %.2f kg%s"),
             bSelected ? TEXT("[EQUIPPED] ") : TEXT(""),
-            *GearSlotLabel(Slot),
+            *GearSlotLabel(EquipmentSlot),
             *Definition->DisplayName.ToString(),
             Definition->WeightKg,
             Definition->bProvidesBallisticProtection ? TEXT("  |  PROTECTIVE") : TEXT(""));
@@ -369,14 +370,14 @@ void UTUArmoryWidget::AddTacticalGearChoices()
         TWeakObjectPtr<UTUArmoryWidget> WeakThis(this);
         RootBox->AddSlot().AutoHeight().Padding(4.0f, 2.0f)
         [
-            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId, Slot, bSelected]()
+            SNew(SButton).Text(FText::FromString(Label)).OnClicked_Lambda([WeakThis, ItemId, EquipmentSlot, bSelected]()
             {
                 if (WeakThis.IsValid() && WeakThis->Operator.IsValid())
                 {
                     if (ATU_ModularOperatorCharacter* CurrentModular = Cast<ATU_ModularOperatorCharacter>(WeakThis->Operator.Get()))
                     {
                         const bool bChanged = bSelected
-                            ? CurrentModular->UnequipGearSlot(Slot)
+                            ? CurrentModular->UnequipGearSlot(EquipmentSlot)
                             : CurrentModular->EquipGearById(ItemId);
                         if (bChanged)
                         {
@@ -391,6 +392,44 @@ void UTUArmoryWidget::AddTacticalGearChoices()
     }
 }
 
+void UTUArmoryWidget::AddStashManifest()
+{
+    AddSectionHeader(TEXT("PERSISTENT STASH / RAID RISK"));
+    if (!Operator.IsValid() || !Operator->GetGameInstance()) return;
+    UTUHideoutLifecycleSubsystem* Life = Operator->GetGameInstance()->GetSubsystem<UTUHideoutLifecycleSubsystem>();
+    if (!Life) return;
+    const FGuid PlayerId = Life->GetLocalPlayerId();
+    const FTUItemLedger Stash = Life->GetPlayerStash(PlayerId);
+    const FTUItemLedger Carried = Operator->ExportItemLedger();
+    const FString Header = FString::Printf(
+        TEXT("HQ SAFE: %d weapons | %d magazines | %d items | %d loose rounds    RAID KIT: %d weapons | %d magazines | %d items | %d loose rounds"),
+        Stash.Weapons.Num(), Stash.Magazines.Num(), Stash.Items.Num(), Stash.LooseCartridges.Num(),
+        Carried.Weapons.Num(), Carried.Magazines.Num(), Carried.Items.Num(), Carried.LooseCartridges.Num());
+    RootBox->AddSlot().AutoHeight().Padding(4.0f,4.0f)
+    [
+        SNew(STextBlock).Text(FText::FromString(Header))
+    ];
+    RootBox->AddSlot().AutoHeight().Padding(4.0f,2.0f)
+    [
+        SNew(STextBlock).Text(FText::FromString(TEXT("Only the RAID KIT above is escrowed on deployment. Unselected HQ inventory remains safe.")))
+    ];
+    for (const FWeaponInstanceState& Weapon : Stash.Weapons)
+    {
+        const bool bCarried = Carried.Weapons.ContainsByPredicate([&](const FWeaponInstanceState& W){ return W.InstanceId == Weapon.InstanceId; });
+        const FString Row = FString::Printf(TEXT("%s %s | %s | chamber %s"),
+            bCarried ? TEXT("[RAID]") : TEXT("[HQ]"),
+            *Weapon.DefinitionId.ToString(), *Weapon.InstanceId.ToString(EGuidFormats::Short),
+            Weapon.ChamberAmmoId.IsNone() ? TEXT("empty") : *Weapon.ChamberAmmoId.ToString());
+        RootBox->AddSlot().AutoHeight().Padding(12.0f,1.0f)[SNew(STextBlock).Text(FText::FromString(Row))];
+    }
+    for (const FTUMagazineInstance& Magazine : Stash.Magazines)
+    {
+        const bool bCarried = Carried.Magazines.ContainsByPredicate([&](const FTUMagazineInstance& M){ return M.InstanceId == Magazine.InstanceId; });
+        const FString Row = FString::Printf(TEXT("%s MAG %s | %d rounds"),
+            bCarried ? TEXT("[RAID]") : TEXT("[HQ]"), *Magazine.InstanceId.ToString(EGuidFormats::Short), Magazine.Cartridges.Num());
+        RootBox->AddSlot().AutoHeight().Padding(12.0f,1.0f)[SNew(STextBlock).Text(FText::FromString(Row))];
+    }
+}
 void UTUArmoryWidget::AddSummary()
 {
     AddSectionHeader(TEXT("LOADOUT SUMMARY"));

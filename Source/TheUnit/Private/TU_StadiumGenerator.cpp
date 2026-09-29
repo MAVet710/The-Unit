@@ -13,6 +13,7 @@ ATU_StadiumGenerator::ATU_StadiumGenerator()
     PrimaryActorTick.bCanEverTick = false;
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    Root->SetMobility(EComponentMobility::Static);
     SetRootComponent(Root);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMeshFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));

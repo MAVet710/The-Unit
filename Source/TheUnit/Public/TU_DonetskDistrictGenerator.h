@@ -27,6 +27,11 @@ class THEUNIT_API ATU_DonetskDistrictGenerator : public AActor
 public:
     ATU_DonetskDistrictGenerator();
     virtual void OnConstruction(const FTransform& Transform) override;
+    virtual void BeginPlay() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    /** Independently calculated on each peer; excludes labels and actor network names. */
+    UFUNCTION(BlueprintPure) FString GetGeneratedGeometrySignature() const;
+    UFUNCTION(BlueprintPure) int32 GetGeneratedCollisionComponentCount() const;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Donetsk")
@@ -36,19 +41,20 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Donetsk|Reference Anchors")
     TObjectPtr<UChildActorComponent> Artema60Anchor;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Donetsk|Layout", meta=(ClampMin="12000.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout", meta=(ClampMin="12000.0"))
     float DistrictWidthCm = 52000.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Donetsk|Layout", meta=(ClampMin="12000.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout", meta=(ClampMin="12000.0"))
     float DistrictLengthCm = 62000.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Donetsk|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
     bool bGenerateReferenceLabels = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Donetsk|Layout")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Donetsk|Layout")
     bool bGenerateTransitFurniture = true;
 
 private:
+    bool bInitialLayoutReceived = false;
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> CubeMesh;
 

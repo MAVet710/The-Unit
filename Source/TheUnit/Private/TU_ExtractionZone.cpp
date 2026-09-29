@@ -1,112 +1,79 @@
 #include "TU_ExtractionZone.h"
-
-#include "Engine/World.h"
-
-#include "TUHideoutLifecycleSubsystem.h"
+#include "TU_GameMode.h"
+#include "TU_GameState.h"
 #include "Components/BoxComponent.h"
-#include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
-#include "TimerManager.h"
-
+#include "Net/UnrealNetwork.h"
 ATU_ExtractionZone::ATU_ExtractionZone()
 {
-    PrimaryActorTick.bCanEverTick = false;
-
+    bReplicates = true;
     Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("ExtractionTrigger"));
     SetRootComponent(Trigger);
-    Trigger->SetBoxExtent(FVector(220.0f, 220.0f, 150.0f));
+    Trigger->SetBoxExtent(FVector(220.f,220.f,150.f));
     Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     Trigger->SetCollisionResponseToAllChannels(ECR_Ignore);
-    Trigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    Trigger->SetCollisionResponseToChannel(ECC_Pawn,ECR_Overlap);
 }
-
 void ATU_ExtractionZone::BeginPlay()
 {
     Super::BeginPlay();
-    Trigger->OnComponentBeginOverlap.AddDynamic(this, &ATU_ExtractionZone::HandleBeginOverlap);
-    Trigger->OnComponentEndOverlap.AddDynamic(this, &ATU_ExtractionZone::HandleEndOverlap);
+    Trigger->OnComponentBeginOverlap.AddDynamic(this,&ATU_ExtractionZone::HandleBeginOverlap);
+    Trigger->OnComponentEndOverlap.AddDynamic(this,&ATU_ExtractionZone::HandleEndOverlap);
 }
-
-void ATU_ExtractionZone::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ATU_ExtractionZone::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    APawn* Pawn = Cast<APawn>(OtherActor);
-    if (!Pawn || bExtractionPending || !GetWorld())
-    {
-        return;
-    }
-
-    if (bRequireActiveMission)
-    {
-        UGameInstance* GameInstance = GetGameInstance();
-        UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance
-            ? GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>()
-            : nullptr;
-        if (!Lifecycle || !Lifecycle->IsMissionInProgress())
-        {
-            return;
-        }
-    }
-
-    PendingPawn = Pawn;
-    bExtractionPending = true;
-
-    if (ExtractionHoldSeconds <= KINDA_SMALL_NUMBER)
-    {
-        FinishTimedExtraction();
-        return;
-    }
-
-    GetWorld()->GetTimerManager().SetTimer(
-        ExtractionTimer,
-        this,
-        &ATU_ExtractionZone::FinishTimedExtraction,
-        ExtractionHoldSeconds,
-        false);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ATU_ExtractionZone,bPowered);
+    DOREPLIFETIME(ATU_ExtractionZone,UsedCapacity);
 }
-
-void ATU_ExtractionZone::HandleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+bool ATU_ExtractionZone::ContainsPawn(const APawn* Pawn) const
 {
-    if (!bExtractionPending || OtherActor != PendingPawn.Get() || !GetWorld())
-    {
-        return;
-    }
-
-    GetWorld()->GetTimerManager().ClearTimer(ExtractionTimer);
-    PendingPawn.Reset();
-    bExtractionPending = false;
+    if (!Pawn || !Trigger) return false;
+    const FVector P = Trigger->GetComponentTransform().InverseTransformPosition(Pawn->GetActorLocation());
+    const FVector E = Trigger->GetUnscaledBoxExtent();
+    return FMath::Abs(P.X)<=E.X && FMath::Abs(P.Y)<=E.Y && FMath::Abs(P.Z)<=E.Z;
 }
-
-void ATU_ExtractionZone::FinishTimedExtraction()
+bool ATU_ExtractionZone::IsEligible(APawn* Pawn,const ATU_GameMode* Mode) const
 {
-    if (!bExtractionPending)
+    if (!HasAuthority() || !Mode || !ContainsPawn(Pawn) || (bRequiresPower && !bPowered) ||
+        (Capacity>0 && UsedCapacity>=Capacity) || Mode->GetRaidElapsedTime()<OpensAtSeconds ||
+        (ClosesAtSeconds>0.f && Mode->GetRaidElapsedTime()>=ClosesAtSeconds)) return false;
+    if (!RequiredItemId.IsNone())
     {
-        return;
+        const FTUItemLedger* Ledger=Mode->GetParticipantLedger(Pawn);
+        if (!Ledger || !Ledger->Items.ContainsByPredicate([&](const FTUItemInstance& Item)
+            { return Item.DefinitionId==RequiredItemId && Item.Location==ETUItemLocation::Carried; })) return false;
     }
-
-    ExtractNow(bCountsAsOperationComplete);
+    return true;
 }
-
-bool ATU_ExtractionZone::ExtractNow(bool bOperationCompleted)
+void ATU_ExtractionZone::CommitCapacity() { if (HasAuthority()) { ++UsedCapacity; ForceNetUpdate(); } }
+void ATU_ExtractionZone::HandleBeginOverlap(UPrimitiveComponent*,AActor* Actor,UPrimitiveComponent*,int32,bool,const FHitResult&)
 {
-    UGameInstance* GameInstance = GetGameInstance();
-    if (!GameInstance)
+    if (ATU_GameMode* Mode=GetWorld()->GetAuthGameMode<ATU_GameMode>()) Mode->BeginExtraction(Cast<APawn>(Actor),this);
+}
+void ATU_ExtractionZone::HandleEndOverlap(UPrimitiveComponent*,AActor* Actor,UPrimitiveComponent*,int32)
+{
+    if (ATU_GameMode* Mode=GetWorld()->GetAuthGameMode<ATU_GameMode>()) Mode->CancelExtraction(Cast<APawn>(Actor));
+}
+bool ATU_ExtractionZone::ExtractNow(bool)
+{
+    // Compatibility entry still requires each participant's completed authority countdown.
+    if (!HasAuthority() || !GetWorld()) return false;
+    ATU_GameMode* Mode=GetWorld()->GetAuthGameMode<ATU_GameMode>();
+    if (!Mode) return false;
+    bool Result=false;
+    for (TActorIterator<APawn> It(GetWorld());It;++It)
     {
-        return false;
+        const FTURaidParticipantState* State=Mode->FindParticipant(*It);
+        if (State && State->bExtracting && State->ExtractId==ExtractId && State->ExtractionEndTime<=Mode->GetRaidElapsedTime() && IsEligible(*It,Mode))
+            Result=Mode->ResolvePlayerOutcome(*It,ETURaidPlayerOutcome::Extracted,ExtractId)||Result;
     }
-
-    UTUHideoutLifecycleSubsystem* Lifecycle = GameInstance->GetSubsystem<UTUHideoutLifecycleSubsystem>();
-    if (!Lifecycle || (bRequireActiveMission && !Lifecycle->IsMissionInProgress()))
-    {
-        return false;
-    }
-
-    if (GetWorld())
-    {
-        GetWorld()->GetTimerManager().ClearTimer(ExtractionTimer);
-    }
-    PendingPawn.Reset();
-    bExtractionPending = false;
-    return Lifecycle->ReturnToHideout(bOperationCompleted);
+    return Result;
+}
+bool ATU_ExtractionZone::IsExtractionPending() const
+{
+    const ATU_GameState* State=GetWorld()?GetWorld()->GetGameState<ATU_GameState>():nullptr;
+    return State && State->Participants.ContainsByPredicate([&](const FTURaidParticipantState& P){return P.bExtracting && P.ExtractId==ExtractId;});
 }

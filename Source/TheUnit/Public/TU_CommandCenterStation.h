@@ -18,7 +18,8 @@ enum class ETUCommandCenterStationType : uint8
     UniformBench UMETA(DisplayName="Uniform / Gear Bench"),
     TestRange UMETA(DisplayName="Test Fire Range"),
     Briefing UMETA(DisplayName="Briefing Room"),
-    MissionLaunch UMETA(DisplayName="Mission Launch")
+    MissionLaunch UMETA(DisplayName="Mission Launch"),
+    TaskHandover UMETA(DisplayName="Task Handover")
 };
 
 /** Physical interaction point used inside the pre-mission Special Operations Command Center. */
@@ -29,6 +30,7 @@ class THEUNIT_API ATU_CommandCenterStation : public AActor
 
 public:
     ATU_CommandCenterStation();
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     UFUNCTION(BlueprintCallable, Category="Command Center")
     virtual bool UseStation(ATU_ArmedOperatorCharacter* Operator);
@@ -58,13 +60,13 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Command Center")
     TObjectPtr<UBoxComponent> InteractionVolume;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center")
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category="Command Center")
     ETUCommandCenterStationType StationType = ETUCommandCenterStationType::Armory;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center")
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category="Command Center")
     FText StationLabel;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Mission")
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category="Command Center|Mission")
     FName MissionId = NAME_None;
 
     /** Optional full data-driven package. Falls back to MissionId/StationLabel when unset. */

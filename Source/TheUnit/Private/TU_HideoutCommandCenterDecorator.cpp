@@ -8,10 +8,15 @@
 #include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/Crc.h"
 
 ATU_HideoutCommandCenterDecorator::ATU_HideoutCommandCenterDecorator()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicateMovement(true);
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     SetRootComponent(Root);
@@ -24,6 +29,7 @@ ATU_HideoutCommandCenterDecorator::ATU_HideoutCommandCenterDecorator()
 void ATU_HideoutCommandCenterDecorator::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    if (GetNetMode() == NM_Client && !bInitialLayoutReceived) return;
     Rebuild();
 }
 
@@ -31,7 +37,7 @@ void ATU_HideoutCommandCenterDecorator::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (bSnapToCommandCenterAtBeginPlay && GetWorld())
+    if (HasAuthority() && bSnapToCommandCenterAtBeginPlay && GetWorld())
     {
         for (TActorIterator<ATU_CommandCenterGenerator> It(GetWorld()); It; ++It)
         {
@@ -40,7 +46,31 @@ void ATU_HideoutCommandCenterDecorator::BeginPlay()
         }
     }
 
+    bInitialLayoutReceived = true;
+    if (HasAuthority()) RefreshFromProgression();
+    else OnRep_LayoutModules();
+}
+
+void ATU_HideoutCommandCenterDecorator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ATU_HideoutCommandCenterDecorator, LayoutModules);
+}
+
+void ATU_HideoutCommandCenterDecorator::RefreshFromProgression()
+{
+    if (!HasAuthority()) return;
+    if (Progression) LayoutModules = Progression->GetModules();
     Rebuild();
+    ForceNetUpdate();
+}
+
+void ATU_HideoutCommandCenterDecorator::OnRep_LayoutModules()
+{
+    if (Progression)
+        for (const FTUHideoutModuleState& Module : LayoutModules)
+            Progression->SetModuleLevel(Module.Type, Module.Level);
+    if (bInitialLayoutReceived) Rebuild();
 }
 
 void ATU_HideoutCommandCenterDecorator::ClearGenerated()
@@ -69,6 +99,7 @@ UStaticMeshComponent* ATU_HideoutCommandCenterDecorator::AddCube(const FName& Na
     }
 
     AddInstanceComponent(Component);
+    Component->SetNetAddressable();
     Component->SetupAttachment(Root);
     Component->SetStaticMesh(CubeMesh);
     Component->SetRelativeLocation(Location);
@@ -246,4 +277,24 @@ void ATU_HideoutCommandCenterDecorator::BuildArmoryAndRangeSupport()
             AddCube(TEXT("RangeChronoStation"), FVector(1750.0f, -3050.0f, 70.0f), FVector(65.0f, 65.0f, 70.0f), FRotator::ZeroRotator, true);
         }
     }
+}
+
+int32 ATU_HideoutCommandCenterDecorator::GetGeneratedCollisionComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            if (Mesh->IsRegistered() && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision) ++Count;
+    return Count;
+}
+
+FString ATU_HideoutCommandCenterDecorator::GetGeneratedGeometrySignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
 }

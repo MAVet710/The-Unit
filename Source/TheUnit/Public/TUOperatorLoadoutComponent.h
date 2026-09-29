@@ -30,10 +30,7 @@ struct FTUOperatorWeaponEntry
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Operator Loadout", meta=(ClampMin="0.0"))
     float WeightKg = 0.0f;
 
-    bool IsValidEntry() const
-    {
-        return !ItemId.IsNone() && WeaponClass != nullptr;
-    }
+    bool IsValidEntry() const;
 };
 
 USTRUCT(BlueprintType)

@@ -23,7 +23,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hideout|Spawn")
     FTransform FallbackPlayerStartTransform = FTransform(
-        FRotator::ZeroRotator,
+        FRotator(0.f, 90.f, 0.f),
         FVector(0.0f, -3300.0f, 100.0f),
         FVector::OneVector);
 };

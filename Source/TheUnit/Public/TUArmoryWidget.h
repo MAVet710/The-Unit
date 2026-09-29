@@ -46,6 +46,7 @@ private:
     void AddEquipmentChoices();
     void AddTacticalGearChoices();
     void AddSummary();
+    void AddStashManifest();
     void PersistSelections();
 
     TWeakObjectPtr<ATU_ArmedOperatorCharacter> Operator;

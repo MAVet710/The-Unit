@@ -6,6 +6,9 @@
 
 class UCameraComponent;
 class USkeletalMeshComponent;
+class USceneComponent;
+class UTUWeaponPresentationComponent;
+class UAnimSequence;
 
 /**
  * Base controllable operator pawn.
@@ -20,6 +23,19 @@ public:
     ATU_OperatorCharacter();
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    USceneComponent* GetWorldWeaponAnchor() const { return WorldWeaponAnchor; }
+    UTUWeaponPresentationComponent* GetWeaponPresentation() const { return WeaponPresentation; }
+    USkeletalMeshComponent* GetOwnerBodyMesh() const { return FirstPersonArmsMesh; }
+    FTransform GetHandlingEyeWorld() const;
+    float GetHandlingADSAlpha() const { return HandlingADSAlpha; }
+    bool IsWeaponClearanceBlocked() const { return bWeaponClearanceBlocked; }
+    void ApplyHandlingCapturePose(bool bADS, bool bCrouched, float Lean, float PitchDegrees);
+    virtual bool CanAimWeapon() const { return true; }
+    void SuspendInputForMenu();
+    UFUNCTION(BlueprintPure) bool IsWeaponRaised() const { return ReadyPosture == 0 && !bIsSprinting && !bWeaponClearanceBlocked && HandlingManipulationAlpha<.02f; }
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -27,6 +43,16 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<USkeletalMeshComponent> FirstPersonArmsMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<USceneComponent> WorldWeaponAnchor;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UTUWeaponPresentationComponent> WeaponPresentation;
+    UPROPERTY() TObjectPtr<UAnimSequence> PrototypeIdle;
+    UPROPERTY(Replicated) uint8 ReplicatedPosture = 0;
+    UFUNCTION(Server, Reliable) void ServerSetPosture(uint8 Flags);
+    UPROPERTY(Replicated, BlueprintReadOnly, Category="Movement|State") uint8 ReadyPosture = 0;
+    UFUNCTION(BlueprintCallable) void CycleReadyPosture();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
     float WalkSpeed = 300.0f;
@@ -98,5 +124,12 @@ protected:
     virtual void Interact();
 
 private:
+    float HandlingADSAlpha = 0.f;
+    float HandlingLean = 0.f;
+    float HandlingReadyPitch = 0.f;
+    float HandlingManipulationAlpha = 0.f;
+    bool bWeaponClearanceBlocked=false;
+    FTransform PreviousClearWeaponPose=FTransform::Identity;
     void UpdateMovementSpeed();
+    void UpdatePosture();
 };

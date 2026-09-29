@@ -19,6 +19,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Mission|Travel")
     FName DestinationMap = NAME_None;
 
+    /** Training uses a disposable kit snapshot and cannot award live-profile items. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Mission|Travel")
+    bool bTrainingOnly = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Map")
     TArray<FTMX50MapMarker> MapMarkers;
 

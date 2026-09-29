@@ -52,7 +52,7 @@ bool FTUHideoutSaveSchemaTest::RunTest(const FString& Parameters)
         return false;
     }
 
-    TestEqual(TEXT("Current save schema version"), Save->SaveVersion, 2);
+    TestEqual(TEXT("Current save schema version"), Save->SaveVersion, 3);
     TestTrue(TEXT("New profile has no persisted tactical gear overrides"), Save->GearBySlot.IsEmpty());
     TestFalse(TEXT("New profile does not begin inside a mission"), Save->bMissionInProgress);
     TestEqual(TEXT("Default return map token"), Save->HideoutMapName, FName(TEXT("CommandCenter")));

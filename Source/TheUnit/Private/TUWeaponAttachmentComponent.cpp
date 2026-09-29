@@ -162,8 +162,9 @@ void UTUWeaponAttachmentComponent::RebuildVisual(ETUWeaponAttachmentSlot Slot)
     Component->SetStaticMesh(Mesh);
     Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Component->SetGenerateOverlapEvents(false);
-    Component->SetOnlyOwnerSee(true);
-    Component->SetCastShadow(false);
+    // Attachments share the canonical world weapon representation for owner and observers.
+    Component->SetOnlyOwnerSee(false);
+    Component->SetCastShadow(true);
     Component->RegisterComponent();
     AttachmentVisuals.Add(Slot, Component);
 }

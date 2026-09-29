@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 #include "TUEquipmentTypes.h"
+#include "TUExecutionTypes.h"
 #include "TUHideoutProgressionComponent.h"
 #include "TUHideoutSaveGame.generated.h"
 
@@ -14,7 +15,19 @@ class THEUNIT_API UTUHideoutSaveGame : public USaveGame
 
 public:
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Profile")
-    int32 SaveVersion = 2;
+    int32 SaveVersion = 3;
+
+    UPROPERTY(SaveGame) FGuid LocalPlayerId;
+    UPROPERTY(SaveGame) int32 CommitSequence = 0;
+    UPROPERTY(SaveGame) bool bInitialKitCaptured = false;
+    UPROPERTY(SaveGame) TArray<FGuid> InitializedPlayers;
+    UPROPERTY(SaveGame) TMap<FString, FGuid> KnownPlayers;
+    UPROPERTY(SaveGame) FTUItemLedger Stash;
+    // Only LooseCartridges is used; keyed because fungible cartridges have no instance OwnerId.
+    UPROPERTY(SaveGame) TMap<FGuid, FTUItemLedger> LooseByPlayer;
+    UPROPERTY(SaveGame) TArray<FTUDeploymentRecord> Deployments;
+    UPROPERTY(SaveGame) TArray<FTURaidOutcome> Outcomes;
+    UPROPERTY(SaveGame) TArray<FTUTaskProgress> Tasks;
 
     UPROPERTY(SaveGame, VisibleAnywhere, BlueprintReadWrite, Category="Hideout")
     TArray<FTUHideoutModuleState> HideoutModules;

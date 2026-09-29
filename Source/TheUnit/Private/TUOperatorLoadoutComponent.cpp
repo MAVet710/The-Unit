@@ -1,10 +1,17 @@
 #include "TUOperatorLoadoutComponent.h"
 
 #include "TU_AK105.h"
+#include "TU_CQB9.h"
 #include "TU_G34CM.h"
 #include "TU_M110.h"
 #include "TU_RGRFive7.h"
 #include "TU_TacticalRifle.h"
+#include "TU_WeaponBase.h"
+
+bool FTUOperatorWeaponEntry::IsValidEntry() const
+{
+    return !ItemId.IsNone() && WeaponClass != nullptr;
+}
 
 UTUOperatorLoadoutComponent::UTUOperatorLoadoutComponent()
 {
@@ -28,7 +35,13 @@ UTUOperatorLoadoutComponent::UTUOperatorLoadoutComponent()
     M110.WeaponClass = ATU_M110::StaticClass();
     M110.WeightKg = 5.4f;
 
-    PrimaryItems = {TU556, AK105, M110};
+    FTUOperatorWeaponEntry CQB9;
+    CQB9.ItemId = TEXT("PRIMARY_CQB9");
+    CQB9.DisplayName = FText::FromString(TEXT("CQB-9"));
+    CQB9.WeaponClass = ATU_CQB9::StaticClass();
+    CQB9.WeightKg = 2.9f;
+
+    PrimaryItems = {TU556, AK105, M110, CQB9};
     SelectedPrimaryId = TU556.ItemId;
 
     FTUOperatorWeaponEntry G34;

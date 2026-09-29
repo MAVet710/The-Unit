@@ -36,7 +36,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Mission|Donetsk")
     FTransform FallbackPlayerStartTransform = FTransform(
-        FRotator::ZeroRotator,
+        FRotator(0.f, 90.f, 0.f),
         FVector(0.0f, -27500.0f, 110.0f),
         FVector::OneVector);
 };

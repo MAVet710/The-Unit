@@ -1,4 +1,5 @@
 #include "TUHealthComponent.h"
+#include "GameFramework/Actor.h"
 
 UTUHealthComponent::UTUHealthComponent()
 {
@@ -14,15 +15,11 @@ UTUHealthComponent::UTUHealthComponent()
 
 void UTUHealthComponent::ApplyRegionalDamage(ETUBodyRegion Region, float Damage)
 {
-	if (IsDead() || Damage <= 0.f) return;
+	if ((GetOwner() && (!GetOwner()->HasAuthority() || !GetOwner()->CanBeDamaged())) || IsDead() || !FMath::IsFinite(Damage) || Damage <= 0.f) return;
 	float* Value = BodyPartHealth.Find(Region);
 	if (!Value) return;
 	*Value = FMath::Max(0.f, *Value - Damage);
-	if ((Region == ETUBodyRegion::Head || Region == ETUBodyRegion::Chest) && *Value <= 0.f)
-	{
-		OnDeath.Broadcast(GetOwner());
-	}
-	if (GetTotalHealth() <= 0.f)
+	if (IsDead())
 	{
 		OnDeath.Broadcast(GetOwner());
 	}

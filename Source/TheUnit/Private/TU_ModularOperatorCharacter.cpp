@@ -47,6 +47,10 @@ float ATU_ModularOperatorCharacter::TakeDamage(
     AController* EventInstigator,
     AActor* DamageCauser)
 {
+    if (!HasAuthority() || !CanBeDamaged() || !HealthComponent || HealthComponent->IsDead() || !FMath::IsFinite(DamageAmount) || DamageAmount <= 0.f)
+    {
+        return 0.f;
+    }
     if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
     {
         const FPointDamageEvent& PointDamage = static_cast<const FPointDamageEvent&>(DamageEvent);
@@ -64,7 +68,9 @@ float ATU_ModularOperatorCharacter::TakeDamage(
         }
     }
 
-    return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    const float Before = HealthComponent->GetTotalHealth();
+    HealthComponent->ApplyRegionalDamage(ETUBodyRegion::Chest, DamageAmount);
+    return Before - HealthComponent->GetTotalHealth();
 }
 
 ETUBodyRegion ATU_ModularOperatorCharacter::ResolveBodyRegionFromBone(FName BoneName) const

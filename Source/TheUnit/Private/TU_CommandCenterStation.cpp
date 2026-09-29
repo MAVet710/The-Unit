@@ -2,8 +2,11 @@
 
 #include "TUArmoryWidget.h"
 #include "TUHideoutLifecycleSubsystem.h"
+#include "TUHideoutSaveGame.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_PlayerController.h"
+#include "TU_PlayerState.h"
+#include "Net/UnrealNetwork.h"
 #include "TUMissionPackageData.h"
 #include "TUMX50TabletComponent.h"
 #include "Components/BoxComponent.h"
@@ -16,6 +19,8 @@
 ATU_CommandCenterStation::ATU_CommandCenterStation()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
 
     StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
     SetRootComponent(StationMesh);
@@ -44,6 +49,15 @@ void ATU_CommandCenterStation::ConfigureStation(ETUCommandCenterStationType NewT
     StationType = NewType;
     StationLabel = NewLabel;
     MissionId = NewMissionId;
+    ForceNetUpdate();
+}
+
+void ATU_CommandCenterStation::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ATU_CommandCenterStation, StationType);
+    DOREPLIFETIME(ATU_CommandCenterStation, StationLabel);
+    DOREPLIFETIME(ATU_CommandCenterStation, MissionId);
 }
 
 bool ATU_CommandCenterStation::IsOperatorInRange(const APawn* Pawn) const
@@ -63,13 +77,37 @@ bool ATU_CommandCenterStation::IsOperatorInRange(const APawn* Pawn) const
 
 bool ATU_CommandCenterStation::UseStation(ATU_ArmedOperatorCharacter* Operator)
 {
-    if (!Operator || !IsOperatorInRange(Operator))
+    if (!HasAuthority() || !Operator || !Operator->HasAuthority() || !IsOperatorInRange(Operator))
     {
         return false;
     }
 
     switch (StationType)
     {
+        case ETUCommandCenterStationType::TaskHandover:
+        {
+            UTUHideoutLifecycleSubsystem* Life = Operator->GetGameInstance() ? Operator->GetGameInstance()->GetSubsystem<UTUHideoutLifecycleSubsystem>() : nullptr;
+            if (!Life || !Life->GetProfile()) return false;
+            const ATU_PlayerState* State = Operator->GetPlayerState<ATU_PlayerState>();
+            const APlayerController* Controller = Cast<APlayerController>(Operator->GetController());
+            const FGuid PlayerId = State && State->PersistentPlayerId.IsValid() ? State->PersistentPlayerId
+                : (Controller && Controller->IsLocalController() ? Life->GetLocalPlayerId() : FGuid());
+            if (!PlayerId.IsValid()) return false;
+            const TArray<FTUTaskProgress> Tasks = Life->GetProfile()->Tasks;
+            const FTUItemLedger Stash = Life->GetPlayerStash(PlayerId);
+            for (const FTUTaskProgress& Task : Tasks)
+            {
+                if (Task.PlayerId != PlayerId || Task.bCompleted) continue;
+                for (const FTUItemInstance& Item : Stash.Items)
+                {
+                    if (Life->CommitTaskHandover(PlayerId, Task.Definition.TaskId, Item.InstanceId))
+                    {
+                        return Operator->ImportItemLedger(Life->GetPlayerStash(PlayerId));
+                    }
+                }
+            }
+            return false;
+        }
         case ETUCommandCenterStationType::Armory:
         case ETUCommandCenterStationType::WeaponBench:
             return Operator->OpenArmoryView(ETUArmoryViewMode::Weapons);

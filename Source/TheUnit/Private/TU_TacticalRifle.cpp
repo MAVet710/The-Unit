@@ -3,6 +3,7 @@
 ATU_TacticalRifle::ATU_TacticalRifle()
 {
     bUseTimedFireCadence = true;
+    bUseProjectileFlight = true;
     ReloadDurationSeconds = 2.35f;
     TraceRangeCm = 120000.0f;
     AvailableFireModes = {ETUFireMode::SemiAuto, ETUFireMode::FullAuto};

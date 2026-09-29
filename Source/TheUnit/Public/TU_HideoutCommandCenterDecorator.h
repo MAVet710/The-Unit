@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TUHideoutProgressionComponent.h"
 #include "TU_HideoutCommandCenterDecorator.generated.h"
 
 class USceneComponent;
@@ -19,13 +20,16 @@ public:
     ATU_HideoutCommandCenterDecorator();
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    UFUNCTION(BlueprintPure) FString GetGeneratedGeometrySignature() const;
+    UFUNCTION(BlueprintPure) int32 GetGeneratedCollisionComponentCount() const;
 
     UFUNCTION(BlueprintPure, Category="Hideout")
     UTUHideoutProgressionComponent* GetProgression() const { return Progression; }
 
     /** Rebuild graybox/environment state after persistence or an upgrade changes module levels. */
     UFUNCTION(BlueprintCallable, Category="Hideout")
-    void RefreshFromProgression() { Rebuild(); }
+    void RefreshFromProgression();
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hideout")
@@ -42,6 +46,10 @@ protected:
     bool bGenerateLabels = true;
 
 private:
+    // Read-only presentation snapshot from host progression, never a guest save authority.
+    UPROPERTY(ReplicatedUsing=OnRep_LayoutModules) TArray<FTUHideoutModuleState> LayoutModules;
+    UFUNCTION() void OnRep_LayoutModules();
+    bool bInitialLayoutReceived = false;
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> CubeMesh;
 
@@ -56,4 +64,5 @@ private:
     void BuildMaintenance();
     void BuildMedical();
     void BuildCommsAndPlanning();
+    void BuildArmoryAndRangeSupport();
 };

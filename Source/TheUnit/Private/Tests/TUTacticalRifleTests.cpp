@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_TacticalRifle.h"
 #include "TUWeaponAttachmentComponent.h"
@@ -22,10 +23,17 @@ bool FTUTacticalRifleRuntimeTest::RunTest(const FString& Parameters)
     {
         return false;
     }
+    if (!TestNotNull(TEXT("Engine for world context"), GEngine))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
 
     ATU_TacticalRifle* Rifle = World->SpawnActor<ATU_TacticalRifle>();
     if (!TestNotNull(TEXT("Tactical rifle"), Rifle))
     {
+        GEngine->DestroyWorldContext(World);
         World->DestroyWorld(false);
         return false;
     }
@@ -47,7 +55,19 @@ bool FTUTacticalRifleRuntimeTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Runtime reload enters timed reload state"), Rifle->IsReloading());
     TestEqual(TEXT("Timed reload does not instantly mutate ammo"), Rifle->GetCurrentAmmo(), 29);
     Rifle->FinishReload();
-    TestFalse(TEXT("Manual completion exits reload state"), Rifle->IsReloading());
+    TestTrue(TEXT("Early manual completion cannot bypass authoritative phase time"), Rifle->IsReloading());
+    TestEqual(TEXT("Early manual completion does not mutate ammo"), Rifle->GetCurrentAmmo(), 29);
+    {
+        // Exercise the real world clock and timer callbacks. TimerManager ticks
+        // once per engine frame; restore the editor frame after this simulation.
+        TGuardValue<uint64> FrameGuard(GFrameCounter, GFrameCounter);
+        for (int32 Step = 0; Step < 200 && Rifle->IsReloading(); ++Step)
+        {
+            ++GFrameCounter;
+            World->Tick(LEVELTICK_All, 0.02f);
+        }
+    }
+    TestFalse(TEXT("Authoritative timers complete reload within four seconds"), Rifle->IsReloading());
     TestEqual(TEXT("Tactical reload restores capacity plus chamber"), Rifle->GetCurrentAmmo(), 31);
 
     UTUWeaponAttachmentComponent* Attachments = NewObject<UTUWeaponAttachmentComponent>();
@@ -68,7 +88,14 @@ bool FTUTacticalRifleRuntimeTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Optic occupies optic slot"), Attachments->GetAttachment(ETUWeaponAttachmentSlot::Optic), Optic);
     TestTrue(TEXT("Attachment spread modifier aggregates"), FMath::IsNearlyEqual(Attachments->GetSpreadMultiplier(), 0.90f));
     TestTrue(TEXT("Attachment recoil modifier aggregates"), FMath::IsNearlyEqual(Attachments->GetRecoilMultiplier(), 0.85f));
-    TestTrue(TEXT("Attachment weight sums"), FMath::IsNearlyEqual(Attachments->GetAttachmentWeightKg(), 0.42f));
+    // Float addition need not equal the separately rounded decimal literal. One
+    // milligram tolerance is below authored weight precision and catches bad sums.
+    const float ActualAttachmentWeightKg = Attachments->GetAttachmentWeightKg();
+    constexpr float ExpectedAttachmentWeightKg = 0.42f;
+    constexpr float WeightToleranceKg = 1.e-6f;
+    TestTrue(FString::Printf(TEXT("Attachment weight sums (actual %.9g kg, expected %.9g kg, tolerance %.9g kg)"),
+        ActualAttachmentWeightKg, ExpectedAttachmentWeightKg, WeightToleranceKg),
+        FMath::IsNearlyEqual(ActualAttachmentWeightKg, ExpectedAttachmentWeightKg, WeightToleranceKg));
 
     UTUWeaponAttachmentDefinition* ReplacementOptic = NewObject<UTUWeaponAttachmentDefinition>();
     ReplacementOptic->ItemId = TEXT("optic_replacement");
@@ -87,6 +114,7 @@ bool FTUTacticalRifleRuntimeTest::RunTest(const FString& Parameters)
         }
     }
 
+    GEngine->DestroyWorldContext(World);
     World->DestroyWorld(false);
     return true;
 }

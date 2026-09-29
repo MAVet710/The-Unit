@@ -5,12 +5,18 @@
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/Crc.h"
 
 ATU_DonetskArtema60Building::ATU_DonetskArtema60Building()
 {
     PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    bAlwaysRelevant = true;
+    SetReplicateMovement(false);
 
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    Root->SetMobility(EComponentMobility::Static);
     SetRootComponent(Root);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -22,6 +28,7 @@ ATU_DonetskArtema60Building::ATU_DonetskArtema60Building()
 void ATU_DonetskArtema60Building::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    if (GetNetMode() == NM_Client && !bInitialLayoutReceived) return;
     ClearGenerated();
     GeneratedNameCounter = 0;
     RebuildBuilding();
@@ -52,6 +59,7 @@ UStaticMeshComponent* ATU_DonetskArtema60Building::AddBox(
 
     const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
     UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this, Name);
+    Mesh->SetNetAddressable();
     Mesh->SetStaticMesh(CubeMesh);
     Mesh->SetRelativeLocation(Location);
     Mesh->SetRelativeRotation(Rotation);
@@ -77,6 +85,7 @@ UStaticMeshComponent* ATU_DonetskArtema60Building::AddCylinder(
 
     const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
     UStaticMeshComponent* Mesh = NewObject<UStaticMeshComponent>(this, Name);
+    Mesh->SetNetAddressable();
     Mesh->SetStaticMesh(CylinderMesh);
     Mesh->SetRelativeLocation(Location);
     // Engine cylinder is 100 cm diameter and 100 cm tall.
@@ -248,4 +257,44 @@ void ATU_DonetskArtema60Building::BuildPostwarDetails()
             FVector(RoundedProjectionRadiusCm * 0.92f, 8.0f, 50.0f),
             TEXT("Artema60_BalustradeReference"));
     }
+}
+void ATU_DonetskArtema60Building::BeginPlay()
+{
+    // PostNetInit invokes BeginPlay after the initial authoritative layout properties arrive.
+    // Spawned replication actors do not receive the server's dynamically generated components.
+    if (!HasAuthority()) { bInitialLayoutReceived = true; OnConstruction(GetActorTransform()); }
+    Super::BeginPlay();
+}
+
+void ATU_DonetskArtema60Building::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, EstimatedFrontageCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, EstimatedDepthCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, GroundFloorHeightCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, UpperFloorHeightCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, RoundedProjectionRadiusCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, StairTowerWidthCm, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, bCurrentPostwarConfiguration, COND_InitialOnly);
+    DOREPLIFETIME_CONDITION(ATU_DonetskArtema60Building, bGenerateWindowReferencePlates, COND_InitialOnly);
+}
+
+int32 ATU_DonetskArtema60Building::GetGeneratedCollisionComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            if (Mesh->IsRegistered() && Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision) ++Count;
+    return Count;
+}
+
+FString ATU_DonetskArtema60Building::GetGeneratedGeometrySignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
 }

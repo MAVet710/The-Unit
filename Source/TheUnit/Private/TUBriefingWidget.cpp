@@ -168,10 +168,10 @@ void UTUBriefingWidget::AddNavigation()
     }
 
     TWeakObjectPtr<UTUBriefingWidget> WeakThis(this);
-    TSharedPtr<SHorizontalBox> Navigation;
+    TSharedPtr<SHorizontalBox> NavigationBox;
     RootBox->AddSlot().AutoHeight().Padding(4.0f, 10.0f)
     [
-        SAssignNew(Navigation, SHorizontalBox)
+        SAssignNew(NavigationBox, SHorizontalBox)
     ];
 
     const ETUMX50Page Pages[] = {
@@ -185,7 +185,7 @@ void UTUBriefingWidget::AddNavigation()
 
     for (ETUMX50Page Page : Pages)
     {
-        Navigation->AddSlot().AutoWidth().Padding(2.0f)
+        NavigationBox->AddSlot().AutoWidth().Padding(2.0f)
         [
             SNew(SButton)
             .Text(GetPageLabel(Page))

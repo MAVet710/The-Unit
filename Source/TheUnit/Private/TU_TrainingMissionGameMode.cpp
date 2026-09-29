@@ -8,6 +8,7 @@
 
 ATU_TrainingMissionGameMode::ATU_TrainingMissionGameMode()
 {
+    bTrainingRaid = true;
     MissionStructureClass = ATU_KillhouseGenerator::StaticClass();
     ExtractionZoneClass = ATU_ExtractionZone::StaticClass();
 }

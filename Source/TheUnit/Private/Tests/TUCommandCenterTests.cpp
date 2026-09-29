@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "Engine/DamageEvents.h"
 #include "TU_ArmedOperatorCharacter.h"
 #include "TU_CommandCenterGenerator.h"
 #include "TU_CommandCenterStation.h"

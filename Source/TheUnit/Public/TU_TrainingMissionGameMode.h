@@ -36,7 +36,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Mission|Spawn")
     FTransform FallbackPlayerStartTransform = FTransform(
-        FRotator::ZeroRotator,
+        FRotator(0.f, 90.f, 0.f),
         FVector(0.0f, -1950.0f, 100.0f),
         FVector::OneVector);
 };

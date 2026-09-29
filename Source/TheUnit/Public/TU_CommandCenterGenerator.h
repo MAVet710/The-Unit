@@ -30,6 +30,9 @@ public:
 
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    UFUNCTION(BlueprintPure) FString GetGeneratedGeometrySignature() const;
+    UFUNCTION(BlueprintPure) int32 GetGeneratedCollisionComponentCount() const;
 
     UFUNCTION(BlueprintCallable, Category="Command Center|Mission")
     void SetDefaultMissionPackage(UTUMissionPackageData* InMissionPackage) { DefaultMissionPackage = InMissionPackage; }
@@ -41,23 +44,23 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Command Center")
     TObjectPtr<USceneComponent> Root;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="1200.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="1200.0"))
     float HubWidth = 5200.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="1800.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="1800.0"))
     float HubLength = 7600.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="260.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="260.0"))
     float CeilingHeight = 320.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="250.0"))
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Dimensions", meta=(ClampMin="250.0"))
     float CorridorWidth = 360.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Debug")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Debug")
     bool bGenerateLabels = true;
 
     /** Spawn functional interaction actors at the authored station markers during BeginPlay. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Command Center|Stations")
+    UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category="Command Center|Stations")
     bool bSpawnRuntimeStations = true;
 
     /** Full mission package injected into generated Briefing and Mission Launch stations. */
@@ -65,6 +68,7 @@ protected:
     TObjectPtr<UTUMissionPackageData> DefaultMissionPackage = nullptr;
 
 private:
+    bool bInitialLayoutReceived = false;
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> CubeMesh;
 
@@ -100,4 +104,5 @@ private:
     void BuildBriefingRoom();
     void BuildTestRange();
     void BuildOperationsDetails();
+    void BuildInteriorLighting();
 };

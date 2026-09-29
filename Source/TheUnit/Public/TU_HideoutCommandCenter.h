@@ -55,6 +55,10 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UTUMissionPackageData> RuntimeFallbackMissionPackage;
 
+    UPROPERTY(Transient) TObjectPtr<UTUMissionPackageData> RuntimeLiveMissionPackage;
+    UPROPERTY(Transient) TArray<TObjectPtr<AActor>> RaidStations;
+    void SpawnRaidStations();
+
     void RestorePersistentState();
     void CapturePersistentState();
     void SpawnUpgradeStations();
