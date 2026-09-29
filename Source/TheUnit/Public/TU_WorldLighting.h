@@ -9,7 +9,7 @@ class USkyAtmosphereComponent;
 class UPostProcessComponent;
 class UExponentialHeightFogComponent;
 
-/** Shared daylight for the generated benchmark maps, including remote peers. */
+/** Production daylight/atmosphere shared by generated maps and replicated peers. */
 UCLASS()
 class THEUNIT_API ATU_WorldLighting : public AActor
 {
@@ -21,6 +21,6 @@ private:
     UPROPERTY(VisibleAnywhere) TObjectPtr<USkyLightComponent> Sky;
     UPROPERTY(VisibleAnywhere) TObjectPtr<USkyAtmosphereComponent> Atmosphere;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UExponentialHeightFogComponent> DistanceFog;
-    /** One deterministic exposure for the graybox benchmark, independent of project EV range. */
+    /** Global production post-process tuned for readable indoor/outdoor tactical contrast. */
     UPROPERTY(VisibleAnywhere) TObjectPtr<UPostProcessComponent> BenchmarkExposure;
 };
