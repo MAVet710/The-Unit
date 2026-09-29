@@ -37,7 +37,8 @@
       "license": "CC0",
       "role": "panel residential block variation",
       "scale_mode": "height_cm",
-      "target_cm": 1500
+      "target_cm": 1400,
+      "scale_note": "Matches authored 5 x 280 cm Khrush_C gameplay collision height."
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_14",
