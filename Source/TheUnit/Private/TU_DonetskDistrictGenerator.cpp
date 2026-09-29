@@ -168,8 +168,9 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddHiddenBox(
     UStaticMeshComponent* Mesh = AddBox(Location, Extents, BaseName, Rotation);
     if (Mesh)
     {
+        // Visibility is disabled while collision stays active. This is intentionally
+        // the same proven API path used elsewhere in the project.
         Mesh->SetVisibility(false, true);
-        Mesh->SetHiddenInGame(true, true);
     }
     return Mesh;
 }
