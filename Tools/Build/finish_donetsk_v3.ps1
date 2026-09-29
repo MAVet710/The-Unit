@@ -16,6 +16,17 @@ function Note([string]$s){ ((Get-Date).ToString('s')+' '+$s) | Tee-Object -FileP
 Set-Location $repo
 Note ('START HEAD='+(git rev-parse HEAD))
 
+# Do not certify the old procedural/Minecraft-looking art as a production Donetsk build.
+$hfReceipt=Join-Path $repo 'ExternalAssets\DonetskHighFidelity\import_receipt.json'
+if(!(Test-Path $hfReceipt)){
+  throw "High-fidelity Donetsk asset receipt is missing: $hfReceipt. Prototype art is not release-eligible."
+}
+$hf=Get-Content $hfReceipt -Raw | ConvertFrom-Json
+Note "HF_ASSETS imported=$($hf.imported_count) required=$($hf.required_count) missing=$($hf.missing_count) failed=$($hf.failed_count)"
+if($hf.imported_count -ne $hf.required_count -or $hf.missing_count -ne 0 -or $hf.failed_count -ne 0){
+  throw "High-fidelity Donetsk asset gate failed. Prototype visual meshes are forbidden in the packaged release."
+}
+
 Note 'BUILD_GAME_START'
 & $dotnet $ubt TheUnit Win64 Development $proj -WaitMutex -NoHotReloadFromIDE -NoXGE -NoUBA -MaxParallelActions=1 *>> $summary
 if($LASTEXITCODE -ne 0){ throw "Game build failed $LASTEXITCODE" }
