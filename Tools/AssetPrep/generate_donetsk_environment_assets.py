@@ -1,5 +1,7 @@
 from pathlib import Path
 import math
+from pathlib import Path
+
 import numpy as np
 from PIL import Image, ImageFilter
 
@@ -54,6 +56,98 @@ def save_surface(name, rgb, roughness, metallic=0.0, grit=0.12, size=1024, seed=
     normal = np.stack(((nx / norm) * 0.5 + 0.5, (ny / norm) * 0.5 + 0.5, (nz / norm) * 0.5 + 0.5), axis=-1)
     Image.fromarray(np.uint8(np.clip(normal, 0, 1) * 255)).save(TEX / f"{name}_Normal.png")
 
+
+def save_brick_surface(size=1024, seed=710):
+    local = np.random.default_rng(seed)
+    height = np.zeros((size, size), dtype=np.float32)
+    base = np.zeros((size, size, 3), dtype=np.float32)
+    brick_h = 96
+    brick_w = 220
+    mortar = 11
+    brick_colors = np.array([
+        [0.34, 0.105, 0.055],
+        [0.42, 0.135, 0.070],
+        [0.30, 0.085, 0.045],
+        [0.48, 0.170, 0.090],
+    ], dtype=np.float32)
+    mortar_color = np.array([0.34, 0.31, 0.27], dtype=np.float32)
+    base[:] = mortar_color
+    height[:] = 0.18
+
+    for row, y0 in enumerate(range(-brick_h, size + brick_h, brick_h)):
+        offset = -(brick_w // 2) if row % 2 else 0
+        for x0 in range(offset - brick_w, size + brick_w, brick_w):
+            y1 = max(0, y0 + mortar)
+            y2 = min(size, y0 + brick_h - mortar)
+            x1 = max(0, x0 + mortar)
+            x2 = min(size, x0 + brick_w - mortar)
+            if y1 >= y2 or x1 >= x2:
+                continue
+            color = brick_colors[local.integers(0, len(brick_colors))].copy()
+            color *= float(local.uniform(0.88, 1.10))
+            patch = local.normal(
+                0.0, 0.035, size=(y2 - y1, x2 - x1, 1)
+            ).astype(np.float32)
+            base[y1:y2, x1:x2] = np.clip(color + patch, 0, 1)
+            surface = 0.72 + local.normal(
+                0.0, 0.055, size=(y2 - y1, x2 - x1)
+            ).astype(np.float32)
+            height[y1:y2, x1:x2] = np.clip(surface, 0, 1)
+
+    yy, xx = np.mgrid[0:size, 0:size]
+    broad = (
+        np.sin(xx / 93.0)
+        + np.sin(yy / 131.0)
+        + np.sin((xx + yy) / 177.0)
+    ) / 3.0
+    base = np.clip(base * (0.94 + 0.09 * broad[..., None]), 0, 1)
+
+    for _ in range(34):
+        cx, cy = local.integers(0, size, 2)
+        radius = int(local.integers(18, 85))
+        dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+        mask = np.clip(1.0 - dist / radius, 0, 1)[..., None]
+        tint = (
+            np.array([0.12, 0.10, 0.08])
+            if local.random() < 0.7
+            else np.array([0.60, 0.55, 0.45])
+        )
+        strength = float(local.uniform(0.025, 0.09))
+        base = base * (1 - mask * strength) + tint * mask * strength
+
+    height_image = Image.fromarray(
+        np.uint8(np.clip(height, 0, 1) * 255), "L"
+    ).filter(ImageFilter.GaussianBlur(1.0))
+    h = np.asarray(height_image, dtype=np.float32) / 255.0
+    gy, gx = np.gradient(h)
+    strength = 7.5
+    nx = -gx * strength
+    ny = -gy * strength
+    nz = np.ones_like(h)
+    norm = np.sqrt(nx * nx + ny * ny + nz * nz)
+    normal = np.stack((nx / norm, ny / norm, nz / norm), axis=-1)
+    normal = normal * 0.5 + 0.5
+    rough = np.clip(
+        0.62 + (1 - h) * 0.20 + local.normal(0, 0.035, (size, size)),
+        0.42,
+        0.93,
+    )
+    metal = np.zeros((size, size), dtype=np.float32)
+
+    Image.fromarray(np.uint8(np.clip(base, 0, 1) * 255), "RGB").save(
+        TEX / "Brick_BaseColor.png"
+    )
+    Image.fromarray(np.uint8(rough * 255), "L").save(
+        TEX / "Brick_Roughness.png"
+    )
+    Image.fromarray(np.uint8(metal * 255), "L").save(
+        TEX / "Brick_Metallic.png"
+    )
+    Image.fromarray(np.uint8(np.clip(normal, 0, 1) * 255), "RGB").save(
+        TEX / "Brick_Normal.png"
+    )
+
+
 SURFACES = {
     "Asphalt": ((40, 43, 44), .91, 0.0, .13, 2048),
     "Paving": ((118, 111, 101), .84, 0.0, .10, 2048),
@@ -80,6 +174,7 @@ SURFACES = {
 }
 for idx, (name, args) in enumerate(SURFACES.items()):
     save_surface(name, *args, seed=SEED + idx * 17)
+save_brick_surface(seed=SEED)
 
 MTL = "\n".join(
     f"newmtl {name}\nKd {rgb[0]/255:.4f} {rgb[1]/255:.4f} {rgb[2]/255:.4f}\nNs 20"
@@ -168,4 +263,4 @@ def puddle():
 for fn in (lamp,dash,barrier,sedan,dumpster,shelter,cabinet,kiosk,rubble,pallet,sign,bench,planter,crate,manhole,puddle):
     fn()
 
-print(f"Generated {len(SURFACES)} PBR material sets and 16 Donetsk environment meshes in {OUT}")
+print(f"Generated {len(SURFACES) + 1} PBR material sets and 16 Donetsk environment meshes in {OUT}")

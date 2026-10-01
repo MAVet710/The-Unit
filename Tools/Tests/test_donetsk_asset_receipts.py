@@ -164,5 +164,27 @@ class DonetskVisualQualityReceiptTests(unittest.TestCase):
         self.assertNotIn("effective_dimensions_cm", validator)
 
 
+class DonetskHyperrealMaterialBindingTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        cls.receipt = json.loads(VISUAL_RECEIPT.read_text(encoding="utf-8"))
+
+    def test_production_meshes_use_manifest_hyperreal_material_instances(self):
+        expected = {
+            asset["target_name"]: asset["material_override"]
+            for asset in self.manifest["assets"]
+        }
+        actual = {
+            asset["target_name"]: asset.get("material_paths", [])
+            for asset in self.receipt.get("assets", [])
+        }
+        self.assertEqual(set(actual), set(expected))
+        for name, material_path in expected.items():
+            self.assertTrue(material_path.startswith("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_"))
+            self.assertTrue(actual[name], name)
+            self.assertTrue(all(path == material_path for path in actual[name]), name)
+
+
 if __name__ == "__main__":
     unittest.main()

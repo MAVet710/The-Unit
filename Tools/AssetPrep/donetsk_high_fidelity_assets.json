@@ -20,7 +20,7 @@
       "target_cm": 1500,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_WhitePlaster.M_WhitePlaster",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Plaster.MI_Donetsk_Plaster",
       "nanite_required": true,
       "import_uniform_scale": 7.999556,
       "baked_scale_expected": true
@@ -36,7 +36,7 @@
       "target_cm": 1500,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PinkStucco.M_PinkStucco",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_PanelWarm.MI_Donetsk_PanelWarm",
       "nanite_required": true,
       "import_uniform_scale": 19.151781,
       "baked_scale_expected": true
@@ -52,7 +52,7 @@
       "target_cm": 1500,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelCool.M_PanelCool",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_PanelCool.MI_Donetsk_PanelCool",
       "nanite_required": true,
       "import_uniform_scale": 7.903155,
       "baked_scale_expected": true
@@ -68,7 +68,7 @@
       "target_cm": 2700,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelWarm.M_PanelWarm",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_PanelWarm.MI_Donetsk_PanelWarm",
       "nanite_required": true,
       "import_uniform_scale": 29.857807,
       "baked_scale_expected": true
@@ -84,7 +84,7 @@
       "target_cm": 2700,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelCool.M_PanelCool",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_PanelCool.MI_Donetsk_PanelCool",
       "nanite_required": true,
       "import_uniform_scale": 22.63018,
       "baked_scale_expected": true
@@ -100,7 +100,7 @@
       "target_cm": 260,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_Galvanized.M_Galvanized",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_GalvanizedMetal.MI_Donetsk_GalvanizedMetal",
       "nanite_required": true,
       "import_uniform_scale": 2.124362,
       "baked_scale_expected": true
@@ -116,7 +116,7 @@
       "target_cm": 430,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_VehiclePaint.M_VehiclePaint",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_VehiclePaint.MI_Donetsk_VehiclePaint",
       "nanite_required": true,
       "import_uniform_scale": 2.15685,
       "baked_scale_expected": true
@@ -132,7 +132,7 @@
       "target_cm": 1300,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_TreeLeaves.M_TreeLeaves",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Foliage.MI_Donetsk_Foliage",
       "nanite_required": false,
       "import_uniform_scale": 6.53374,
       "baked_scale_expected": true
@@ -148,7 +148,7 @@
       "target_cm": 1100,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_TreeLeaves.M_TreeLeaves",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Foliage.MI_Donetsk_Foliage",
       "nanite_required": false,
       "import_uniform_scale": 5.598497,
       "baked_scale_expected": true
@@ -164,7 +164,7 @@
       "target_cm": 700,
       "source_type": "meshy_community",
       "meshy_task_id": null,
-      "material_override": "/Game/TheUnit/Donetsk/Materials/M_Concrete.M_Concrete",
+      "material_override": "/Game/TheUnit/Donetsk/Materials/MI_Donetsk_AgedConcrete.MI_Donetsk_AgedConcrete",
       "nanite_required": true,
       "import_uniform_scale": 3.5,
       "baked_scale_expected": true

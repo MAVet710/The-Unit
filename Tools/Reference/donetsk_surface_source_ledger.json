@@ -1,0 +1,358 @@
+{
+  "schema": "the-unit/donetsk-surface-source-ledger/v1",
+  "version": 1,
+  "surfaces": [
+    {
+      "name": "Asphalt",
+      "source_prefix": "Asphalt",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "asphalt",
+      "resolution": 2048,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Asphalt_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Asphalt_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Asphalt_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Asphalt_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "11a68f57ff752a92388890c92971b3d17b344e899d9ff47041ea9895394b25f0",
+        "Normal": "ddcaa245e20fb03f0243aeb3719c8a4dbcedd20e978ca6aaa973cb803ee5cf3d",
+        "Roughness": "9a6df86eb15743764649af6f7b2a3f1b720d92456b1d1cbf423dc041b23e78bd",
+        "Metallic": "47409785b30cc38f1ec62f219ce1c46f885427442416c0768dc470497ef784cb"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Paving",
+      "source_prefix": "Paving",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "paving",
+      "resolution": 2048,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Paving_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Paving_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Paving_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Paving_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "dc6a132f002c749e43c4f43e41f16ae019c74608c35ff27021c6bddafae5e102",
+        "Normal": "38a1e51d14f864c9930a575ec7dcfcbddbb8371ab5484b3bde62e44071b7919b",
+        "Roughness": "2845d42587ecb41da88b6b1c45e8119000f741ef79b23136ccec3690e8a9341a",
+        "Metallic": "47409785b30cc38f1ec62f219ce1c46f885427442416c0768dc470497ef784cb"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "AgedConcrete",
+      "source_prefix": "Concrete",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "aged_concrete",
+      "resolution": 2048,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "abcd131ecd59e344ff8822816d1684b2171f3c7c852fbc1573bcd9039fe542a3",
+        "Normal": "92ea3158fc8034c320fe0eec8c32784d142667d9ccc3d936dbf8c8043cc45467",
+        "Roughness": "e8cf2eeaa0ccedb39f03ce356722e22c293fd7f0cc26d2a878cb0f95a128876b",
+        "Metallic": "47409785b30cc38f1ec62f219ce1c46f885427442416c0768dc470497ef784cb"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "CurbConcrete",
+      "source_prefix": "Concrete",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "curb_concrete",
+      "resolution": 2048,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Concrete_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "abcd131ecd59e344ff8822816d1684b2171f3c7c852fbc1573bcd9039fe542a3",
+        "Normal": "92ea3158fc8034c320fe0eec8c32784d142667d9ccc3d936dbf8c8043cc45467",
+        "Roughness": "e8cf2eeaa0ccedb39f03ce356722e22c293fd7f0cc26d2a878cb0f95a128876b",
+        "Metallic": "47409785b30cc38f1ec62f219ce1c46f885427442416c0768dc470497ef784cb"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Plaster",
+      "source_prefix": "WhitePlaster",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "plaster",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/WhitePlaster_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/WhitePlaster_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/WhitePlaster_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/WhitePlaster_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "f173942d25315f08204d1efe893bc81c591894d41c8356a1fdbeef146886e04d",
+        "Normal": "980bf23ce12d3bcba80fc9f2ec7321368299f4a21dea8e75b2aa3e6e448a474b",
+        "Roughness": "6afbf8d43f3e46a7e85767992d09b69c3eef572ecc853b45fb2209937eebb4d6",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "PanelWarm",
+      "source_prefix": "PanelWarm",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "panel_warm",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelWarm_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelWarm_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelWarm_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelWarm_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "06b1aa7b26ccc6893f87791329067a57e5657ebc11a7e300eec985940ff728ba",
+        "Normal": "54190e344d1d0bc8249b2c4143eccba5ca8b937206718048af805805ad1db643",
+        "Roughness": "c939fba734b6d18cd9d6969a443dc57cded48cb0dc6612b60d7af6021b2613b7",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "PanelCool",
+      "source_prefix": "PanelCool",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "panel_cool",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelCool_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelCool_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelCool_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/PanelCool_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "18a8caefd14cffb8e09009ceaaa0ff414c5c5b589cde56828137cc751084b119",
+        "Normal": "50012a953f90b8d1cec5a43e063c6f217ddbd78db1257905785fbb8904fbbc1b",
+        "Roughness": "2e6e192fe8142b9f01e5f2998a1b11211c115b117b5fee583e28dc2b5339343d",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Brick",
+      "source_prefix": "Brick",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "brick",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Brick_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Brick_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Brick_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Brick_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "a770c1b8f9752aadc0a7f6395e432a9868ad650b01e37e691b144bcc03ec7f10",
+        "Normal": "a4cba7ab89b9511865ade893f2ba7ef399b31435e09d71a48f1eee680c3042dc",
+        "Roughness": "98ef590bbb2d159666891ba708ed4241b94047152f0174de73601e3fa417b571",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "GalvanizedMetal",
+      "source_prefix": "Galvanized",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "galvanized_metal",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Galvanized_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Galvanized_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Galvanized_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Galvanized_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "5092828da32e52be62b3a43f5cadd0120e319cac91defeb152c5cf8a9102835f",
+        "Normal": "0582e4abd7151cb479aa3de67b429d0b367951d754858687ece2dce092169dbe",
+        "Roughness": "4b1eb773901384c599ea5438cb8e58d7e054829812c2c7ef27d3e124b3366836",
+        "Metallic": "3fa52f39c1f526e9362e1c188a5a329f86506258e96a39dd244fbb2fdb7b12c0"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "RustedSteel",
+      "source_prefix": "RustSteel",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "rusted_steel",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/RustSteel_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/RustSteel_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/RustSteel_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/RustSteel_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "6faae7a40f1cc69e7d06e90ffd037e6f6970a46fc509602dd64a7ae9cae7c32c",
+        "Normal": "6dedd63348296e58d2ebfad441174c4851e2b657f74aa4b02e54173e82df8fbc",
+        "Roughness": "c8210aaa3b2f13756aad1835ce8ac79bc10743c2c32ed791d7fa33a900a60bc8",
+        "Metallic": "76e8ffe457a81a603ea9b9d97536f1f1135a9d1ec2ff91fc19f7bcf983ceb059"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Wood",
+      "source_prefix": "Wood",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "wood",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/Wood_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Wood_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Wood_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/Wood_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "b0727b05e81884e1da7ec53b67f39f0a93a2ad6d7b8c0fb5f530a19b8d72e67e",
+        "Normal": "eeaa45d50129f295080175871dce7f892a503f1edf732a09f95e1d6dce3ec912",
+        "Roughness": "b7474d6218bc2b011c3c5ac395b445014b8e6092e54876c8915c7ba1c483aed6",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Soil",
+      "source_prefix": "DrySoil",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "soil",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "cfd69c69f8320edf166f5ebd8d4d96861694e7f82572699a0197f95ce88166b8",
+        "Normal": "2b3cc8007b38c3f994915cc688efb46ec576e155cb197e5232bf69263aa7525e",
+        "Roughness": "40257840917a201b8a07d3fd1288d994b8dfdfbf80e4f870a83a46e2c0311832",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "WetGround",
+      "source_prefix": "DrySoil",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "wet_ground",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DrySoil_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "cfd69c69f8320edf166f5ebd8d4d96861694e7f82572699a0197f95ce88166b8",
+        "Normal": "2b3cc8007b38c3f994915cc688efb46ec576e155cb197e5232bf69263aa7525e",
+        "Roughness": "40257840917a201b8a07d3fd1288d994b8dfdfbf80e4f870a83a46e2c0311832",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Glass",
+      "source_prefix": "DarkGlass",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "glass",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/DarkGlass_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DarkGlass_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DarkGlass_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/DarkGlass_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "8d5f3f43a2968b58bf530d4812fa5c1ae9ae386bcd5236c97a7f055727c7cd46",
+        "Normal": "ebf46bbc5c602f8f7fe35bb37b438d75021bb60205308c82ee491569cb1b7885",
+        "Roughness": "81017d0ba42bd2318ec672b4038f7468b5b5c0edcd233e4b4820d7c482ee4103",
+        "Metallic": "8e0e49d990aa255418f4f4249032e23e38b8fa03c76125ca1ff0b0efe89a087e"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "Foliage",
+      "source_prefix": "TreeLeaves",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "foliage",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/TreeLeaves_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/TreeLeaves_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/TreeLeaves_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/TreeLeaves_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "5ec1fe154c3036b2ec2f939522c169d48283884697cd60de76f0cf485c2e191f",
+        "Normal": "534878e0150e6d1c7feea7ea23a4f4daaa86c7ee18dfdf31d8d5bc4997da5c90",
+        "Roughness": "bac29047e6d63bd01a7d1d07b6b85f34da91ff4e242e7338963e82da56a70fa6",
+        "Metallic": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    },
+    {
+      "name": "VehiclePaint",
+      "source_prefix": "VehiclePaint",
+      "source_url": null,
+      "license": "Project-owned original",
+      "physical_surface": "vehicle_paint",
+      "resolution": 1024,
+      "local_files": [
+        "ExternalAssets/GeneratedDonetsk/Textures/VehiclePaint_BaseColor.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/VehiclePaint_Normal.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/VehiclePaint_Roughness.png",
+        "ExternalAssets/GeneratedDonetsk/Textures/VehiclePaint_Metallic.png"
+      ],
+      "sha256": {
+        "BaseColor": "e94d70290ed3b1a1d9a8f279a61e33eec436898dd1d890eb8309a13ab05d17b6",
+        "Normal": "8d84731609e49d0e8b7cf82dd8b252f33690aa642f00734ac3a2a424335df7de",
+        "Roughness": "0a262667931d14ecb2138a152d4ad50b168d82b9a1c9fcc27791e12bdcaf04b9",
+        "Metallic": "84cf16d55d569645631a29f87f441f7171782a32f6c526ac6b6cb41d4b51fa71"
+      },
+      "approval_state": "approved",
+      "provenance": "Original procedurally generated project texture set; no reference-game texture data."
+    }
+  ]
+}
