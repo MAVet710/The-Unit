@@ -39,21 +39,25 @@ ATU_DonetskDistrictGenerator::ATU_DonetskDistrictGenerator()
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Stalinka10Finder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_Stalinka_5F_10.SM_Donetsk_Stalinka_5F_10"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeAFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_A.SM_Donetsk_StreetTree_A"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> TreeBFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_StreetTree_B.SM_Donetsk_StreetTree_B"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> BusShelterFinder(TEXT("/Game/TheUnit/Donetsk/Environment/SM_Donetsk_Prop_BusShelter.SM_Donetsk_Prop_BusShelter"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> SedanFinder(TEXT("/Game/TheUnit/Donetsk/Environment/SM_Donetsk_Prop_Sedan.SM_Donetsk_Prop_Sedan"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> RubblePileFinder(TEXT("/Game/TheUnit/Donetsk/Environment/SM_Donetsk_Prop_RubblePile.SM_Donetsk_Prop_RubblePile"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CivicCoreFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_CivicCore.SM_Donetsk_CivicCore"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CivicWingFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_CivicWing.SM_Donetsk_CivicWing"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> RailStationFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_RailStation_Reference.SM_Donetsk_RailStation_Reference"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> IndustrialFinder(TEXT("/Game/TheUnit/Donetsk/Production/SM_Donetsk_IndustrialEdge.SM_Donetsk_IndustrialEdge"));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> AsphaltFinder(TEXT("/Game/TheUnit/Donetsk/Production/Asphalt.Asphalt"));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> PavingFinder(TEXT("/Game/TheUnit/Donetsk/Production/Paving.Paving"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> AsphaltFinder(TEXT("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Asphalt.MI_Donetsk_Asphalt"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> PavingFinder(TEXT("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Paving.MI_Donetsk_Paving"));
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> GrassFinder(TEXT("/Game/TheUnit/Donetsk/Production/UrbanGrass.UrbanGrass"));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> SoilFinder(TEXT("/Game/TheUnit/Donetsk/Production/DrySoil.DrySoil"));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> RustFinder(TEXT("/Game/TheUnit/Donetsk/Production/RustSteel.RustSteel"));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> ConcreteFinder(TEXT("/Game/TheUnit/Donetsk/Production/Concrete.Concrete"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> SoilFinder(TEXT("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_Soil.MI_Donetsk_Soil"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> RustFinder(TEXT("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_RustedSteel.MI_Donetsk_RustedSteel"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> ConcreteFinder(TEXT("/Game/TheUnit/Donetsk/Materials/MI_Donetsk_AgedConcrete.MI_Donetsk_AgedConcrete"));
     CubeMesh = CubeFinder.Object;
     Khrush16Mesh = Khrush16Finder.Object; Khrush14Mesh = Khrush14Finder.Object; Khrush12Mesh = Khrush12Finder.Object;
     Brezhnev14Mesh = Brezhnev14Finder.Object; Brezhnev10Mesh = Brezhnev10Finder.Object;
     Stalinka12Mesh = Stalinka12Finder.Object; Stalinka10Mesh = Stalinka10Finder.Object;
     StreetTreeAMesh = TreeAFinder.Object; StreetTreeBMesh = TreeBFinder.Object;
+    BusShelterMesh = BusShelterFinder.Object; SedanMesh = SedanFinder.Object; RubblePileMesh = RubblePileFinder.Object;
     CivicCoreMesh = CivicCoreFinder.Object; CivicWingMesh = CivicWingFinder.Object;
     RailStationMesh = RailStationFinder.Object; IndustrialEdgeMesh = IndustrialFinder.Object;
     AsphaltMaterial = AsphaltFinder.Object; PavingMaterial = PavingFinder.Object;
@@ -471,9 +475,18 @@ void ATU_DonetskDistrictGenerator::BuildStreetFurniture()
     for (int32 Index = -7; Index <= 7; ++Index)
         AddHiddenBox(FVector(0.0f, Index * 3600.0f, 630.0f), FVector(1480.0f, 5.0f, 4.0f), TEXT("TransitWire_CrossSpan"));
 
-    // Bus/tram stop shelter blockout.
+    // Bus/tram stop collision remains hidden and deterministic. Production art owns rendering.
     AddHiddenBox(FVector(2350.0f, -7200.0f, 115.0f), FVector(360.0f, 90.0f, 115.0f), TEXT("TransitStop_Back"));
     AddHiddenBox(FVector(2350.0f, -7200.0f, 240.0f), FVector(390.0f, 130.0f, 14.0f), TEXT("TransitStop_Roof"));
+    AddProductionVisual(BusShelterMesh, FVector(2350.0f, -7200.0f, 0.0f),
+        TEXT("TransitStop_Production"));
+
+    // A civilian sedan adds real-world street scale. Its simple collision remains independent
+    // from the render mesh so source-art revisions cannot change authoritative traversal.
+    AddHiddenBox(FVector(3550.0f, -4400.0f, 75.0f), FVector(215.0f, 90.0f, 75.0f),
+        TEXT("CivilianSedan_Collision"), FRotator(0.0f, 90.0f, 0.0f));
+    AddProductionVisual(SedanMesh, FVector(3550.0f, -4400.0f, 0.0f),
+        TEXT("CivilianSedan_Production"), FRotator(0.0f, 90.0f, 0.0f));
 
     // Kiosks and utility cabinets are part of the everyday street texture rather than combat-specific set dressing.
     AddHiddenBox(FVector(-2800.0f, 3400.0f, 120.0f), FVector(180.0f, 140.0f, 120.0f), TEXT("StreetKiosk_A"));
@@ -548,6 +561,15 @@ void ATU_DonetskDistrictGenerator::BuildMissionDamageLayer()
     for (const FRubblePiece& Piece : Rubble)
         AddHiddenBox(Piece.P, Piece.E, TEXT("Damage_RubbleConcrete"), Piece.R);
 
+    // A small number of real debris meshes replace the visible cube read while the
+    // hidden pieces above continue to own deterministic collision.
+    AddProductionVisual(RubblePileMesh, FVector(-5200.0f, -17600.0f, 0.0f),
+        TEXT("Damage_RubblePile_Production_A"), FRotator(0.0f, 28.0f, 0.0f));
+    AddProductionVisual(RubblePileMesh, FVector(15400.0f, -14200.0f, 0.0f),
+        TEXT("Damage_RubblePile_Production_B"), FRotator(0.0f, -18.0f, 0.0f));
+    AddProductionVisual(RubblePileMesh, FVector(-3200.0f, -23100.0f, 0.0f),
+        TEXT("Damage_RubblePile_Production_C"), FRotator(0.0f, 41.0f, 0.0f));
+
     // Improvised road-control positions create extraction-shooter cover without
     // blocking the documented Artema boulevard or the two extraction lanes.
     for (int32 I=0; I<4; ++I)
@@ -594,8 +616,115 @@ FString ATU_DonetskDistrictGenerator::GetGeneratedGeometrySignature() const
 {
     TArray<FString> Records;
     for (const UActorComponent* Component : GeneratedComponents)
-        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
-            Records.Add(Mesh->GetName() + TEXT("|") + Mesh->GetRelativeTransform().ToString() + TEXT("|") + Mesh->GetCollisionProfileName().ToString());
+    {
+        const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
+        if (!Mesh || Mesh->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+        {
+            continue;
+        }
+
+        Records.Add(
+            Mesh->GetName()
+            + TEXT("|")
+            + Mesh->GetRelativeTransform().ToString()
+            + TEXT("|")
+            + Mesh->GetCollisionProfileName().ToString());
+    }
+
+    Records.Sort();
+    const FString Joined = FString::Join(Records, TEXT(";"));
+    return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));
+}
+
+int32 ATU_DonetskDistrictGenerator::GetProductionVisualComponentCount() const
+{
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+    {
+        const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
+        if (!Mesh || !Mesh->IsRegistered() || !Mesh->GetStaticMesh())
+        {
+            continue;
+        }
+
+        if (Mesh->GetStaticMesh() != CubeMesh
+            && Mesh->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+        {
+            ++Count;
+        }
+    }
+    return Count;
+}
+
+int32 ATU_DonetskDistrictGenerator::GetVisiblePrimitiveFallbackCount() const
+{
+    static const TCHAR* IntentionalSurfaceTokens[] = {
+        TEXT("DistrictGround"),
+        TEXT("MainBoulevard"),
+        TEXT("BoulevardMedian"),
+        TEXT("CrossStreetSouth"),
+        TEXT("CrossStreetNorth"),
+        TEXT("WestSidewalk"),
+        TEXT("EastSidewalk"),
+        TEXT("CentralSquare_Hardscape"),
+        TEXT("CentralSquare_WestApron"),
+        TEXT("CentralSquare_EastStreet"),
+        TEXT("CentralSquare_SouthParterre"),
+        TEXT("CentralSquare_NorthParterre"),
+        TEXT("Khrush_CourtyardHardscape"),
+        TEXT("Khrush_PlaygroundPad"),
+        TEXT("Industrial_ServiceYard"),
+    };
+
+    int32 Count = 0;
+    for (const UActorComponent* Component : GeneratedComponents)
+    {
+        const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
+        if (!Mesh || !Mesh->IsRegistered() || !Mesh->IsVisible()
+            || Mesh->GetStaticMesh() != CubeMesh)
+        {
+            continue;
+        }
+
+        const FString ComponentName = Mesh->GetName();
+        bool bIntentionalSurfaceCarrier = false;
+        for (const TCHAR* Token : IntentionalSurfaceTokens)
+        {
+            if (ComponentName.Contains(Token))
+            {
+                bIntentionalSurfaceCarrier = true;
+                break;
+            }
+        }
+
+        if (!bIntentionalSurfaceCarrier)
+        {
+            ++Count;
+        }
+    }
+    return Count;
+}
+
+FString ATU_DonetskDistrictGenerator::GetGeneratedVisualSignature() const
+{
+    TArray<FString> Records;
+    for (const UActorComponent* Component : GeneratedComponents)
+    {
+        const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
+        UStaticMesh* StaticMesh = Mesh ? Mesh->GetStaticMesh() : nullptr;
+        if (!Mesh || !Mesh->IsRegistered() || !StaticMesh
+            || StaticMesh == CubeMesh
+            || Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision)
+        {
+            continue;
+        }
+
+        Records.Add(
+            StaticMesh->GetPathName()
+            + TEXT("|")
+            + Mesh->GetRelativeTransform().ToString());
+    }
+
     Records.Sort();
     const FString Joined = FString::Join(Records, TEXT(";"));
     return FString::Printf(TEXT("%d:%08x"), Records.Num(), FCrc::StrCrc32(*Joined));

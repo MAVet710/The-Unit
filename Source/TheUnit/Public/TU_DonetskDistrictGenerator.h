@@ -30,9 +30,15 @@ public:
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    /** Independently calculated on each peer; excludes labels and actor network names. */
+    /** Independently calculated on each peer; collision-only and independent of render art. */
     UFUNCTION(BlueprintPure) FString GetGeneratedGeometrySignature() const;
     UFUNCTION(BlueprintPure) int32 GetGeneratedCollisionComponentCount() const;
+    /** Render-only production art. These components must never own gameplay collision. */
+    UFUNCTION(BlueprintPure) int32 GetProductionVisualComponentCount() const;
+    /** Visible cube-based placeholders, excluding intentional road/ground surface carriers. */
+    UFUNCTION(BlueprintPure) int32 GetVisiblePrimitiveFallbackCount() const;
+    /** Deterministic render signature from production asset path plus relative transform. */
+    UFUNCTION(BlueprintPure) FString GetGeneratedVisualSignature() const;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Donetsk")
@@ -75,6 +81,9 @@ private:
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> Stalinka10Mesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeAMesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> StreetTreeBMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> BusShelterMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> SedanMesh;
+    UPROPERTY(Transient) TObjectPtr<UStaticMesh> RubblePileMesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> CivicCoreMesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> CivicWingMesh;
     UPROPERTY(Transient) TObjectPtr<UStaticMesh> RailStationMesh;

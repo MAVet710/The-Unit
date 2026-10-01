@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "TU_DonetskDistrictGenerator.h"
 #include "TU_DonetskArtema60Building.h"
 #include "TU_KillhouseGenerator.h"
@@ -27,13 +28,28 @@ bool FTUGeneratedGeometryIdentityTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Generator has a real network actor identity"), First->GetIsReplicated());
         TestTrue(TEXT("Generator relevant across complete raid"), First->bAlwaysRelevant);
         TestTrue(TEXT("Generated collision exists"), First->GetGeneratedCollisionComponentCount() > 100);
-        TestEqual(TEXT("Independent builds have identical named geometry"), First->GetGeneratedGeometrySignature(), Second->GetGeneratedGeometrySignature());
+        TestTrue(TEXT("Production visuals exist"), First->GetProductionVisualComponentCount() > 0);
+        TestTrue(TEXT("Visible primitive fallback is bounded"), First->GetVisiblePrimitiveFallbackCount() <= 12);
+        TestEqual(TEXT("Independent builds have identical collision geometry"), First->GetGeneratedGeometrySignature(), Second->GetGeneratedGeometrySignature());
+        TestEqual(TEXT("Independent builds have identical production visuals"), First->GetGeneratedVisualSignature(), Second->GetGeneratedVisualSignature());
+
+        int32 ObservedProductionVisuals = 0;
         TInlineComponentArray<UStaticMeshComponent*> Meshes(First);
         for (UStaticMeshComponent* Mesh : Meshes)
         {
-            TestTrue(TEXT("Collision component supports movement-base references"), Mesh->IsSupportedForNetworking());
-            TestTrue(TEXT("Collision component name resolves relative to generator"), Mesh->IsNameStableForNetworking());
+            TestTrue(TEXT("Generated mesh supports movement-base references"), Mesh->IsSupportedForNetworking());
+            TestTrue(TEXT("Generated mesh name resolves relative to generator"), Mesh->IsNameStableForNetworking());
+
+            UStaticMesh* StaticMesh = Mesh->GetStaticMesh();
+            if (StaticMesh && !StaticMesh->GetPathName().StartsWith(TEXT("/Engine/BasicShapes/Cube")))
+            {
+                ++ObservedProductionVisuals;
+                TestEqual(TEXT("Production visual has collision disabled"),
+                    Mesh->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
+            }
         }
+        TestEqual(TEXT("Production visual count matches generated components"),
+            ObservedProductionVisuals, First->GetProductionVisualComponentCount());
     }
     ATU_DonetskArtema60Building* Building = World->SpawnActor<ATU_DonetskArtema60Building>();
     if (TestNotNull(TEXT("Reference building"), Building))
