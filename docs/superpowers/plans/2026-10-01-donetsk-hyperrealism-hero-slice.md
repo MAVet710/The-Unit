@@ -18,6 +18,23 @@
 - Hide visible primitive geometry whenever a validated production replacement exists.
 - Ultra validation is 2560x1440 on the RTX 4070 Ti SUPER machine; normal beta hardware retains a scalable High path.
 - A street-level frame that still reads as a graybox fails.
+
+## Meshy Acquisition Rule
+
+Visible environment assets use this order:
+
+1. Search Meshy Community first for an existing realistic asset with appropriate commercial-use licensing.
+2. Record the candidate source URL, license, creator/source metadata, intended role, and local file name before import.
+3. Reject candidates that fail first-person silhouette, proportion, texture, or realism review even if the license is acceptable.
+4. When Community does not provide a suitable asset, use Meshy AI generation from a focused text prompt or available reference images.
+5. Meshy AI generation workspace: `ExternalAssets/DonetskHighFidelity`; CLI bookkeeping lives in `ExternalAssets/DonetskHighFidelity/meshy_output`.
+6. For a new text-generated asset, run `meshy make "<description>" --dry-run` first to inspect the generation chain/credit estimate, then submit once. Use 4K PBR refinement for hero/near-field assets.
+7. Reuse an existing Meshy task for retexture, remesh, resize, or format conversion instead of paying for a fresh generation when the geometry is already acceptable.
+8. Download GLB for inspection and FBX when needed by the Unreal import pipeline. Normalize scale in Unreal after import and preserve the source/task receipt.
+9. Community and generated assets pass the same Task 1/Task 2 gates before they may replace a visible prototype.
+
+Current Community search already confirms useful Soviet/Post-Soviet and Ukrainian building categories plus CC0 examples; Community remains the first source rather than generating duplicates.
+
 ## Review Focus
 
 1. Reimport/scale drift: re-running import or normalization must not move approved assets outside the 3.5 percent scale tolerance. Task 1 adds idempotence checks.
@@ -47,7 +64,7 @@
 - Create: `Tools/Tests/test_donetsk_asset_receipts.py`
 - Evidence: `ExternalAssets/DonetskHighFidelity/scale_receipt.json`
 
-**Interfaces:** Consume manifest `target_name`, `destination`, `scale_mode`, `target_cm`; produce `the-unit/donetsk-high-fidelity-scale/v2` with 10 passing assets, dimensions, build-scale state, iteration count, and idempotence factor.
+**Interfaces:** Consume manifest `target_name`, `destination`, `scale_mode`, `target_cm`, `source_type`, `source_url`, `license`, and optional `meshy_task_id`; produce `the-unit/donetsk-high-fidelity-scale/v2` with all required assets passing, dimensions, build-scale state, iteration count, and idempotence factor.
 
 - [ ] **Step 1: Write failing receipt tests.** Assert manifest version 3, 10 required assets, success status, every error <= 0.035, second-pass factor within 0.005 of 1.0, and `SM_Donetsk_Khrush_5F_12` between 1447.5 and 1552.5 cm.
 - [ ] **Step 2: Run `python -m unittest Tools.Tests.test_donetsk_asset_receipts -v`.** Expected: FAIL on the current failed v1 receipt.
@@ -67,7 +84,7 @@
 
 - [ ] **Step 1: Add failing tests** for exactly 10 target names, at least one material slot, no `WorldGridMaterial`, positive bounds, scale still in tolerance, and Nanite enabled for opaque building/rubble/prop roles.
 - [ ] **Step 2: Run the receipt tests.** Expected: FAIL because the quality receipt does not exist.
-- [ ] **Step 3: Implement the editor validator.** It must load every manifest asset, emit one result per target, and mark the whole receipt failed if an asset is missing or invalid.
+- [ ] **Step 3: Implement the editor validator.** It must load every manifest asset, emit one result per target, and mark the whole receipt failed if an asset is missing or invalid. Any missing or rejected visible role is added to a sourcing queue that records `community_search`, `community_selected`, `generate_required`, or `approved` rather than silently falling back to prototype art.
 - [ ] **Step 4: Generate the receipt and rerun tests.** Mechanical checks must pass; `manual_review` remains `pending` until Task 8.
 - [ ] **Step 5: Commit:** `test: gate Donetsk production visual assets`.
 ### Task 3: Build the physically based Donetsk surface system
@@ -193,14 +210,14 @@
 - Evidence: `E:\TheUnitWork\donetsk-hyperrealism-evidence\<commit>\`
 - Output: a new versioned Windows build directory; never overwrite the last known-good package.
 
-**Interfaces:** Package identity includes the final git commit. Evidence includes test logs, scale/quality/material/decal receipts, visual captures, runtime log, and performance summary.
+**Interfaces:** Package identity includes the final git commit. Evidence includes test logs, scale/quality/material/decal receipts, Meshy Community source records and AI task IDs for newly generated assets, visual captures, runtime log, and performance summary.
 
 - [ ] **Step 1: Run the full suite:** `powershell -ExecutionPolicy Bypass -File Scripts/ValidateTheUnit.ps1`. Expected: editor build and all `TheUnit.*` tests PASS.
 - [ ] **Step 2: Run Ultra hero-slice validation.** Record average frame time, 1 percent low if available, CPU/GPU bottleneck indication, active resolution/features, and capture ID. Do not lower visual quality to hide an art defect.
 - [ ] **Step 3: Run a normal High-profile launch** and verify the map remains playable without Ultra overrides or a hardware-RT requirement.
 - [ ] **Step 4: Package a new Windows beta** using the existing pipeline. Do not overwrite `main-release-donetsk-production-v3-20260929`.
 - [ ] **Step 5: Run packaged game smoke and two-player/network smoke.** Extraction, persistence, mission flow, collision, and handling must not regress.
-- [ ] **Step 6: Final evidence review.** Accept only when all automated gates pass, all 10 scale assets pass, visual/material/decal receipts pass, manual screenshot review is approved, package smoke/network gates pass, and the hero slice no longer reads as a prototype.
+- [ ] **Step 6: Final evidence review.** Accept only when all automated gates pass, all 10 baseline scale assets and every new replacement pass, visual/material/decal receipts pass, Meshy Community/generated source records are complete, manual screenshot review is approved, package smoke/network gates pass, and the hero slice no longer reads as a prototype.
 
 ## Execution Order
 

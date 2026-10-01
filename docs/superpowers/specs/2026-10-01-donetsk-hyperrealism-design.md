@@ -23,7 +23,9 @@ Gameplay collision and authoritative raid behavior must remain stable while visi
 
 The rendering foundation is suitable for a high-end target: DirectX 12, Shader Model 6, Nanite, Lumen GI/reflections, Virtual Shadow Maps, mesh distance fields, TSR, and volumetric atmosphere/fog.
 
-The primary visual bottleneck is not missing renderer features. It is the visible art layer.\n\nThe current Donetsk generator still relies heavily on procedural AddBox(...) geometry for roads, civic details, collision proxies, mission damage, street furniture, and architectural rhythm.
+The primary visual bottleneck is not missing renderer features. It is the visible art layer.
+
+The current Donetsk generator still relies heavily on procedural AddBox(...) geometry for roads, civic details, collision proxies, mission damage, street furniture, and architectural rhythm.
 The locally generated production environment props are also largely built from boxes and cylinders.
 The generated material textures use procedural noise and do not yet encode enough real-world surface structure, history, or localized wear to meet the target.
 
@@ -46,7 +48,9 @@ This prevents visual fidelity work from destabilizing gameplay or networking.
 
 ### 2. Hero-slice-first production
 
-Do not attempt to polish the entire district at once.\n\nCreate one hero-quality slice containing one boulevard segment, one apartment frontage, one civic edge, one transit stop, one damaged/rubble lane, representative vegetation, a representative civilian vehicle, and representative ground-material transitions.
+Do not attempt to polish the entire district at once.
+
+Create one hero-quality slice containing one boulevard segment, one apartment frontage, one civic edge, one transit stop, one damaged/rubble lane, representative vegetation, a representative civilian vehicle, and representative ground-material transitions.
 
 This slice becomes the benchmark scene. No district-wide propagation happens until the hero slice passes visual review.
 
@@ -67,6 +71,21 @@ Every visible production asset must pass:
 
 Assets that look synthetic, melted, toy-like, low-detail, or visibly AI-generated in first person are rejected and regenerated, replaced, or hand-corrected.
 
+## Meshy Asset Acquisition Strategy
+
+Use a community-first sourcing policy for visible environment art.
+
+1. Search Meshy Community for an existing asset that matches the required object, region/era, proportions, and realism target.
+2. Prefer CC0 community assets when visual quality is sufficient. Record source URL, creator/license, local filename, and intended role before import.
+3. Reject community assets that look melted, toy-like, stylized, incorrectly proportioned, poorly textured, or visibly AI-generated at first-person distance.
+4. If no suitable community asset exists, use Meshy AI to generate the missing asset specifically for The Unit.
+5. Generated assets must target realistic geometry, physically plausible proportions, PBR textures, and an isolated object without a baked environment unless the asset is intentionally a building module.
+6. Reuse/refine existing Meshy tasks for texture, topology, scale, or format changes instead of regenerating unnecessarily.
+7. Every community or generated asset must pass the same Unreal quality gates for scale, silhouette, UVs, normals, material slots, PBR wiring, Nanite suitability, and first-person review.
+8. Community/generated assets are presentation only until accepted; procedural collision remains the gameplay authority.
+
+Initial community search priorities are Soviet/Post-Soviet apartment families, street furniture, manholes/drains, utility cabinets, lamp posts, civilian vehicles, rubble, fencing, pallets, dumpsters, kiosks, and realistic deciduous vegetation.
+
 ## Material System
 
 Build shared Unreal master materials rather than one-off flat materials.
@@ -75,7 +94,9 @@ Required surface families: aged concrete, painted plaster/stucco, Soviet panel f
 
 Each relevant master material should support base color, normal, roughness, metallic where physically appropriate, macro color variation, macro roughness variation, dirt accumulation, leak/streak masks, edge wear where appropriate, wetness control, detail normal, world-aligned or tri-planar fallback where UVs are weak, vertex/per-instance variation, and decal compatibility.
 
-Material values must remain physically plausible. Realism comes from structured variation, not exaggerated contrast.\n\n## Decal System
+Material values must remain physically plausible. Realism comes from structured variation, not exaggerated contrast.
+
+## Decal System
 
 Use DBuffer-compatible decals for localized history and repetition breakup.
 
@@ -104,7 +125,9 @@ Priority families:
 6. railway-station reference volumes
 
 The existing Donetsk architecture bible remains the source of truth for reference provenance and dimensional confidence.
-Generic Soviet-looking assets are acceptable only as secondary filler, not as named hero landmarks.\n\n## Lighting and Atmosphere
+Generic Soviet-looking assets are acceptable only as secondary filler, not as named hero landmarks.
+
+## Lighting and Atmosphere
 
 Preserve the current Lumen/Nanite/VSM foundation.
 Target naturalistic urban daylight rather than stylized cinematic grading.
@@ -129,7 +152,9 @@ OPERATOR is the primary reference philosophy for first-person embodiment.
 
 Required behavior includes visible body coherence, stock-to-shoulder relationship, believable cheek weld, correct optic alignment, correct support-hand placement, physically plausible reload hand paths, magazine/chamber state reflected in animation, high-ready and low-ready states, stance-linked weapon presentation, procedural lean linked to body position, muzzle obstruction/wall compression, weapon reaction to door frames and tight spaces, and grounded sway rather than camera-only oscillation.
 
-The weapon must behave as an object carried by a body, not as a HUD element.\n\n## Tarkov-Inspired Gameplay Boundary
+The weapon must behave as an object carried by a body, not as a HUD element.
+
+## Tarkov-Inspired Gameplay Boundary
 
 The visual rebuild must preserve and support the existing extraction-shooter direction: persistent stash, raid loadout risk, modular weapons, magazine state, chamber state, ammunition packing, ammunition-specific ballistic behavior, armor/plate interaction, equipment weight, medical consequences, mission items, loot value, extraction conditions, raid-result persistence, and solo/two-player co-op.
 
@@ -155,7 +180,9 @@ Any frame that still reads as a graybox fails.
 
 ### Play gate
 
-Verify walking, sprinting, leaning, stance transitions, cover readability, collision alignment with visible art, no floating props, no miniature/oversized assets, no obvious texture tiling, no repeated identical dressing patterns, no severe Lumen/Nanite/VSM artifacts, stable navigation, stable extraction paths, and acceptable performance on the development profile.\n\n## Production Sequence
+Verify walking, sprinting, leaning, stance transitions, cover readability, collision alignment with visible art, no floating props, no miniature/oversized assets, no obvious texture tiling, no repeated identical dressing patterns, no severe Lumen/Nanite/VSM artifacts, stable navigation, stable extraction paths, and acceptable performance on the development profile.
+
+## Production Sequence
 
 1. Repair the existing imported high-fidelity scale failure.
 2. Audit all ten imported high-fidelity assets in-engine.
