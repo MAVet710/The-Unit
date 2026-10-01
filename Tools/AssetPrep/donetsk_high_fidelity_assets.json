@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "purpose": "Replace Donetsk prototype visuals without changing gameplay collision/layout.",
   "source_root": "ExternalAssets/DonetskHighFidelity",
   "notes": [
@@ -19,7 +19,11 @@
       "scale_mode": "height_cm",
       "target_cm": 1500,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_WhitePlaster.M_WhitePlaster",
+      "nanite_required": true,
+      "import_uniform_scale": 7.999556,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_14",
@@ -31,7 +35,11 @@
       "scale_mode": "height_cm",
       "target_cm": 1500,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PinkStucco.M_PinkStucco",
+      "nanite_required": true,
+      "import_uniform_scale": 19.151781,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_12",
@@ -43,7 +51,11 @@
       "scale_mode": "height_cm",
       "target_cm": 1500,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelCool.M_PanelCool",
+      "nanite_required": true,
+      "import_uniform_scale": 7.903155,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_14",
@@ -55,7 +67,11 @@
       "scale_mode": "height_cm",
       "target_cm": 2700,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelWarm.M_PanelWarm",
+      "nanite_required": true,
+      "import_uniform_scale": 29.857807,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_10",
@@ -67,7 +83,11 @@
       "scale_mode": "height_cm",
       "target_cm": 2700,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_PanelCool.M_PanelCool",
+      "nanite_required": true,
+      "import_uniform_scale": 22.63018,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Prop_BusShelter",
@@ -79,7 +99,11 @@
       "scale_mode": "height_cm",
       "target_cm": 260,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_Galvanized.M_Galvanized",
+      "nanite_required": true,
+      "import_uniform_scale": 2.124362,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Prop_Sedan",
@@ -91,7 +115,11 @@
       "scale_mode": "longest_cm",
       "target_cm": 430,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_VehiclePaint.M_VehiclePaint",
+      "nanite_required": true,
+      "import_uniform_scale": 2.15685,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_StreetTree_A",
@@ -103,7 +131,11 @@
       "scale_mode": "height_cm",
       "target_cm": 1300,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_TreeLeaves.M_TreeLeaves",
+      "nanite_required": false,
+      "import_uniform_scale": 6.53374,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_StreetTree_B",
@@ -115,7 +147,11 @@
       "scale_mode": "height_cm",
       "target_cm": 1100,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_TreeLeaves.M_TreeLeaves",
+      "nanite_required": false,
+      "import_uniform_scale": 5.598497,
+      "baked_scale_expected": true
     },
     {
       "target_name": "SM_Donetsk_Prop_RubblePile",
@@ -127,7 +163,11 @@
       "scale_mode": "longest_cm",
       "target_cm": 700,
       "source_type": "meshy_community",
-      "meshy_task_id": null
+      "meshy_task_id": null,
+      "material_override": "/Game/TheUnit/Donetsk/Materials/M_Concrete.M_Concrete",
+      "nanite_required": true,
+      "import_uniform_scale": 3.5,
+      "baked_scale_expected": true
     }
   ]
 }
