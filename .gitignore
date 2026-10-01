@@ -32,3 +32,7 @@ Thumbs.db
 *.log
 *.tmp
 *.cache
+
+# Local isolated development worktrees and execution ledgers
+.worktrees/
+.superpowers/
