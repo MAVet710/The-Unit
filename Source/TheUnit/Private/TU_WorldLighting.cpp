@@ -16,24 +16,20 @@ ATU_WorldLighting::ATU_WorldLighting()
     Sun->SetupAttachment(RootComponent);
     Sun->SetMobility(EComponentMobility::Movable);
     Sun->SetRelativeRotation(FRotator(-42.f, -35.f, 0.f));
-    // Midday overcast-bright exterior. Physical-scale sun intensity gives Lumen
-    // enough energy for believable bounce while the post process preserves tactical contrast.
-    Sun->SetIntensity(60000.0f);
+    // Midday overcast-bright exterior. Physical-scale values are applied through
+    // editable neutral-daylight controls so validation can tune light without a film grade.
     Sun->SetAtmosphereSunLight(true);
     Atmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("DaylightAtmosphere"));
     Atmosphere->SetupAttachment(RootComponent);
     Sky = CreateDefaultSubobject<USkyLightComponent>(TEXT("DaylightSky"));
     Sky->SetupAttachment(RootComponent);
     Sky->SetMobility(EComponentMobility::Movable);
-    Sky->SetIntensity(1.05f);
     Sky->SetRealTimeCapture(true);
     Sky->SetLowerHemisphereColor(FLinearColor(.06f,.07f,.09f));
 
     DistanceFog = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("UrbanDistanceFog"));
     DistanceFog->SetupAttachment(RootComponent);
     DistanceFog->SetMobility(EComponentMobility::Movable);
-    DistanceFog->SetFogDensity(0.0022f);
-    DistanceFog->SetFogHeightFalloff(0.12f);
     DistanceFog->SetFogInscatteringColor(FLinearColor(0.60f, 0.64f, 0.67f));
     DistanceFog->SetVolumetricFog(true);
     DistanceFog->SetVolumetricFogScatteringDistribution(0.25f);
@@ -53,7 +49,6 @@ ATU_WorldLighting::ATU_WorldLighting()
     Settings.bOverride_AutoExposureApplyPhysicalCameraExposure = true;
     Settings.AutoExposureApplyPhysicalCameraExposure = false;
     Settings.bOverride_AutoExposureBias = true;
-    Settings.AutoExposureBias = -0.35f;
     Settings.bOverride_AutoExposureBiasCurve = true;
     Settings.AutoExposureBiasCurve = nullptr;
     // Subtle bloom only. The shooter remains clear while bright sky/specular response
@@ -62,4 +57,35 @@ ATU_WorldLighting::ATU_WorldLighting()
     Settings.BloomIntensity = 0.15f;
     Settings.bOverride_MotionBlurAmount = true;
     Settings.MotionBlurAmount = 0.f;
+
+    ApplyNeutralDaylightSettings();
+}
+
+void ATU_WorldLighting::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    ApplyNeutralDaylightSettings();
+}
+
+void ATU_WorldLighting::ApplyNeutralDaylightSettings()
+{
+    if (Sun)
+    {
+        Sun->SetIntensity(SunIntensityLux);
+        Sun->SetUseTemperature(true);
+        Sun->SetTemperature(SunTemperatureK);
+    }
+    if (Sky)
+    {
+        Sky->SetIntensity(SkyIntensity);
+    }
+    if (DistanceFog)
+    {
+        DistanceFog->SetFogDensity(FogDensity);
+        DistanceFog->SetFogHeightFalloff(FogHeightFalloff);
+    }
+    if (BenchmarkExposure)
+    {
+        BenchmarkExposure->Settings.AutoExposureBias = ExposureBias;
+    }
 }
