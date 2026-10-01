@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "purpose": "Replace Donetsk prototype visuals without changing gameplay collision/layout.",
   "source_root": "ExternalAssets/DonetskHighFidelity",
   "notes": [
@@ -17,7 +17,9 @@
       "license": "CC0",
       "role": "primary post-Soviet Ukrainian residential block",
       "scale_mode": "height_cm",
-      "target_cm": 1500
+      "target_cm": 1500,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_14",
@@ -27,7 +29,9 @@
       "license": "CC0",
       "role": "brick residential block variation",
       "scale_mode": "height_cm",
-      "target_cm": 1500
+      "target_cm": 1500,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Khrush_5F_12",
@@ -37,7 +41,9 @@
       "license": "CC0",
       "role": "panel residential block variation",
       "scale_mode": "height_cm",
-      "target_cm": 1500
+      "target_cm": 1500,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_14",
@@ -47,7 +53,9 @@
       "license": "CC0",
       "role": "taller late-Soviet residential mass",
       "scale_mode": "height_cm",
-      "target_cm": 2700
+      "target_cm": 2700,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Brezhnev_9F_10",
@@ -57,7 +65,9 @@
       "license": "CC0",
       "role": "late-Soviet panel housing variation",
       "scale_mode": "height_cm",
-      "target_cm": 2700
+      "target_cm": 2700,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Prop_BusShelter",
@@ -67,7 +77,9 @@
       "license": "CC0",
       "role": "weathered civilian bus shelter",
       "scale_mode": "height_cm",
-      "target_cm": 260
+      "target_cm": 260,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Prop_Sedan",
@@ -77,7 +89,9 @@
       "license": "CC0",
       "role": "Eastern-European civilian sedan",
       "scale_mode": "longest_cm",
-      "target_cm": 430
+      "target_cm": 430,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_StreetTree_A",
@@ -87,7 +101,9 @@
       "license": "CC0",
       "role": "mature deciduous street tree",
       "scale_mode": "height_cm",
-      "target_cm": 1300
+      "target_cm": 1300,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_StreetTree_B",
@@ -97,7 +113,9 @@
       "license": "CC0",
       "role": "secondary deciduous street tree",
       "scale_mode": "height_cm",
-      "target_cm": 1100
+      "target_cm": 1100,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     },
     {
       "target_name": "SM_Donetsk_Prop_RubblePile",
@@ -107,7 +125,9 @@
       "license": "CC0",
       "role": "reference source for realistic masonry/concrete debris",
       "scale_mode": "longest_cm",
-      "target_cm": 700
+      "target_cm": 700,
+      "source_type": "meshy_community",
+      "meshy_task_id": null
     }
   ]
 }
