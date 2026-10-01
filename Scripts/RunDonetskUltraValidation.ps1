@@ -2,7 +2,8 @@ param(
     [string]$EngineRoot = "",
     [string]$ProjectPath = "",
     [string]$LogPath = "",
-    [int]$AutoExitSeconds = 0
+    [int]$AutoExitSeconds = 0,
+    [switch]$Automated
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,7 +28,8 @@ if ([string]::IsNullOrWhiteSpace($EngineRoot)) {
     }
 }
 
-$EditorExe = Join-Path $EngineRoot "Engine\Binaries\Win64\UnrealEditor.exe"
+$EditorBinary = if ($Automated) { "UnrealEditor-Cmd.exe" } else { "UnrealEditor.exe" }
+$EditorExe = Join-Path $EngineRoot "Engine\Binaries\Win64\$EditorBinary"
 if (-not (Test-Path $EditorExe)) {
     throw "Unreal Editor not found: $EditorExe"
 }
@@ -71,7 +73,11 @@ $QueryCommands = @(
     "r.Nanite",
     "r.Lumen.HardwareRayTracing"
 )
-$ExecCommands = (($SetCommands + $QueryCommands) -join ",")
+$CommandList = $SetCommands + $QueryCommands
+if ($Automated) {
+    $CommandList += "quit"
+}
+$ExecCommands = ($CommandList -join ",")
 
 $Arguments = @(
     $ProjectPath,
@@ -89,8 +95,25 @@ $Arguments = @(
     "-abslog=$LogPath"
 )
 
+if (-not [string]::IsNullOrWhiteSpace($CaptureId)) {
+    if ($CaptureId -notmatch '^[A-Za-z0-9_-]{1,96}$') {
+        throw "CaptureId contains unsupported characters."
+    }
+    $Arguments += "-RenderOffscreen"
+    $Arguments += "-TUDonetskVisual=$CaptureId"
+}
+if ($Automated) {
+    $Arguments += @("-unattended", "-nosound", "-stdout", "-FullStdOutLogOutput")
+}
+
 Write-Host "Launching Donetsk Ultra validation."
 Write-Host "Log: $LogPath"
+
+if ($Automated) {
+    & $EditorExe @Arguments
+    exit $LASTEXITCODE
+}
+
 $Process = Start-Process $EditorExe -ArgumentList $Arguments -PassThru
 Write-Host "PID: $($Process.Id)"
 

@@ -51,7 +51,8 @@ class DonetskUltraProfileTests(unittest.TestCase):
         self.assertIn("-noxgeshadercompile", self.launcher)
 
     def test_hardware_lumen_is_opt_in_but_project_support_exists(self):
-        self.assertNotIn("r.Lumen.HardwareRayTracing", self.engine)
+        self.assertIn("r.Lumen.HardwareRayTracing=False", self.engine)
+        self.assertNotIn("r.Lumen.HardwareRayTracing=True", self.engine)
         self.assertIn("r.RayTracing=True", self.engine)
         self.assertIn("r.SkinCache.CompileShaders=True", self.engine)
 
@@ -59,6 +60,8 @@ class DonetskUltraProfileTests(unittest.TestCase):
         self.assertIn("/Game/TheUnit/Maps/Donetsk", self.launcher)
         self.assertRegex(self.launcher, r"DonetskUltra.*\.log")
         self.assertIn("-game", self.launcher)
+        self.assertIn("UnrealEditor-Cmd.exe", self.launcher)
+        self.assertIn("[switch]$Automated", self.launcher)
 
 
 if __name__ == "__main__":
