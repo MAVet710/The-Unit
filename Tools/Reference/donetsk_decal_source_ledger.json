@@ -1,0 +1,371 @@
+{
+  "schema": "the-unit/donetsk-decal-source-ledger/v1",
+  "version": 1,
+  "generator": "Tools/AssetPrep/generate_donetsk_decals.py",
+  "decals": [
+    {
+      "name": "CrackedPlaster",
+      "instance_name": "MI_Donetsk_Decal_CrackedPlaster",
+      "category": "facade_damage",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 180,
+        "y": 180
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/CrackedPlaster_BaseColor.png",
+        "ExternalAssets/DonetskDecals/CrackedPlaster_Normal.png",
+        "ExternalAssets/DonetskDecals/CrackedPlaster_Roughness.png",
+        "ExternalAssets/DonetskDecals/CrackedPlaster_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "b7855a6975b9182e909cf8a6662c9b30236f009320055c596e6206ce33f36282",
+        "Normal": "31c17127a8614e7f361a02a4af5667f6fe11780367f9f1aa7701101284157b91",
+        "Roughness": "4171ad20705a38bdd83e9138140848240c11a96d9d7ee51324e77284dc0cc5d3",
+        "Opacity": "389420c2904eae489ee93a170913110240aa4f7dabfc5efe981b1fbce9f3d479"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "ChippedPaint",
+      "instance_name": "MI_Donetsk_Decal_ChippedPaint",
+      "category": "facade_damage",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 220,
+        "y": 180
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/ChippedPaint_BaseColor.png",
+        "ExternalAssets/DonetskDecals/ChippedPaint_Normal.png",
+        "ExternalAssets/DonetskDecals/ChippedPaint_Roughness.png",
+        "ExternalAssets/DonetskDecals/ChippedPaint_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "7faaf9700aa4e57c5380aaf761c48c56f8b4a73a95c02d8eaedba26c6d17bf56",
+        "Normal": "ead39612d4fda7dd63adf1b03c071eb82aee2954139a43b3a2624ab2d2338978",
+        "Roughness": "b110a8b3202711b302deee1283799702a6ce380c92fee989d9ca4acefc5b1500",
+        "Opacity": "0f4b1668d119f77ceb6b86645573f088ab2341d7b284314d5df0be7226ea5d91"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "ExposedSubstrate",
+      "instance_name": "MI_Donetsk_Decal_ExposedSubstrate",
+      "category": "facade_damage",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 260,
+        "y": 220
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/ExposedSubstrate_BaseColor.png",
+        "ExternalAssets/DonetskDecals/ExposedSubstrate_Normal.png",
+        "ExternalAssets/DonetskDecals/ExposedSubstrate_Roughness.png",
+        "ExternalAssets/DonetskDecals/ExposedSubstrate_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "ed56dcbccfa7cc0428eedd39a9985ac39bd9f1e009eaafdb441d2dcd99147a9b",
+        "Normal": "01a70bfc287affb365d49ef7e0b31d35d118ca0296c4bf93adee82b50658d3fc",
+        "Roughness": "8cca18393178dfa6384a7a0db280c7dea278be1827ab32b84b9d6e28eb0569b5",
+        "Opacity": "3e07a131df0c38cfd63489b59205c0c5a5fe8d2540c644e087e9e59a90a79dd5"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "Soot",
+      "instance_name": "MI_Donetsk_Decal_Soot",
+      "category": "water_grime",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 240,
+        "y": 360
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/Soot_BaseColor.png",
+        "ExternalAssets/DonetskDecals/Soot_Normal.png",
+        "ExternalAssets/DonetskDecals/Soot_Roughness.png",
+        "ExternalAssets/DonetskDecals/Soot_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "c26ce27467bab2d6829c22b791de86fc78e9084346a1033105b476921fd8a443",
+        "Normal": "7f6a0536d3ebf41850ba020a3d5b4fe15615b110d9355ef41d73223774b20364",
+        "Roughness": "e90f91bab70d9dcee9a47ba38e9cc18a050e6cd43c54e8203cc229a29d11f174",
+        "Opacity": "dedcc97d2a09b4c0692a50ee6468b17338c69fec496d679277778aaac58c5ece"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "RainStreaks",
+      "instance_name": "MI_Donetsk_Decal_RainStreaks",
+      "category": "water_grime",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 220,
+        "y": 420
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/RainStreaks_BaseColor.png",
+        "ExternalAssets/DonetskDecals/RainStreaks_Normal.png",
+        "ExternalAssets/DonetskDecals/RainStreaks_Roughness.png",
+        "ExternalAssets/DonetskDecals/RainStreaks_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "807c214e4c6f04e91d69daad14f32e2f9009d04ffbf6ec9ef2405be17742e64c",
+        "Normal": "2b43365dad0ee343fcb0e408aa38c2700b5da2c1484f48c1eaf563977ea6adb1",
+        "Roughness": "dd894a195440a3a368caa90516257e918f8cae8d2555607546c4fbf92a571cde",
+        "Opacity": "0343efb09b1ae224628362a153dc3226711092cc9617778e9a49ee7aef704730"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "RustDrips",
+      "instance_name": "MI_Donetsk_Decal_RustDrips",
+      "category": "rust",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 180,
+        "y": 360
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/RustDrips_BaseColor.png",
+        "ExternalAssets/DonetskDecals/RustDrips_Normal.png",
+        "ExternalAssets/DonetskDecals/RustDrips_Roughness.png",
+        "ExternalAssets/DonetskDecals/RustDrips_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "b3e261659ecbdc3dfb6743b9c63f3015ea2f030b4105269bc9768fb40c5777e4",
+        "Normal": "f68280aa7dbc0f49bbba61c3d6df8896a265c57c0e6bcf711f476343c93e031e",
+        "Roughness": "b6fa493bbe1ed0b94703c15648c76d83b86fb12163a3abef7ecbcd0ee0bb3819",
+        "Opacity": "193d4d4fa225e0d1f2b63f49a293008858ab1ddf63f79cfe0b0b50041f1e5ea2"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "PatchedAsphalt",
+      "instance_name": "MI_Donetsk_Decal_PatchedAsphalt",
+      "category": "road_wear",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 320,
+        "y": 220
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/PatchedAsphalt_BaseColor.png",
+        "ExternalAssets/DonetskDecals/PatchedAsphalt_Normal.png",
+        "ExternalAssets/DonetskDecals/PatchedAsphalt_Roughness.png",
+        "ExternalAssets/DonetskDecals/PatchedAsphalt_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "abd669df2244c22ae7f9ddfdb97d5f6f35307c8467a0247a5d2581c1c2f1f9b0",
+        "Normal": "becc4c584e4ecd8f2d5e0f78431c9ff3926d5cb1ca29f819cef0a9273dab7eb3",
+        "Roughness": "823c9152efc31e32f1f2f67ff534453f215cca4bddc76319000acd0e0453b5d7",
+        "Opacity": "243fb5bef742efdbf0ee1ae83827809101baa28d2b69dcc0a79b986252d00bec"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "AsphaltCracks",
+      "instance_name": "MI_Donetsk_Decal_AsphaltCracks",
+      "category": "road_wear",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 300,
+        "y": 300
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/AsphaltCracks_BaseColor.png",
+        "ExternalAssets/DonetskDecals/AsphaltCracks_Normal.png",
+        "ExternalAssets/DonetskDecals/AsphaltCracks_Roughness.png",
+        "ExternalAssets/DonetskDecals/AsphaltCracks_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "f460b9f9a8ffb47fcd1489e58cf6a68df4a76d11eb09399069502a8c53c2c400",
+        "Normal": "a69353ee23a0f2926322532f679f5b7f421b93e051920a29bc5ce8d8d4492a4e",
+        "Roughness": "14c9127b8228369a14f13b1928b189f799e23ac98c49eb57f601de77ff0842c6",
+        "Opacity": "1028aa98f25511f0ce8c3ed54355fbf415b412012d787d6846fc8f55d447a1a7"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "TireWear",
+      "instance_name": "MI_Donetsk_Decal_TireWear",
+      "category": "road_wear",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 420,
+        "y": 180
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/TireWear_BaseColor.png",
+        "ExternalAssets/DonetskDecals/TireWear_Normal.png",
+        "ExternalAssets/DonetskDecals/TireWear_Roughness.png",
+        "ExternalAssets/DonetskDecals/TireWear_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "22ecb5a6db6cffc578d1fe564d8fbb7d1a1ed9a5f95f170c9f4672e10a59e31a",
+        "Normal": "e652ce2a184a1d916f4ed23840cbda21b97d1d09c56bce0b9ecf4ce1d4501549",
+        "Roughness": "42db3707f84bb015d0cf7bd9ecfdf07def883d5846fd5c8c6e98d353ad9eca22",
+        "Opacity": "34b5eda2a683562558a6ed83e30a8c65471eab393155799b05c589a75ab98168"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "CurbGrime",
+      "instance_name": "MI_Donetsk_Decal_CurbGrime",
+      "category": "water_grime",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 360,
+        "y": 140
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/CurbGrime_BaseColor.png",
+        "ExternalAssets/DonetskDecals/CurbGrime_Normal.png",
+        "ExternalAssets/DonetskDecals/CurbGrime_Roughness.png",
+        "ExternalAssets/DonetskDecals/CurbGrime_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "e6c78c3347cbef2e0f9662fc3980a8a91e3fe2ac811bd8aec14d91e4fa4c49df",
+        "Normal": "bda2fcc91b001700b98e1a254bad5ff06f5cad079d45bbcc3ae9ff325372cc7c",
+        "Roughness": "98a03478a6488ace9100aead9f480deb0ee06caa02d40a7828ab37ac501d1749",
+        "Opacity": "9da40e6cd8886fe0c3082999f94991bdae776e564a8daf3a6970036e95daf6cc"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "UtilityMarking",
+      "instance_name": "MI_Donetsk_Decal_UtilityMarking",
+      "category": "signage_remnants",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 180,
+        "y": 180
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/UtilityMarking_BaseColor.png",
+        "ExternalAssets/DonetskDecals/UtilityMarking_Normal.png",
+        "ExternalAssets/DonetskDecals/UtilityMarking_Roughness.png",
+        "ExternalAssets/DonetskDecals/UtilityMarking_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "8d86e8bd998c2b6782f187aab07f554d4ec9f71584ab4a5e271f499f10c56f89",
+        "Normal": "52632a554bcc7e6f19d6ccb5a3967d120cdaec8ddbbc5283472107072c3637e0",
+        "Roughness": "cd49ae0402a068089e9d7dc2e1ce7ab474e9209532710f115ae87a49ab34f0d3",
+        "Opacity": "4bb22791adc648456fd7516c0f2ec815b369ec055bb94e5feae44241b8e753d3"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "FadedSignage",
+      "instance_name": "MI_Donetsk_Decal_FadedSignage",
+      "category": "signage_remnants",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 360,
+        "y": 180
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/FadedSignage_BaseColor.png",
+        "ExternalAssets/DonetskDecals/FadedSignage_Normal.png",
+        "ExternalAssets/DonetskDecals/FadedSignage_Roughness.png",
+        "ExternalAssets/DonetskDecals/FadedSignage_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "d16097d5aa9018a605f61ac2e9ccb369764af8f2384bd8fdcedf3aa98ccc99d7",
+        "Normal": "e747609fefa8aca8514e2cf25fdb413132dfb8270fb446063c875dc121696bff",
+        "Roughness": "2f9aa27ee2985927251669a915896ea9929524dbaffaf5a7cf52a393dbbfeb20",
+        "Opacity": "a785fa01be486ae77c2485d1da3899b844efacea84d36bcf580e7b98cf2cf2c3"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "WaterStain",
+      "instance_name": "MI_Donetsk_Decal_WaterStain",
+      "category": "water_grime",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 260,
+        "y": 260
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/WaterStain_BaseColor.png",
+        "ExternalAssets/DonetskDecals/WaterStain_Normal.png",
+        "ExternalAssets/DonetskDecals/WaterStain_Roughness.png",
+        "ExternalAssets/DonetskDecals/WaterStain_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "845ba50ae795ff4891d488f7ad0a7c54b54c7ed351f554e2e8421d6579fb0572",
+        "Normal": "5e120aab28231f621ced435e2ac182fe9e7e5148db7ddd0b7ad63f5dda9ddf80",
+        "Roughness": "1399266aa3214a699f7c0b63da5480ea48e00f811b068807c0248a89929dcec1",
+        "Opacity": "49dc2afb2e4ec3c682f12e25565ea7830f01b9321decec64d1d2c29867709256"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    },
+    {
+      "name": "ImpactScorch",
+      "instance_name": "MI_Donetsk_Decal_ImpactScorch",
+      "category": "mission_impact",
+      "source_url": null,
+      "license": "Project-owned original",
+      "approval_state": "approved",
+      "resolution": 1024,
+      "physical_size_cm": {
+        "x": 220,
+        "y": 220
+      },
+      "local_files": [
+        "ExternalAssets/DonetskDecals/ImpactScorch_BaseColor.png",
+        "ExternalAssets/DonetskDecals/ImpactScorch_Normal.png",
+        "ExternalAssets/DonetskDecals/ImpactScorch_Roughness.png",
+        "ExternalAssets/DonetskDecals/ImpactScorch_Opacity.png"
+      ],
+      "sha256": {
+        "BaseColor": "8206cf63b98c27e408afb13a83136b22195cc0500b8ef3596cbd0c852e1d7726",
+        "Normal": "55de90f6c62b24e622957e7012adf6ac7e28dee5c65439a3a7c505b1111d8705",
+        "Roughness": "7565535ae63a710b390db761a29c2f0f47fc264e6f90bc9ffcba563d05cb4e26",
+        "Opacity": "de90759152a13bf92847c80ad38c093ecae21e9ee2628120081acae3f583b426"
+      },
+      "provenance": "Original deterministic procedural decal authored for The Unit; no reference-game texture data."
+    }
+  ]
+}
