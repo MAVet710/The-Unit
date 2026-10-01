@@ -2,6 +2,7 @@
 
 #include "TU_DonetskArtema60Building.h"
 #include "Components/ChildActorComponent.h"
+#include "Components/DecalComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -102,6 +103,8 @@ void ATU_DonetskDistrictGenerator::RebuildDistrict()
         BuildMissionDamageLayer();
     }
 
+    BuildHeroSliceDressing();
+
     AddLabel(
         TEXT("REFERENCE ANCHOR // ARTEMA STREET 60 // DEDICATED PHOTO-MATCH ACTOR"),
         FVector(-6200.0f, -6500.0f, 1720.0f));
@@ -180,7 +183,8 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddHiddenBox(
 }
 
 UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
-    UStaticMesh* Asset, const FVector& Location, const FString& BaseName, const FRotator& Rotation)
+    UStaticMesh* Asset, const FVector& Location, const FString& BaseName,
+    const FRotator& Rotation, const FVector& Scale)
 {
     if (!Asset) return nullptr;
     const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
@@ -189,6 +193,7 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
     Mesh->SetStaticMesh(Asset);
     Mesh->SetRelativeLocation(Location);
     Mesh->SetRelativeRotation(Rotation);
+    Mesh->SetRelativeScale3D(Scale);
     Mesh->SetMobility(EComponentMobility::Static);
     Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Mesh->SetGenerateOverlapEvents(false);
@@ -197,6 +202,30 @@ UStaticMeshComponent* ATU_DonetskDistrictGenerator::AddProductionVisual(
     Mesh->RegisterComponent();
     GeneratedComponents.Add(Mesh);
     return Mesh;
+}
+
+
+UDecalComponent* ATU_DonetskDistrictGenerator::AddHeroDecal(
+    UMaterialInterface* Material, const FVector& Location, const FVector& DecalSize,
+    const FString& BaseName, const FRotator& Rotation)
+{
+    if (!Material)
+    {
+        return nullptr;
+    }
+
+    const FName Name(*FString::Printf(TEXT("%s_%04d"), *BaseName, GeneratedNameCounter++));
+    UDecalComponent* Decal = NewObject<UDecalComponent>(this, Name);
+    Decal->SetNetAddressable();
+    Decal->SetDecalMaterial(Material);
+    Decal->DecalSize = DecalSize;
+    Decal->SetRelativeLocation(Location);
+    Decal->SetRelativeRotation(Rotation);
+    Decal->SetMobility(EComponentMobility::Static);
+    Decal->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+    Decal->RegisterComponent();
+    GeneratedComponents.Add(Decal);
+    return Decal;
 }
 
 void ATU_DonetskDistrictGenerator::AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation)
@@ -584,6 +613,139 @@ void ATU_DonetskDistrictGenerator::BuildMissionDamageLayer()
     AddHiddenBox(FVector(-18400,-12600,110), FVector(250,18,110), TEXT("Damage_RustSheet"), FRotator(0,9,5));
 }
 
+
+
+void ATU_DonetskDistrictGenerator::BuildHeroSliceDressing()
+{
+    // This seed controls render-only variation. It never changes authoritative layout
+    // or collision, so clients rebuild the same visual composition independently.
+    FRandomStream VisualRng(710);
+
+    const auto LoadDecal = [](const TCHAR* Path) -> UMaterialInterface*
+    {
+        return LoadObject<UMaterialInterface>(nullptr, Path);
+    };
+    UMaterialInterface* AsphaltCrackDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_AsphaltCracks.MI_Donetsk_Decal_AsphaltCracks"));
+    UMaterialInterface* PatchedAsphaltDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_PatchedAsphalt.MI_Donetsk_Decal_PatchedAsphalt"));
+    UMaterialInterface* TireWearDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_TireWear.MI_Donetsk_Decal_TireWear"));
+    UMaterialInterface* WaterStainDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_WaterStain.MI_Donetsk_Decal_WaterStain"));
+    UMaterialInterface* CurbGrimeDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_CurbGrime.MI_Donetsk_Decal_CurbGrime"));
+    UMaterialInterface* CrackedPlasterDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_CrackedPlaster.MI_Donetsk_Decal_CrackedPlaster"));
+    UMaterialInterface* RainStreakDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_RainStreaks.MI_Donetsk_Decal_RainStreaks"));
+    UMaterialInterface* RustDripsDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_RustDrips.MI_Donetsk_Decal_RustDrips"));
+    UMaterialInterface* UtilityMarkingDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_UtilityMarking.MI_Donetsk_Decal_UtilityMarking"));
+    UMaterialInterface* FadedSignageDecal = LoadDecal(
+        TEXT("/Game/TheUnit/Donetsk/Decals/MI_Donetsk_Decal_FadedSignage.MI_Donetsk_Decal_FadedSignage"));
+
+    if (bGenerateUrbanVegetation)
+    {
+        const FVector HeroTreeLocations[] = {
+            FVector(-3150.0f, -6200.0f, 0.0f),
+            FVector(3180.0f, -10300.0f, 0.0f),
+            FVector(-3220.0f, -13750.0f, 0.0f),
+        };
+
+        for (int32 Index = 0; Index < UE_ARRAY_COUNT(HeroTreeLocations); ++Index)
+        {
+            const float Scale = VisualRng.FRandRange(0.92f, 1.08f);
+            const float Yaw = VisualRng.FRandRange(-14.0f, 14.0f);
+            UStaticMesh* Tree = (Index % 2 == 0) ? StreetTreeAMesh : StreetTreeBMesh;
+            AddProductionVisual(
+                Tree,
+                HeroTreeLocations[Index],
+                TEXT("HeroTree_Production"),
+                FRotator(0.0f, Yaw, 0.0f),
+                FVector(Scale));
+
+            if (UStaticMeshComponent* Trunk = AddBox(
+                HeroTreeLocations[Index] + FVector(0.0f, 0.0f, 420.0f),
+                FVector(45.0f, 45.0f, 420.0f),
+                TEXT("HeroTree_TrunkCollision")))
+            {
+                Trunk->SetVisibility(false, true);
+            }
+        }
+    }
+
+    // Ground wear stays sparse and follows plausible traffic/water history rather
+    // than being uniformly scattered across the boulevard.
+    AddHeroDecal(
+        AsphaltCrackDecal,
+        FVector(-620.0f, -6100.0f, 24.0f),
+        FVector(55.0f, 150.0f, 150.0f),
+        TEXT("HeroRoad_AsphaltCracks"),
+        FRotator(-90.0f, 8.0f, 0.0f));
+    AddHeroDecal(
+        PatchedAsphaltDecal,
+        FVector(720.0f, -5200.0f, 24.0f),
+        FVector(55.0f, 160.0f, 110.0f),
+        TEXT("HeroRoad_PatchedAsphalt"),
+        FRotator(-90.0f, -5.0f, 0.0f));
+    AddHeroDecal(
+        TireWearDecal,
+        FVector(-540.0f, -3300.0f, 24.0f),
+        FVector(45.0f, 210.0f, 90.0f),
+        TEXT("HeroRoad_TireWear"),
+        FRotator(-90.0f, 0.0f, 0.0f));
+
+    // A localized wet stain near the stop/curb acts as the hero-slice drain/water
+    // detail while preserving collision beneath it.
+    AddHeroDecal(
+        WaterStainDecal,
+        FVector(1920.0f, -7060.0f, 30.0f),
+        FVector(45.0f, 135.0f, 135.0f),
+        TEXT("HeroWet_DrainStain"),
+        FRotator(-90.0f, 11.0f, 0.0f));
+    AddHeroDecal(
+        CurbGrimeDecal,
+        FVector(2018.0f, -7200.0f, 62.0f),
+        FVector(45.0f, 180.0f, 70.0f),
+        TEXT("HeroCurb_Grime"),
+        FRotator(0.0f, 90.0f, 0.0f));
+    AddHeroDecal(
+        UtilityMarkingDecal,
+        FVector(1680.0f, -7620.0f, 25.0f),
+        FVector(35.0f, 90.0f, 90.0f),
+        TEXT("HeroRoad_UtilityMarking"),
+        FRotator(-90.0f, 17.0f, 0.0f));
+
+    // Facade history is localized to exposed/weather-facing zones. These marks are
+    // deliberately limited so the buildings retain readable material hierarchy.
+    AddHeroDecal(
+        CrackedPlasterDecal,
+        FVector(-10500.0f, 5908.0f, 610.0f),
+        FVector(45.0f, 90.0f, 90.0f),
+        TEXT("HeroFacade_CrackedPlaster"),
+        FRotator(0.0f, 90.0f, 0.0f));
+    AddHeroDecal(
+        RainStreakDecal,
+        FVector(-9910.0f, 5908.0f, 890.0f),
+        FVector(45.0f, 110.0f, 210.0f),
+        TEXT("HeroFacade_RainStreaks"),
+        FRotator(0.0f, 90.0f, 0.0f));
+    AddHeroDecal(
+        RustDripsDecal,
+        FVector(2350.0f, -7108.0f, 125.0f),
+        FVector(35.0f, 80.0f, 150.0f),
+        TEXT("HeroTransit_RustDrips"),
+        FRotator(0.0f, 90.0f, 0.0f));
+    AddHeroDecal(
+        FadedSignageDecal,
+        FVector(18680.0f, -650.0f, 420.0f),
+        FVector(45.0f, 180.0f, 90.0f),
+        TEXT("HeroCivic_FadedSignage"),
+        FRotator(0.0f, 180.0f, 0.0f));
+}
+
 void ATU_DonetskDistrictGenerator::BeginPlay()
 {
     // PostNetInit invokes BeginPlay after the initial authoritative layout properties arrive.
@@ -710,19 +872,40 @@ FString ATU_DonetskDistrictGenerator::GetGeneratedVisualSignature() const
     TArray<FString> Records;
     for (const UActorComponent* Component : GeneratedComponents)
     {
-        const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
-        UStaticMesh* StaticMesh = Mesh ? Mesh->GetStaticMesh() : nullptr;
-        if (!Mesh || !Mesh->IsRegistered() || !StaticMesh
-            || StaticMesh == CubeMesh
-            || Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision)
+        if (const UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
         {
+            UStaticMesh* StaticMesh = Mesh->GetStaticMesh();
+            if (!Mesh->IsRegistered() || !StaticMesh
+                || StaticMesh == CubeMesh
+                || Mesh->GetCollisionEnabled() != ECollisionEnabled::NoCollision)
+            {
+                continue;
+            }
+
+            Records.Add(
+                TEXT("MESH|")
+                + StaticMesh->GetPathName()
+                + TEXT("|")
+                + Mesh->GetRelativeTransform().ToString());
             continue;
         }
 
-        Records.Add(
-            StaticMesh->GetPathName()
-            + TEXT("|")
-            + Mesh->GetRelativeTransform().ToString());
+        if (const UDecalComponent* Decal = Cast<UDecalComponent>(Component))
+        {
+            UMaterialInterface* Material = Decal->GetDecalMaterial();
+            if (!Decal->IsRegistered() || !Material)
+            {
+                continue;
+            }
+
+            Records.Add(
+                TEXT("DECAL|")
+                + Material->GetPathName()
+                + TEXT("|")
+                + Decal->GetRelativeTransform().ToString()
+                + TEXT("|")
+                + Decal->DecalSize.ToString());
+        }
     }
 
     Records.Sort();

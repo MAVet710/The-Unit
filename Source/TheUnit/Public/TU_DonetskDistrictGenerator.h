@@ -6,6 +6,7 @@
 
 class UActorComponent;
 class UChildActorComponent;
+class UDecalComponent;
 class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
@@ -96,6 +97,17 @@ private:
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> RustMaterial;
     UPROPERTY(Transient) TObjectPtr<UMaterialInterface> ConcreteMaterial;
 
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> AsphaltCrackDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> PatchedAsphaltDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> TireWearDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> WaterStainDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> CurbGrimeDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> CrackedPlasterDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> RainStreakDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> RustDripsDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> UtilityMarkingDecalMaterial;
+    UPROPERTY(Transient) TObjectPtr<UMaterialInterface> FadedSignageDecalMaterial;
+
     UPROPERTY(Transient)
     TArray<TObjectPtr<UActorComponent>> GeneratedComponents;
 
@@ -109,7 +121,10 @@ private:
     UStaticMeshComponent* AddHiddenBox(const FVector& Location, const FVector& Extents, const FString& BaseName,
         const FRotator& Rotation = FRotator::ZeroRotator);
     UStaticMeshComponent* AddProductionVisual(UStaticMesh* Asset, const FVector& Location,
-        const FString& BaseName, const FRotator& Rotation = FRotator::ZeroRotator);
+        const FString& BaseName, const FRotator& Rotation = FRotator::ZeroRotator,
+        const FVector& Scale = FVector::OneVector);
+    UDecalComponent* AddHeroDecal(UMaterialInterface* Material, const FVector& Location,
+        const FVector& DecalSize, const FString& BaseName, const FRotator& Rotation);
     void AddLabel(const FString& Text, const FVector& Location, const FRotator& Rotation = FRotator(0.0f, 90.0f, 0.0f));
 
     void BuildRoadNetwork();
@@ -122,6 +137,7 @@ private:
     void BuildStreetFurniture();
     void BuildUrbanVegetation();
     void BuildMissionDamageLayer();
+    void BuildHeroSliceDressing();
 
     void BuildSimpleFacadeBlock(const FVector& Origin, int32 Floors, int32 Bays, float BayWidthCm,
         float DepthCm, float FloorHeightCm, const FString& Prefix, bool bBalconies, bool bRaisedGroundFloor);
